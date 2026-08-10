@@ -20,9 +20,12 @@ final class MockCraneScene: CraneSceneProviding {
     private(set) var placements: [GearPlacement]
     private(set) var screenTargets: [GearScreenTarget] = []
 
+    /// Above and left of the driver gear, which is where the mouse stands.
+    private(set) var mouseScreenAnchor: CGPoint? = CGPoint(x: 604, y: 250)
+
     /// What the last call asked for, so a preview can show the choreography without
     /// anything being drawn in 3D.
-    private(set) var pose: MouseSprite = .talkIdle
+    private(set) var pose: MouseSprite = .happy
     private(set) var isRopeVisible = true
     private(set) var highlighted: Set<UUID> = []
     private(set) var lastState = GearTrainState()

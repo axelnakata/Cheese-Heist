@@ -11,6 +11,20 @@
 //  means every rotation write also rewrites the position, and the two systems fight
 //  over the gear at 60 Hz.
 //
+//  ═══ THE TWIN WEARS THE PART'S OWN MATERIALS. ═══
+//
+//  It used to be re-skinned as an emissive wireframe in the gear's role colour — cyan
+//  for the driver, amber for the follower — on the argument that an outline reads as an
+//  annotation while a solid gear reads as a replacement. On a screen that argument held.
+//  Over a real grey gear at arm's length it did not: the wireframe moiréd against the
+//  real teeth into an orange scribble that was not legible as a gear at all, and colour
+//  the app chose sat on top of the colour LEGO chose.
+//
+//  So nothing is applied. `gear_8` is Technic red, `gear_24` and `gear_40` are the two
+//  greys, and the twin looks like the part it is sitting on because it IS that part.
+//  Which gear is the driver is carried by the role label and the highlight ring — by
+//  the annotations, which is where an annotation belongs.
+//
 
 import RealityKit
 import simd
@@ -26,11 +40,16 @@ struct GearTwin {
 
 enum GearTwinEntityFactory {
 
-    @MainActor
-    static func make(type: GearType, role: GearRole) -> GearTwin? {
-        guard let mesh = GearMeshFactory.entity(for: type) else { return nil }
+    /// How far toward the camera the twin sits, in metres.
+    ///
+    /// Two coincident surfaces z-fight, and a virtual gear registered to within 5mm of
+    /// a real one is coincident. Now that the twin is opaque this is doing more work
+    /// than it was as a wireframe, not less.
+    static let cameraWardOffset: Float = 0.002
 
-        apply(HolographicGearMaterial.make(for: role), to: mesh)
+    @MainActor
+    static func make(type: GearType) -> GearTwin? {
+        guard let mesh = GearMeshFactory.entity(for: type) else { return nil }
 
         let holder = Entity()
         let spin = Entity()
@@ -39,24 +58,8 @@ enum GearTwinEntityFactory {
 
         // Toward the camera: the crane frame's +Z points out of the beam's face, so
         // this is the anti-z-fight nudge and nothing else.
-        holder.position.z = HolographicGearMaterial.cameraWardOffset
+        holder.position.z = Self.cameraWardOffset
 
         return GearTwin(holder: holder, spin: spin, type: type)
-    }
-
-    /// Re-skins an existing twin when its role changes, so a role swap does not have
-    /// to rebuild the mesh — which would drop it for a frame and read as a flicker.
-    @MainActor
-    static func restyle(_ twin: GearTwin, as role: GearRole) {
-        apply(HolographicGearMaterial.make(for: role), to: twin.spin)
-    }
-
-    /// The loaded USDZ is a hierarchy, and only some of its entities carry a model.
-    private static func apply(_ material: some Material, to entity: Entity) {
-        if var model = entity.components[ModelComponent.self] as ModelComponent? {
-            model.materials = Array(repeating: material, count: model.materials.count)
-            entity.components.set(model)
-        }
-        for child in entity.children { apply(material, to: child) }
     }
 }

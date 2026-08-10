@@ -90,11 +90,15 @@ struct Level1View: View {
             targets: viewModel.screenTargets,
             beat: viewModel.dialogue.current,
             isRevealComplete: viewModel.dialogue.isRevealComplete,
+            mouseAnchor: viewModel.mouseAnchor,
             onRevealComplete: { viewModel.dialogue.markRevealComplete() }
         )
 
         if viewModel.inputGate.tapAdvances {
-            Level1HandOverLayer(onContinue: { viewModel.tapToContinue() })
+            Level1HandOverLayer(
+                onContinue: { viewModel.tapToContinue() },
+                showsHint: !viewModel.hasDialogue
+            )
         }
 
         if viewModel.phase == .manualFallback, let failure = services.detection.phase.failure {

@@ -16,12 +16,13 @@ enum GearType: Int, CaseIterable, Hashable, Codable, Sendable {
     /// Tip radius (pitch radius + 1 module), for collision and placement.
     var tipRadiusMetres: Double { Double(teeth + 2) * 0.0005 }
 
-    /// USDZ asset name in Resources/3DModels/Gears/.
+    /// USDZ asset name in Resources/3DModels/Gears/ — the real Technic part, in its
+    /// real moulded colour. The twin is the part, not an annotation of it.
     var modelName: String {
         switch self {
-        case .eightTooth:      return "gear_8t"
-        case .twentyFourTooth: return "gear_24t"
-        case .fortyTooth:      return "gear_40t"
+        case .eightTooth:      return "gear_8"
+        case .twentyFourTooth: return "gear_24"
+        case .fortyTooth:      return "gear_40"
         }
     }
 

@@ -18,6 +18,10 @@ struct Level1TutorialLayer: View {
     let targets: [GearScreenTarget]
     let beat: DialogueBeat?
     let isRevealComplete: Bool
+
+    /// The mouse's head on screen — the bubble hangs off it.
+    let mouseAnchor: CGPoint?
+
     let onRevealComplete: () -> Void
 
     @Environment(\.layoutScale) private var scale
@@ -42,6 +46,7 @@ struct Level1TutorialLayer: View {
                     GameplayDialogueLayer(
                         text: DialogueBeatText.attributed(beat),
                         isRevealComplete: isRevealComplete,
+                        anchor: mouseAnchor,
                         onRevealComplete: onRevealComplete
                     )
                 }

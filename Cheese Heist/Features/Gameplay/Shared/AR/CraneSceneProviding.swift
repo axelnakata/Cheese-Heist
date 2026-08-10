@@ -22,6 +22,10 @@ protocol CraneSceneProviding: AnyObject {
     /// Where those gears are on screen this frame.
     var screenTargets: [GearScreenTarget] { get }
 
+    /// Where the mouse's head is on screen this frame, or nil when it is off screen.
+    /// The speech bubble hangs off this — the mouse is the one doing the talking.
+    var mouseScreenAnchor: CGPoint? { get }
+
     /// Re-lays the scene for a new role assignment, animated over `AppDuration`.
     func apply(assignment: GearRoleAssignment, animated: Bool)
 

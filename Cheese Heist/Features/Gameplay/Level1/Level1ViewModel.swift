@@ -134,8 +134,13 @@ final class Level1ViewModel {
     // MARK: - Presentation
 
     var screenTargets: [GearScreenTarget] { scene?.screenTargets ?? [] }
+    var mouseAnchor: CGPoint? { scene?.mouseScreenAnchor }
     var chipText: String? { Level1PhasePresentation.chip(for: phase) }
     var spotlight: SpotlightSubject { director?.spotlight(for: phase) ?? .none }
     var isSucceeded: Bool { phase == .succeeded }
     var liftProgress: Double { runner?.progress ?? 0 }
+
+    /// Whether a speech bubble is on screen right now. The bubble prints its own
+    /// tap-to-continue hint, so the full-screen one stands down while it is up.
+    var hasDialogue: Bool { dialogue.current != nil }
 }

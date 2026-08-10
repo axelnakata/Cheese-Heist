@@ -34,12 +34,53 @@ struct BundledAssetTests {
             return
         }
 
+        // A WIDE BAND, not an equality. The cheese is handed back already turned to face
+        // the camera, and the axis-aligned box around a rotated wedge is legitimately
+        // bigger than the wedge's own longest edge — by up to sqrt(3) in the worst case,
+        // and by 1.25 at the angle actually used. Pinning it tighter would mean this
+        // test fails every time the presentation angle is nudged by a degree, which is
+        // not what it is here to catch: the failures it guards against are a 1.19m wall
+        // of cheese and a 4mm crumb, both orders of magnitude outside this.
         let longest = max(bounds.extents.x, max(bounds.extents.y, bounds.extents.z))
-        #expect(abs(longest - CheeseEntity.longestEdge) < 0.001)
+        #expect(longest > CheeseEntity.longestEdge * 0.8)
+        #expect(longest < CheeseEntity.longestEdge * 1.8)
 
         // Centred on its own origin, so a caller writing `.position` puts the cheese
         // where it meant to rather than the cheese's authoring datum.
         #expect(simd_length(bounds.center) < 0.001)
+    }
+
+    /// The wedge has to present its TRIANGLE to the camera, not its length.
+    ///
+    /// `BillboardSystem` turns local +Z to the camera, so "we are looking at the flat
+    /// face" is precisely "the local Z extent is the smallest of the three" — the
+    /// thinnest axis is the one pointing at us. Authored, it was the LARGEST (1.19 of
+    /// 1.19/0.88/0.48), which is why the cheese read as a lozenge.
+    @Test("the cheese shows its triangular face, not its point")
+    func cheeseFacesTheCameraFlatOn() {
+        guard let cheese = CheeseEntity.make(),
+              let bounds = ModelBounds.measure(cheese) else {
+            Issue.record("the cheese did not load")
+            return
+        }
+
+        #expect(bounds.extents.z < bounds.extents.x)
+        #expect(bounds.extents.z < bounds.extents.y)
+    }
+
+    /// The cheese rests ON the table. Half its own height is the offset that puts it
+    /// there, and it has to be a real number or the wedge sinks into the tabletop.
+    @Test("the cheese knows how far to sit above its own origin")
+    func cheeseRestingLiftIsHalfItsHeight() {
+        guard let cheese = CheeseEntity.make(),
+              let bounds = ModelBounds.measure(cheese) else {
+            Issue.record("the cheese did not load")
+            return
+        }
+
+        let lift = CheeseEntity.restingLift(of: cheese)
+        #expect(lift > 0)
+        #expect(abs(lift - bounds.extents.y / 2) < 0.0001)
     }
 
     /// Each gear has to measure LEGO's module-1 tip diameter, because the whole lesson

@@ -33,6 +33,9 @@ enum AppColor {
     static let surfaceBlueprint = Palette.blueprintNavy
     /// Dim behind a spotlight or a success overlay.
     static let surfaceScrim = Palette.ink.opacity(0.55)
+    /// Under the speech bubble. It floats over a live camera feed of a real room, and
+    /// without a shadow it reads as a hole cut in the picture rather than a card on it.
+    static let bubbleShadow = Palette.ink.opacity(0.28)
     /// Stroke around the instruction chip, at `AppStroke.chip`.
     static let strokeChip = Palette.parchment
     /// Instruction chip navy gradient, top stop.

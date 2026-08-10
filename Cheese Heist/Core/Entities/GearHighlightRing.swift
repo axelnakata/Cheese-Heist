@@ -35,7 +35,7 @@ enum GearHighlightRing {
 
         // The cylinder is generated standing on Y; the gear's axis is +Z.
         ring.orientation = simd_quatf(angle: .pi / 2, axis: simd_float3(1, 0, 0))
-        ring.position.z = HolographicGearMaterial.cameraWardOffset
+        ring.position.z = GearTwinEntityFactory.cameraWardOffset
         return ring
     }
 }

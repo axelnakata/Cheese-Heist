@@ -27,16 +27,10 @@ extension GameplaySceneCoordinator: CraneSceneProviding {
         setAssignment(assignment)
         setLayout(next)
 
-        restyleTwins(for: assignment)
+        // No re-skinning. The twins wear the Technic part's own colours and a role swap
+        // does not change which part is which — only the label and the ring move.
         move(mouseSprite?.entity, to: next.mousePerch, animated: animated)
         move(payloadHolder, to: next.ropeAnchor, animated: animated)
-    }
-
-    private func restyleTwins(for assignment: GearRoleAssignment) {
-        for (id, twin) in twinsByID {
-            guard let role = assignment.role(of: id) else { continue }
-            GearTwinEntityFactory.restyle(twin, as: role)
-        }
     }
 
     private func move(_ entity: Entity?, to position: simd_float3, animated: Bool) {
@@ -70,12 +64,16 @@ extension GameplaySceneCoordinator: CraneSceneProviding {
     }
 
     /// Moves the cheese up from its resting position and shortens the rope to match.
+    ///
+    /// The rope ends where the cheese's TOP is; the cheese hangs its own half-height
+    /// below that. Without the lift the wedge's centre sits on the table and half of it
+    /// is underneath — invisible at 32mm, obvious at 48mm.
     private func setPayloadHeight(_ height: Float) {
         guard let rope = ropeLine else { return }
         setAppliedHeight(height)
         let drop = max(rope.restingDrop - height, 0.001)
         rope.setLength(drop)
-        cheeseEntity?.position = simd_float3(0, -drop, 0)
+        cheeseEntity?.position = simd_float3(0, -drop + cheeseRestingLift, 0)
     }
 
     // MARK: - Choreography
@@ -131,6 +129,16 @@ extension GameplaySceneCoordinator: CraneSceneProviding {
         setScreenTargets(projector?.targets(
             for: placements, assignment: assignment, root: contentRoot
         ) ?? [])
+
+        setMouseScreenAnchor(projectedMouseHead())
+    }
+
+    /// The top of the mouse's head in screen space — where a speech bubble's tail wants
+    /// to land, rather than its feet.
+    private func projectedMouseHead() -> CGPoint? {
+        guard let layout = currentLayout, mouseSprite != nil else { return nil }
+        let head = layout.mousePerch + simd_float3(0, MouseSpriteEntity.height / 2, 0)
+        return projector?.project(local: head, root: contentRoot)
     }
 
     /// Re-measures the table under the follower and drops the cheese onto it.

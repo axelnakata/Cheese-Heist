@@ -46,6 +46,7 @@ private struct Level1LayerHarness: View {
                 targets: scene.screenTargets,
                 beat: Level1PhasePresentation.beats(for: phase).first,
                 isRevealComplete: true,
+                mouseAnchor: scene.mouseScreenAnchor,
                 onRevealComplete: {}
             )
         }

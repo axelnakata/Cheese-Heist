@@ -55,6 +55,14 @@ final class GearScreenProjector {
         }
     }
 
+    /// Where one crane-local point lands on screen, or nil when it is behind the camera
+    /// or off the edge. Used for the mouse, so its speech bubble can sit over its head
+    /// rather than in a fixed corner.
+    func project(local: simd_float3, root: Entity?) -> CGPoint? {
+        guard let arView, let root else { return nil }
+        return arView.project(root.convert(position: local, to: nil))
+    }
+
     /// The gear's tip radius, measured on screen.
     ///
     /// Offset along the crane's local +X, which is along the beam and therefore

@@ -54,6 +54,7 @@ final class GameplaySceneCoordinator {
 
     private(set) var placements: [GearPlacement] = []
     private(set) var screenTargets: [GearScreenTarget] = []
+    private(set) var mouseScreenAnchor: CGPoint?
 
     // MARK: Scene graph
 
@@ -84,6 +85,9 @@ final class GameplaySceneCoordinator {
     /// can be applied immediately, rather than only on the next physics frame — and
     /// there are no physics frames at all until the child first cranks.
     private var appliedHeight: Float = 0
+
+    /// Half the cheese's own height, so it rests ON the table rather than half in it.
+    private var cheeseLift: Float = 0
 
     // MARK: - Build
 
@@ -132,7 +136,7 @@ final class GameplaySceneCoordinator {
 
     private func buildEntities(root: Entity) {
         for placement in placements {
-            guard let twin = GearTwinEntityFactory.make(type: placement.type, role: .driver) else { continue }
+            guard let twin = GearTwinEntityFactory.make(type: placement.type) else { continue }
             twin.holder.position = placement.local
             root.addChild(twin.holder)
             twins[placement.id] = twin
@@ -159,7 +163,8 @@ final class GameplaySceneCoordinator {
         rope = line
 
         if let wedge = CheeseEntity.make() {
-            wedge.position = simd_float3(0, -drop, 0)
+            cheeseLift = CheeseEntity.restingLift(of: wedge)
+            wedge.position = simd_float3(0, -drop + cheeseLift, 0)
             holder.addChild(wedge)
             billboards.register(wedge)
             cheese = wedge
@@ -193,6 +198,7 @@ final class GameplaySceneCoordinator {
         ropeCheeseHolder = nil
         placements = []
         screenTargets = []
+        mouseScreenAnchor = nil
         layout = nil
         assignment = nil
     }
@@ -211,6 +217,8 @@ final class GameplaySceneCoordinator {
     var currentLiftHeight: Float { liftHeight }
     var lastAppliedHeight: Float { appliedHeight }
     func setAppliedHeight(_ next: Float) { appliedHeight = next }
+    var cheeseRestingLift: Float { cheeseLift }
     func setAssignment(_ next: GearRoleAssignment) { assignment = next }
     func setScreenTargets(_ next: [GearScreenTarget]) { screenTargets = next }
+    func setMouseScreenAnchor(_ next: CGPoint?) { mouseScreenAnchor = next }
 }

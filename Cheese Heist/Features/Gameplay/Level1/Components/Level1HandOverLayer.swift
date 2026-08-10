@@ -15,6 +15,11 @@ struct Level1HandOverLayer: View {
 
     let onContinue: () -> Void
 
+    /// False while a speech bubble is up, because the bubble prints the same words
+    /// directly under itself. Two "tap to continue"s on one screen — one under the
+    /// bubble and one along the bottom — read as two different things to tap.
+    var showsHint: Bool = true
+
     @Environment(\.layoutScale) private var scale
 
     var body: some View {
@@ -23,16 +28,23 @@ struct Level1HandOverLayer: View {
                 .contentShape(Rectangle())
                 .onTapGesture(perform: onContinue)
 
-            VStack {
-                Spacer()
-                TapToContinueHint()
-                    .padding(.bottom, AppSpacing.xxl * scale)
+            if showsHint {
+                VStack {
+                    Spacer()
+                    TapToContinueHint(title: "tap to continue..")
+                        .padding(.bottom, AppSpacing.xxl * scale)
+                }
             }
         }
     }
 }
 
-#Preview {
+#Preview("With the hint") {
     Level1HandOverLayer(onContinue: {})
+        .previewBackdrop(.cameraFeed)
+}
+
+#Preview("Tap target only — a bubble is up") {
+    Level1HandOverLayer(onContinue: {}, showsHint: false)
         .previewBackdrop(.cameraFeed)
 }
