@@ -38,7 +38,17 @@ final class SupportSurfaceEstimator {
     static let minimumDrop: Float = 0.03
 
     /// …and no further than this, which is what rejects the room floor.
-    static let maximumDrop: Float = 1.0
+    ///
+    /// A CRANE'S HEIGHT, NOT A ROOM'S. This was a metre, which is not a rejection at
+    /// all: a crane on a desk has its gears maybe 15cm above the desk and 75cm above the
+    /// carpet, and 75cm is inside a one-metre window. So the "nearest hit below" rule
+    /// quietly returned the floor whenever the desk had not been meshed yet, and the
+    /// rope paid out three quarters of a metre through the desk with the cheese somewhere
+    /// past the bottom of the screen. 30cm is taller than any crane built from one
+    /// baseplate and shorter than any table, so the two cases stop overlapping — and
+    /// when nothing plausible is found the 9cm fallback is a far better wrong answer
+    /// than the floor.
+    static let maximumDrop: Float = 0.30
 
     static let sampleWindow = 40
     static let samplesForStability = 8

@@ -80,6 +80,11 @@ final class GameplaySceneCoordinator {
     private var layout: SceneLayout?
     private var liftHeight: Float = 0.06
 
+    /// How far up its rope the cheese currently is. Remembered so a re-measured table
+    /// can be applied immediately, rather than only on the next physics frame — and
+    /// there are no physics frames at all until the child first cranks.
+    private var appliedHeight: Float = 0
+
     // MARK: - Build
 
     /// Builds the scene once, on the detection lock.
@@ -204,6 +209,8 @@ final class GameplaySceneCoordinator {
     var payloadHolder: Entity? { ropeCheeseHolder }
     var view: ARView? { arView }
     var currentLiftHeight: Float { liftHeight }
+    var lastAppliedHeight: Float { appliedHeight }
+    func setAppliedHeight(_ next: Float) { appliedHeight = next }
     func setAssignment(_ next: GearRoleAssignment) { assignment = next }
     func setScreenTargets(_ next: [GearScreenTarget]) { screenTargets = next }
 }

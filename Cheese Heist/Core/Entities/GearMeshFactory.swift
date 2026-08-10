@@ -40,7 +40,7 @@ enum GearMeshFactory {
             return nil
         }
 
-        stripLights(from: model)
+        LoadedModelSanitiser.strip(from: model)
 
         guard let normalised = GearMeshNormaliser.normalisedDisc(
             model, targetDiameter: GearGeometry.tipDiameter(teeth: type.teeth)
@@ -51,23 +51,5 @@ enum GearMeshFactory {
 
         cache[type.teeth] = normalised
         return normalised.clone(recursive: true)
-    }
-
-    /// Removes any light the exporter left in the file, anywhere in the hierarchy.
-    ///
-    /// Lighting an AR scene is the session's job, not an asset's: the virtual gear has
-    /// to sit under the same light as the real one it is covering, or it stops reading
-    /// as the same object.
-    private static func stripLights(from entity: Entity) {
-        // Snapshotted: `removeFromParent` mutates the collection being walked.
-        for child in Array(entity.children) {
-            if child.components.has(PointLightComponent.self)
-                || child.components.has(DirectionalLightComponent.self)
-                || child.components.has(SpotLightComponent.self) {
-                child.removeFromParent()
-            } else {
-                stripLights(from: child)
-            }
-        }
     }
 }

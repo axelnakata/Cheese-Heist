@@ -36,7 +36,7 @@ extension GearDetectionService {
         }
 
         lastSeenCount = detections.count
-        viability.observe(gearCount: detections.count)
+        if viability.observe(gearCount: detections.count) { isViable = true }
 
         guard detections.count == Self.requiredGearCount else {
             // Any frame that doesn't show exactly two gears breaks the streak — a lock

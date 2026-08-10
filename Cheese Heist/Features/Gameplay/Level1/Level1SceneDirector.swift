@@ -32,20 +32,15 @@ struct Level1SceneDirector {
         scene.setHighlightedGears(highlighted(for: phase, assignment: assignment))
     }
 
-    /// Which pose the mouse wears.
+    /// Which pose the mouse wears — `happy`, the whole way through Level 1.
     ///
-    /// It struggles only where the lesson is about the load — mid-lift, when the
-    /// follower is being named — and is delighted at the top. A mouse that looks the
-    /// same throughout is a mouse the child stops looking at.
+    /// The other three poses exist and the phase switch that chose between them was
+    /// written; it is deliberately not wired up yet. The talking art is trimmed to a
+    /// different box from `happy`, so a pose change moves the mouse on its perch, and
+    /// that is not worth debugging while the question on the table is whether the mouse
+    /// appears at all. One sprite, one size, one thing that can be wrong.
     func mousePose(for phase: Level1Phase) -> MouseSprite {
-        switch phase {
-        case .guidedCrankToHalf, .teachingFollower, .guidedCrankToFull, .freeCrank:
-            return .talkStruggle
-        case .handOver, .selectingRoles, .succeeded:
-            return .shockHappy
-        default:
-            return .talkIdle
-        }
+        .happy
     }
 
     /// Which gears pulse.
@@ -79,16 +74,21 @@ struct Level1SceneDirector {
         }
     }
 
-    /// Level 1's teaching run starts on the SMALL gear as driver.
+    /// Level 1's teaching run starts on the LEFT gear as driver.
     ///
-    /// A deliberate choice, not an arbitrary one: the small gear as driver is the
-    /// gearing-up case, so the guided run the child watches first is the SLOW one. When
-    /// they then choose for themselves and pick the other way round, the difference is
-    /// something they have already seen the baseline for.
-    static func initialAssignment(for gears: [DetectedGear]) -> GearRoleAssignment? {
+    /// Left and right, not small and large, because this assignment is the first thing
+    /// the child ever sees and it has to be legible before any of the vocabulary is:
+    /// the mouse is standing on the left gear and the cheese is hanging off the right
+    /// one, and nothing about that reading depends on being able to tell an 8T from a
+    /// 40T at a glance. It also makes the guided run reproducible in a classroom — every
+    /// iPad in the room teaches the same gear first, whichever way round the cranes were
+    /// built.
+    ///
+    /// The gears must ALREADY be left-to-right (`GearOrdering.leftToRight`); the caller
+    /// holds the crane frame that decides which is which, and this does not.
+    static func initialAssignment(leftToRight gears: [DetectedGear]) -> GearRoleAssignment? {
         guard gears.count == 2 else { return nil }
-        let ordered = GearOrdering.ordered(gears)
-        return GearRoleAssignment(driverID: ordered[0].id, followerID: ordered[1].id)
+        return GearRoleAssignment(driverID: gears[0].id, followerID: gears[1].id)
     }
 
     /// The gear pair the physics runs on, read ONCE at lock.

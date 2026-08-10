@@ -37,6 +37,16 @@
 //  the offset bringing the model's centre to the origin has to be rotated and scaled
 //  too.
 //
+//  ═══ AND THE WRAPPER IS NOT WHAT IS HANDED BACK. ═══
+//
+//  The correction lives in a transform, and a transform is exactly what a caller reaches
+//  for when it wants to put the prop somewhere: `cheese.position = …` writes the
+//  translation component and silently deletes the recentring, leaving the cheese offset
+//  by its own bounding-box centre — a metre-scale asset's centre, scaled. So the result
+//  is returned inside an outer container whose transform is identity and is the caller's
+//  to write. Position, orient and billboard the container; the correction underneath is
+//  never touched.
+//
 
 import RealityKit
 import simd
@@ -89,18 +99,22 @@ enum GearMeshNormaliser {
 
     // MARK: - Measurement
 
-    /// Measured BEFORE reparenting, so this is world space — and world space for an
-    /// entity with no parent means the model's own transform IS the frame these
-    /// numbers are in. That is what the wrapper below relies on.
+    /// Measured BEFORE reparenting, so this is the model's own space — which for an
+    /// entity with no parent means the model's transform IS the frame these numbers are
+    /// in. That is what the wrapper below relies on.
+    ///
+    /// `ModelBounds`, not `visualBounds`: the asset's camera and lights are metres away
+    /// from the prop and must not be measured. See that file.
     private static func measuredExtents(
         of model: Entity
     ) -> (value: simd_float3, centre: simd_float3)? {
-        let bounds = model.visualBounds(relativeTo: nil)
+        guard let bounds = ModelBounds.measure(model) else { return nil }
         let extents = bounds.extents
         guard extents.min() > 0 else { return nil }
         return (extents, bounds.center)
     }
 
+    /// The correction, on a wrapper, inside a container the caller owns.
     private static func wrap(
         _ model: Entity, centre: simd_float3, rotation: simd_quatf, scale: Float
     ) -> Entity {
@@ -111,7 +125,12 @@ enum GearMeshNormaliser {
             rotation: rotation,
             translation: -scale * rotation.act(centre)
         )
-        return holder
+
+        // Identity, and it stays that way until a caller writes to it. This is the only
+        // reason `prop.position = …` at a call site is safe.
+        let container = Entity()
+        container.addChild(holder)
+        return container
     }
 
     // MARK: - Geometry

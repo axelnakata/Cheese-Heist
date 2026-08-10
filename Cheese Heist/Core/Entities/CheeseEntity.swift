@@ -7,6 +7,11 @@
 //  already solves, so it is normalised through that rather than corrected with a
 //  hand-tuned scale constant beside it.
 //
+//  It is a Blender export of a whole scene: a camera, two sphere lights, a dome light
+//  and a cheese authored 1.19m tall. All three of those facts have bitten. The camera
+//  and lights go through `LoadedModelSanitiser` — before measuring, not just before
+//  rendering — and the size then comes out of `ModelBounds`, which counts meshes only.
+//
 
 import RealityKit
 import os
@@ -25,6 +30,8 @@ enum CheeseEntity {
             Logger.scene.error("Cheese.usdc is not in the bundle")
             return nil
         }
+
+        LoadedModelSanitiser.strip(from: model)
 
         guard let normalised = GearMeshNormaliser.normalisedProp(
             model, targetLongestEdge: longestEdge

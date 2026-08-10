@@ -58,7 +58,9 @@ final class AppServices {
         guard let level1, let arView = arSessionManager.arView else { return }
 
         if coordinator == nil {
-            guard let assignment = Level1SceneDirector.initialAssignment(for: gears) else { return }
+            let ordered = GearOrdering.leftToRight(gears, in: frame)
+            guard let assignment = Level1SceneDirector.initialAssignment(leftToRight: ordered)
+            else { return }
             let scene = GameplaySceneCoordinator()
             scene.build(
                 frame: frame, gears: gears, assignment: assignment,

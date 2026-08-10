@@ -4,10 +4,11 @@
 //
 //  Which pose the mouse is wearing.
 //
-//  The three in-scene poses share ONE trimmed bounding box (PRD-Level1 §5.2), so
-//  swapping between them changes only the pixels — the sprite stays registered and the
-//  mouse does not jump when it starts struggling. `happy` is the success screen's own
-//  artwork and is never used in the scene.
+//  `happy` is the pose Level 1 wears throughout — see `Level1SceneDirector.mousePose`.
+//  The other three are trimmed to ONE shared bounding box (PRD-Level1 §5.2) so that
+//  swapping between them changes only the pixels; `happy` was trimmed on its own and
+//  carries a different aspect ratio, which is why `MouseSpriteEntity` rebuilds its quad
+//  on a pose change rather than only re-texturing it.
 //
 
 import CoreGraphics
@@ -20,8 +21,7 @@ enum MouseSprite: String, CaseIterable, Sendable {
 
     var assetName: String { rawValue }
 
-    /// The shared trim's aspect ratio, width over height. All three in-scene poses have
-    /// it by construction; `happy` is trimmed on its own and carries its own.
+    /// The trim's aspect ratio, width over height, straight off the PNG's pixel size.
     var aspectRatio: CGFloat {
         switch self {
         case .talkIdle, .talkStruggle, .shockHappy: return 881.0 / 1200.0
@@ -30,5 +30,5 @@ enum MouseSprite: String, CaseIterable, Sendable {
     }
 
     /// Poses the mouse can wear while standing in the AR scene.
-    static let inScene: [MouseSprite] = [.talkIdle, .talkStruggle, .shockHappy]
+    static let inScene: [MouseSprite] = [.happy, .talkIdle, .talkStruggle, .shockHappy]
 }

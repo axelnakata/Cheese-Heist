@@ -40,7 +40,12 @@ extension Level1ViewModel {
     /// The pair and the roles the teaching run starts on, or nil if the lock has not
     /// produced two usable gears yet.
     private func lockedPair() -> (pair: GearPair, assignment: GearRoleAssignment)? {
-        guard let assignment = Level1SceneDirector.initialAssignment(for: detection.gears),
+        // `gearsLeftToRight`, not `gears`: this has to agree with the assignment
+        // `AppServices` built the scene from, or the mouse would perch on one gear while
+        // the physics ran the other one's tooth count.
+        guard let assignment = Level1SceneDirector.initialAssignment(
+                  leftToRight: detection.gearsLeftToRight
+              ),
               let pair = Level1SceneDirector.pair(for: detection.gears, assignment: assignment)
         else { return nil }
         return (pair, assignment)
@@ -49,8 +54,9 @@ extension Level1ViewModel {
     /// The child chose the gears themselves after a timeout. The same entry effects
     /// run as for an automatic lock — there is no second scene-building path.
     func chooseManualPair(_ first: GearType, _ second: GearType) {
-        guard let assignment = Level1SceneDirector.initialAssignment(for: detection.gears)
-                ?? placeholderAssignment() else { return }
+        guard let assignment = Level1SceneDirector.initialAssignment(
+            leftToRight: detection.gearsLeftToRight
+        ) ?? placeholderAssignment() else { return }
 
         let ordered = first.teeth <= second.teeth ? (first, second) : (second, first)
         handle(.manualPairChosen(

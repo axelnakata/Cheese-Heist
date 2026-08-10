@@ -31,10 +31,17 @@ enum Level1PhaseMachine {
         case (.aligningCrane, .detectionViable):
             return .detectingGears
 
-        case (.detectingGears, .detectionLocked):
+        // A lock is accepted straight off the illustration as well as out of
+        // `detectingGears`. The detector reaches both states from the same tick and
+        // nothing guarantees the viability signal is delivered first — and if the lock
+        // arrives alone, refusing it here is what leaves the child holding a framed,
+        // recognised crane behind an illustration that never comes down.
+        case (.aligningCrane, .detectionLocked),
+             (.detectingGears, .detectionLocked):
             return .introDialogue
 
-        case (.detectingGears, .detectionTimedOut):
+        case (.aligningCrane, .detectionTimedOut),
+             (.detectingGears, .detectionTimedOut):
             return .manualFallback
 
         // The detector keeps tracking behind the sheet, so a late lock is still taken.

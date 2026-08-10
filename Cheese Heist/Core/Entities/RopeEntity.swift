@@ -16,7 +16,11 @@ import UIKit
 @MainActor
 final class RopeEntity {
 
-    static let radius: Float = 0.0006
+    /// Half a real string's thickness would be honest and invisible. At the 40cm the
+    /// child holds the iPad at, 0.6mm subtends about two pixels — a dark hairline over a
+    /// dark table, which is why the rope read as missing rather than as thin. 1.5mm is
+    /// still a rope and is still there when they lean back.
+    static let radius: Float = 0.0015
 
     let entity: ModelEntity
 
@@ -35,11 +39,17 @@ final class RopeEntity {
 
     /// Updates where the table is. The cheese's resting height is a scene fact that
     /// improves as ARKit maps the surface, so it is re-measured rather than fixed at
-    /// build time — but only while the rope is at rest, since rewriting it mid-lift
-    /// would move the cheese for a reason the physics knows nothing about.
-    func setRestingDrop(_ drop: Float) {
-        guard abs(drop - restingDrop) > 0.001 else { return }
+    /// build time.
+    ///
+    /// Returns whether the table actually moved — by more than a millimetre, which is
+    /// what stops the caller regenerating a cylinder mesh sixty times a second over
+    /// float noise. It stores the number and draws nothing: only the caller knows how
+    /// far the lift has already travelled up it.
+    @discardableResult
+    func setRestingDrop(_ drop: Float) -> Bool {
+        guard abs(drop - restingDrop) > 0.001 else { return false }
         restingDrop = drop
+        return true
     }
 
     /// Restretches the rope so its top stays at the axle and its bottom follows the

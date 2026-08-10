@@ -62,7 +62,21 @@ final class GearDetectionService {
 
     /// True once the model has seen a gear steadily enough that the alignment
     /// illustration has done its job.
-    var isViable: Bool { viability.isViable }
+    ///
+    /// STORED, NOT COMPUTED OFF `viability`. The gate itself is `@ObservationIgnored`,
+    /// so a computed mirror of it changed without ever notifying anyone: `Level1View`
+    /// only re-reads the detector when `phase` or `trackingVersion` changes, and during
+    /// the search neither does — `phase` sits on `.searching` and `trackingVersion` is
+    /// not bumped until the lock. The illustration therefore stayed up forever. This is
+    /// the one flag whose whole job is to be noticed, so it is a real property.
+    internal(set) var isViable = false
+
+    /// The pair as the CHILD sees them, left to right. Empty or single until a frame
+    /// has been solved.
+    var gearsLeftToRight: [DetectedGear] {
+        guard let craneFrame else { return gears }
+        return GearOrdering.leftToRight(gears, in: craneFrame)
+    }
 
     /// Fast path (~6 Hz) — see `GearTrackingPublisher`. Bypasses Observation on
     /// purpose: the alignment filter wants every measurement it can get.
@@ -145,6 +159,7 @@ final class GearDetectionService {
         lockProgress = 0
         isTracking = false
         hasLostGears = false
+        isViable = false
         trackingVersion = 0
         lastSeenCount = 0
     }

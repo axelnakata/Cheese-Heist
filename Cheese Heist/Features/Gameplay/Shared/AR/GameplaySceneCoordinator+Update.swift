@@ -72,6 +72,7 @@ extension GameplaySceneCoordinator: CraneSceneProviding {
     /// Moves the cheese up from its resting position and shortens the rope to match.
     private func setPayloadHeight(_ height: Float) {
         guard let rope = ropeLine else { return }
+        setAppliedHeight(height)
         let drop = max(rope.restingDrop - height, 0.001)
         rope.setLength(drop)
         cheeseEntity?.position = simd_float3(0, -drop, 0)
@@ -141,9 +142,16 @@ extension GameplaySceneCoordinator: CraneSceneProviding {
 
         let world = root.convert(position: layout.ropeAnchor, to: nil)
         surface.update(session: session, below: world)
-        ropeLine?.setRestingDrop(
-            surface.restingDrop(below: world, fallback: Self.fallbackRestingDrop)
-        )
+
+        // Re-render on the ticks where the measurement actually moved the table.
+        // `setRestingDrop` only stores the number, and the only other thing that draws
+        // the rope is a physics frame — which does not happen until the child first
+        // cranks. Without this the cheese hangs at the 9cm fallback right through the
+        // intro dialogue and both teaching beats, which is the entire window in which
+        // the child is looking at the scene for the first time.
+        let drop = surface.restingDrop(below: world, fallback: Self.fallbackRestingDrop)
+        guard ropeLine?.setRestingDrop(drop) == true else { return }
+        setPayloadHeight(lastAppliedHeight)
     }
 
     private func anchorWorldTransform() -> simd_float4x4? {

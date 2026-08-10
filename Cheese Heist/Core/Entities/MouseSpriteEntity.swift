@@ -25,12 +25,9 @@ final class MouseSpriteEntity {
     private var textures: [MouseSprite: TextureResource] = [:]
     private(set) var pose: MouseSprite
 
-    init?(pose: MouseSprite = .talkIdle) {
+    init?(pose: MouseSprite = .happy) {
         self.pose = pose
-
-        let width = Self.height * Float(pose.aspectRatio)
-        let mesh = MeshResource.generatePlane(width: width, height: Self.height)
-        entity = ModelEntity(mesh: mesh, materials: [UnlitMaterial()])
+        entity = ModelEntity(mesh: Self.quad(for: pose), materials: [UnlitMaterial()])
 
         guard apply(pose) else {
             Logger.scene.error("mouse sprite \(pose.assetName, privacy: .public) is missing")
@@ -38,11 +35,22 @@ final class MouseSpriteEntity {
         }
     }
 
-    /// Swaps the pose. The three in-scene poses share a trim, so this changes only the
-    /// pixels — the mouse does not shift on screen.
+    /// Swaps the pose, rebuilding the quad when the new art is a different shape.
+    ///
+    /// The three talking poses share a trim, so between those this changes only the
+    /// pixels and the mouse does not shift on screen. `happy` is trimmed on its own, so
+    /// re-texturing alone would stretch it.
     func setPose(_ next: MouseSprite) {
         guard next != pose, apply(next) else { return }
+        if next.aspectRatio != pose.aspectRatio {
+            entity.model?.mesh = Self.quad(for: next)
+        }
         pose = next
+    }
+
+    /// A plane in XY facing +Z, which is the axis `BillboardSystem` turns to the camera.
+    private static func quad(for pose: MouseSprite) -> MeshResource {
+        .generatePlane(width: height * Float(pose.aspectRatio), height: height)
     }
 
     @discardableResult
@@ -54,6 +62,11 @@ final class MouseSpriteEntity {
         // The PNG is mostly transparent canvas around the mouse; without this it draws
         // as a white card.
         material.blending = .transparent(opacity: .init(floatLiteral: 1))
+        // A cutout, not a fade. The mouse's own pixels are fully opaque and the canvas
+        // is fully clear, so discarding the clear ones outright keeps the sprite out of
+        // the transparency sort — which is what stops it flickering behind the rope and
+        // the cheese as the child walks around the crane.
+        material.opacityThreshold = 0.5
         material.faceCulling = .none
 
         entity.model?.materials = [material]

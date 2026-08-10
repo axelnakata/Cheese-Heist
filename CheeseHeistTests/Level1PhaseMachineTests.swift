@@ -20,6 +20,10 @@ struct Level1PhaseMachineTests {
     /// The §8 table, transcribed. Anything not listed here must return nil.
     static let table: [(Level1Phase, Level1Event, Level1Phase)] = [
         (.aligningCrane, .detectionViable, .detectingGears),
+        // The detector can reach viability and a lock on the same tick, and nothing
+        // orders the two signals — so the illustration must accept a lock directly.
+        (.aligningCrane, .detectionLocked(pair: pair, assignment: assignment), .introDialogue),
+        (.aligningCrane, .detectionTimedOut, .manualFallback),
         (.detectingGears, .detectionLocked(pair: pair, assignment: assignment), .introDialogue),
         (.detectingGears, .detectionTimedOut, .manualFallback),
         (.manualFallback, .manualPairChosen(pair: pair, assignment: assignment), .introDialogue),

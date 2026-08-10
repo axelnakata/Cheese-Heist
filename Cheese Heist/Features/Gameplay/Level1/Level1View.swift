@@ -54,6 +54,13 @@ struct Level1View: View {
         .onChange(of: services.detection.phase) { _, _ in
             viewModel.observeDetection()
         }
+        // The third signal, and the one that takes the illustration down. Neither of the
+        // other two moves during the search — `phase` sits on `.searching` and
+        // `trackingVersion` is not bumped until the lock — so without this the child
+        // frames the crane perfectly and nothing happens.
+        .onChange(of: services.detection.isViable) { _, _ in
+            viewModel.observeDetection()
+        }
     }
 
     @ViewBuilder
