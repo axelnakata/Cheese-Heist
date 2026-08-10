@@ -17,6 +17,9 @@ enum Palette {
     static let ink = Color(hex: "#000000")
     static let parchment = Color(hex: "#F9F2E4")
     static let pureWhite = Color(hex: "#FFFFFF")
+    static let hologramCyan = Color(hex: "#00E5FF")
+    static let navyGradientTop = Color(hex: "#0E3155")
+    static let navyGradientBottom = Color(hex: "#1D364F")
 
     /// Not present in the Figma Design System frame — taken from the cutscene-guideline
     /// raster mockups. Pending design sign-off, tracked as OQ-1 (PRD §14).

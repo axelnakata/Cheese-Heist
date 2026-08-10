@@ -12,6 +12,7 @@ excluded:
 file_length:
   warning: 150
   error: 200
+  ignore_comment_only_lines: true
 type_body_length:
   warning: 120
   error: 160
@@ -27,6 +28,33 @@ cyclomatic_complexity:
 nesting:
   type_level:
     warning: 2
+identifier_name:
+  # `AppSpacing.s/.m/.l` is the T-shirt-size scale token API (PRD §7.5) — renaming
+  # them would touch every call site across the app for no readability gain.
+  #
+  # The rest are the standard names of the quantities they hold, in the notation the
+  # maths is written in everywhere else: camera intrinsics (fx/fy/cx/cy), a frame's
+  # delta time (dt), pixel indices (px/py), a basis vector (up), an identifier (id).
+  # `depthX` reads as a different quantity from `cx`, not a clearer one.
+  excluded:
+    - s
+    - m
+    - l
+    - xs
+    - xl
+    - x
+    - y
+    - z
+    - id
+    - to
+    - up
+    - dt
+    - fx
+    - fy
+    - cx
+    - cy
+    - px
+    - py
 
 # Design-token enforcement (PRD §7): no view may contain a colour literal, a font
 # name, a numeric font size or a magic corner radius.
@@ -41,7 +69,7 @@ custom_rules:
     regex: '\.font\(\s*\.system\(\s*size:'
     message: "Use .appText(AppFont.…), not .system(size:) (PRD §7.3)."
     severity: error
-    excluded: ".*/(LargeCTAButton|DesignSystemGalleryView)\\.swift"
+    excluded: ".*/(LargeCTAButton|DesignSystemGalleryView|UnsupportedDeviceView)\\.swift"
   no_raw_corner_radius:
     name: "Hard-coded corner radius"
     regex: '\.cornerRadius\(\s*\d'

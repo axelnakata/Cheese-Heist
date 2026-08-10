@@ -40,7 +40,7 @@ struct InstructionChip: View {
         .padding(.horizontal, Metric.horizontalPadding * scale)
         .padding(.vertical, Metric.verticalPadding * scale)
         .frame(minHeight: Metric.minHeight * scale)
-        .background(AppColor.surfaceInstruction, in: chipShape)
+        .background(chipShape.fill(AppGradient.navyChip))
         .overlay(chipShape.strokeBorder(AppColor.strokeChip, lineWidth: AppStroke.chip * scale))
     }
 

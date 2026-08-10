@@ -35,6 +35,10 @@ enum AppColor {
     static let surfaceScrim = Palette.ink.opacity(0.55)
     /// Stroke around the instruction chip, at `AppStroke.chip`.
     static let strokeChip = Palette.parchment
+    /// Instruction chip navy gradient, top stop.
+    static let chipGradientTop = Palette.navyGradientTop
+    /// Instruction chip navy gradient, bottom stop.
+    static let chipGradientBottom = Palette.navyGradientBottom
 
     // MARK: - Text
 
@@ -45,12 +49,17 @@ enum AppColor {
     /// HUD text over the AR feed.
     static let textOnCamera = Palette.pureWhite
 
-    // MARK: - Gear roles
+    // MARK: - Gear roles (PRD-Level1 D-1: driver = blue, follower = amber)
 
     /// Driver gear ring + label.
-    static let roleDriver = Palette.crustAmber
+    static let roleDriver = Palette.skyBlue
     /// Follower gear ring + label.
-    static let roleFollower = Palette.skyBlue
+    static let roleFollower = Palette.crustAmber
+
+    // MARK: - AR overlays
+
+    /// Holographic gear twin material.
+    static let hologram = Palette.hologramCyan
 
     // MARK: - State
 

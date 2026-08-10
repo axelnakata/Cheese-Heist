@@ -10,16 +10,15 @@ import SwiftUI
 @main
 struct CheeseHeistApp: App {
 
+    @State private var services = AppServices()
+
     init() {
         AppFontResolver.verifyRegisteredFonts()
     }
 
     var body: some Scene {
         WindowGroup {
-            // TODO: WS-2 replaces this with RootView(), driven by AppRouter.
-            // The capability gate (PRD §5.1) runs before RootView renders.
-            DesignSystemGalleryView()
-                .providesLayoutScale()
+            RootView(services: services)
         }
     }
 }

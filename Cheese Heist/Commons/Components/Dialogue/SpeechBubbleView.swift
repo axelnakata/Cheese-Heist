@@ -20,6 +20,7 @@ struct SpeechBubbleView: View {
 
     let text: AttributedString
     var charactersPerSecond: Double = 40
+    var style: SpeechBubbleStyle = .accent
 
     /// `true` finishes the reveal at once; the bubble sets it when the line ends.
     /// Defaults to a constant `true` for static callers that want no typewriter.
@@ -30,10 +31,12 @@ struct SpeechBubbleView: View {
     init(
         text: AttributedString,
         charactersPerSecond: Double = 40,
+        style: SpeechBubbleStyle = .accent,
         isRevealComplete: Binding<Bool> = .constant(true)
     ) {
         self.text = text
         self.charactersPerSecond = charactersPerSecond
+        self.style = style
         self._isRevealComplete = isRevealComplete
     }
 
@@ -44,13 +47,13 @@ struct SpeechBubbleView: View {
             isComplete: $isRevealComplete
         )
         .appText(AppFont.dialogue)
-        .foregroundStyle(AppColor.textPrimary)
+        .foregroundStyle(style.textColor)
         .frame(maxWidth: Metric.maxWidth * scale, alignment: .leading)
         .padding(.horizontal, Metric.horizontalPadding * scale)
         .padding(.vertical, Metric.verticalPadding * scale)
         .frame(minHeight: Metric.minHeight * scale, alignment: .leading)
         .padding(.bottom, Metric.tailSize.height * scale)
-        .background(bubbleShape.fill(AppColor.accent))
+        .background(bubbleShape.fill(style.fillColor))
     }
 
     private var bubbleShape: SpeechBubbleShape {
