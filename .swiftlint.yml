@@ -1,0 +1,66 @@
+# PRD §8.4 — file-size discipline is a gate, not a review convention.
+# A PR that fails SwiftLint does not get reviewed. The fix is always to split,
+# never to raise a limit.
+
+included:
+  - "Cheese Heist"
+
+excluded:
+  - "Cheese Heist/Resources"
+  - "**/*.generated.swift"
+
+file_length:
+  warning: 150
+  error: 200
+type_body_length:
+  warning: 120
+  error: 160
+function_body_length:
+  warning: 30
+  error: 50
+closure_body_length:
+  warning: 25
+  error: 40
+cyclomatic_complexity:
+  warning: 8
+  error: 12
+nesting:
+  type_level:
+    warning: 2
+
+# Design-token enforcement (PRD §7): no view may contain a colour literal, a font
+# name, a numeric font size or a magic corner radius.
+custom_rules:
+  no_color_literal:
+    name: "Colour literal"
+    regex: 'Color\(\s*(red|\.sRGB|white)\s*:'
+    message: "Use an AppColor semantic token, not a colour literal (PRD §7.2)."
+    severity: error
+  no_system_font_size:
+    name: "Hard-coded font size"
+    regex: '\.font\(\s*\.system\(\s*size:'
+    message: "Use .appText(AppFont.…), not .system(size:) (PRD §7.3)."
+    severity: error
+    excluded: ".*/(LargeCTAButton|DesignSystemGalleryView)\\.swift"
+  no_raw_corner_radius:
+    name: "Hard-coded corner radius"
+    regex: '\.cornerRadius\(\s*\d'
+    message: "Use an AppRadius token (PRD §7.5)."
+    severity: error
+  palette_outside_appcolor:
+    name: "Palette used directly"
+    regex: '\bPalette\.'
+    message: "Only AppColor may reference Palette (PRD §7.1)."
+    severity: error
+    excluded: ".*/(AppColor|Palette)\\.swift"
+
+opt_in_rules:
+  - explicit_init
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - redundant_type_annotation
+  - unused_import
+  - vertical_parameter_alignment_on_call
+
+disabled_rules:
+  - todo

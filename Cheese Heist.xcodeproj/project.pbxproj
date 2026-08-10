@@ -10,9 +10,55 @@
 		36F817243029637800CE2E98 /* Cheese Heist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Cheese Heist.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		36F8172630296378DEADBEEF /* Exceptions for "Cheese Heist" folder in "Cheese Heist" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Commons/Components/Buttons/.gitkeep",
+				"Commons/Components/Chips/.gitkeep",
+				"Commons/Components/Dialogue/.gitkeep",
+				"Commons/Components/Hints/.gitkeep",
+				"Commons/Components/Overlays/.gitkeep",
+				"Commons/DesignSystem/Extensions/.gitkeep",
+				"Commons/DesignSystem/Layout/.gitkeep",
+				"Commons/DesignSystem/Tokens/.gitkeep",
+				"Commons/Extensions/.gitkeep",
+				"Commons/Utilities/.gitkeep",
+				"Core/AR/.gitkeep",
+				"Core/Audio/.gitkeep",
+				"Core/Entities/.gitkeep",
+				"Core/Gear/.gitkeep",
+				"Core/Persistence/.gitkeep",
+				"Core/Vision/.gitkeep",
+				"Features/Blueprint/Components/.gitkeep",
+				"Features/Cutscene/Components/.gitkeep",
+				"Features/Cutscene/SurfaceScan/Components/.gitkeep",
+				"Features/Gameplay/Level1/Components/.gitkeep",
+				"Features/Gameplay/Level2/.gitkeep",
+				"Features/Gameplay/Shared/AR/.gitkeep",
+				"Features/Gameplay/Shared/Components/.gitkeep",
+				"Features/Gameplay/Shared/Models/.gitkeep",
+				"Features/Gameplay/Shared/ViewModels/.gitkeep",
+				"Features/Result/Components/.gitkeep",
+				"Features/Splash/Components/.gitkeep",
+				"Features/Unsupported/.gitkeep",
+				"PreviewData/.gitkeep",
+				"Resources/3DModels/Characters/.gitkeep",
+				"Resources/3DModels/Gears/.gitkeep",
+				"Resources/3DModels/Props/.gitkeep",
+				"Resources/Audio/.gitkeep",
+				"Resources/ML/.gitkeep",
+			);
+			target = 36F817233029637800CE2E98 /* Cheese Heist */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		36F817263029637800CE2E98 /* Cheese Heist */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				36F8172630296378DEADBEEF /* Exceptions for "Cheese Heist" folder in "Cheese Heist" target */,
+			);
 			path = "Cheese Heist";
 			sourceTree = "<group>";
 		};
@@ -47,11 +93,34 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		36F8172630296378503A1117 /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if command -v swiftlint >/dev/null 2>&1; then\n  swiftlint --config \"$SRCROOT/.swiftlint.yml\"\nelse\n  echo \"warning: SwiftLint not installed - the PRD 8.4 size gate is not running. Install with: brew install swiftlint\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXNativeTarget section */
 		36F817233029637800CE2E98 /* Cheese Heist */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 36F817313029637900CE2E98 /* Build configuration list for PBXNativeTarget "Cheese Heist" */;
 			buildPhases = (
+				36F8172630296378503A1117 /* SwiftLint */,
 				36F817203029637800CE2E98 /* Sources */,
 				36F817213029637800CE2E98 /* Frameworks */,
 				36F817223029637800CE2E98 /* Resources */,
@@ -178,7 +247,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -236,7 +305,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -256,6 +325,7 @@
 				DEVELOPMENT_TEAM = 3LU8LUNSN3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -288,6 +358,7 @@
 				DEVELOPMENT_TEAM = 3LU8LUNSN3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
