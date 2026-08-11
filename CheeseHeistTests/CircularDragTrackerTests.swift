@@ -88,4 +88,33 @@ struct CircularDragTrackerTests {
         #expect(tracker.angularVelocity == 0)
         #expect(tracker.engagement == .disengaged)
     }
+
+    /// ═══ THE ONE THAT WAS SHIPPING. ═══
+    ///
+    /// A child who put a thumb on the ring and stopped moving it kept cranking, because
+    /// SwiftUI sends a drag change only when the finger MOVES and `update` was the only
+    /// thing that recomputed the velocity. So the gears turned and the cheese climbed
+    /// with nobody doing anything — the exact opposite of the lesson. `settle(at:)` runs
+    /// on the render clock and expires the last sample.
+    @Test("a finger that stops moving stops cranking")
+    func stationaryFingerSettles() {
+        var tracker = drag(through: [0, 10, 20, 30])
+        #expect(tracker.engagement == .engaged)
+
+        // Still down — `end()` is never called — but no new samples for a tenth of a
+        // second past the staleness window.
+        tracker.settle(at: 3 / 60 + CircularDragTracker.staleAfter + 0.1)
+
+        #expect(tracker.angularVelocity == 0)
+        #expect(tracker.engagement == .disengaged)
+    }
+
+    /// …and one or two dropped frames must not read as stopping.
+    @Test("a settle inside the staleness window leaves the crank engaged")
+    func briefGapKeepsCranking() {
+        var tracker = drag(through: [0, 10, 20, 30])
+        tracker.settle(at: 3 / 60 + CircularDragTracker.staleAfter / 2)
+
+        #expect(tracker.engagement == .engaged)
+    }
 }

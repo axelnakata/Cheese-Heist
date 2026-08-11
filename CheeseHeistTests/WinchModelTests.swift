@@ -41,6 +41,23 @@ struct WinchModelTests {
         #expect(cap == 0.06 / 1.2)
     }
 
+    /// The mirror of the floor, and the reason it exists: `liftHeight` is measured off
+    /// the crane now, so a child who builds a tall one puts 25cm of rope on the drum,
+    /// and at the slow pairing's honest speed that is most of a minute of cranking.
+    @Test("maxLiftDuration floors speed at liftHeight / maxLiftDuration")
+    func speedFloor() {
+        let floor = tuning.liftHeight / tuning.maxLiftDuration
+
+        #expect(WinchModel.clampedRopeSpeed(rawSpeed: floor / 10, tuning: tuning) == floor)
+        #expect(WinchModel.clampedRopeSpeed(rawSpeed: floor * 2, tuning: tuning) == floor * 2)
+    }
+
+    /// The two bounds must not cross, or one of them silently wins everywhere.
+    @Test("the floor is below the cap")
+    func boundsAreOrdered() {
+        #expect(tuning.maxLiftDuration > tuning.minLiftDuration)
+    }
+
     @Test("height never decreases and never passes the ceiling")
     func monotonicAndClamped() {
         var height: Double = 0

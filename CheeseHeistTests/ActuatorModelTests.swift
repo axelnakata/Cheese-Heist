@@ -22,7 +22,8 @@ struct ActuatorModelTests {
             meshEfficiency: tuning.meshEfficiency,
             winchRadius: tuning.winchRadius,
             liftHeight: tuning.liftHeight,
-            minLiftDuration: tuning.minLiftDuration
+            minLiftDuration: tuning.minLiftDuration,
+            maxLiftDuration: tuning.maxLiftDuration
         )
 
         let omega = ActuatorModel.driverAngularVelocity(ratio: 1, tuning: unloaded)
@@ -40,7 +41,8 @@ struct ActuatorModelTests {
             meshEfficiency: tuning.meshEfficiency,
             winchRadius: tuning.winchRadius,
             liftHeight: tuning.liftHeight,
-            minLiftDuration: tuning.minLiftDuration
+            minLiftDuration: tuning.minLiftDuration,
+            maxLiftDuration: tuning.maxLiftDuration
         )
 
         for pair in GearRatioCalculatorTests.allPairs {
@@ -58,7 +60,8 @@ struct ActuatorModelTests {
             meshEfficiency: tuning.meshEfficiency,
             winchRadius: tuning.winchRadius,
             liftHeight: tuning.liftHeight,
-            minLiftDuration: tuning.minLiftDuration
+            minLiftDuration: tuning.minLiftDuration,
+            maxLiftDuration: tuning.maxLiftDuration
         )
 
         let gearedUp = GearPair(driver: .eightTooth, follower: .fortyTooth)

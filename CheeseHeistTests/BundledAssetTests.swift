@@ -15,6 +15,7 @@
 import Foundation
 import RealityKit
 import Testing
+import UIKit
 @testable import Cheese_Heist
 
 @MainActor
@@ -24,7 +25,7 @@ struct BundledAssetTests {
     /// light and a cheese authored 1.19m tall. It has to come out at table scale.
     @Test("the cheese loads and normalises to table scale")
     func cheeseIsTableScale() {
-        guard let cheese = CheeseEntity.make() else {
+        guard let cheese = CheeseEntity.make()?.holder else {
             Issue.record("Cheese.usdc did not load out of the bundle")
             return
         }
@@ -50,29 +51,31 @@ struct BundledAssetTests {
         #expect(simd_length(bounds.center) < 0.001)
     }
 
-    /// The wedge has to present its TRIANGLE to the camera, not its length.
+    /// The wedge must not be pointing its LENGTH at the camera. Authored, it was: 1.19
+    /// of 1.19/0.88/0.48 ran straight down the view axis, which is why the cheese read
+    /// as a yellow lozenge with no triangle in it.
     ///
-    /// `BillboardSystem` turns local +Z to the camera, so "we are looking at the flat
-    /// face" is precisely "the local Z extent is the smallest of the three" — the
-    /// thinnest axis is the one pointing at us. Authored, it was the LARGEST (1.19 of
-    /// 1.19/0.88/0.48), which is why the cheese read as a lozenge.
-    @Test("the cheese shows its triangular face, not its point")
-    func cheeseFacesTheCameraFlatOn() {
-        guard let cheese = CheeseEntity.make(),
+    /// A weak check by design, and it is the bounding box that makes it weak — the box
+    /// around a wedge turned three ways is close to cubical, so it can tell "end-on"
+    /// from "not end-on" and nothing finer. The pose itself is asserted properly, as
+    /// directions rather than extents, in `CheeseOrientationTests`; this one is here to
+    /// tie that quaternion to the actual mesh in the actual bundle.
+    @Test("the cheese is not seen end-on down its own length")
+    func cheeseIsNotEndOn() {
+        guard let cheese = CheeseEntity.make()?.holder,
               let bounds = ModelBounds.measure(cheese) else {
             Issue.record("the cheese did not load")
             return
         }
 
         #expect(bounds.extents.z < bounds.extents.x)
-        #expect(bounds.extents.z < bounds.extents.y)
     }
 
     /// The cheese rests ON the table. Half its own height is the offset that puts it
     /// there, and it has to be a real number or the wedge sinks into the tabletop.
     @Test("the cheese knows how far to sit above its own origin")
     func cheeseRestingLiftIsHalfItsHeight() {
-        guard let cheese = CheeseEntity.make(),
+        guard let cheese = CheeseEntity.make()?.holder,
               let bounds = ModelBounds.measure(cheese) else {
             Issue.record("the cheese did not load")
             return
@@ -111,6 +114,20 @@ struct BundledAssetTests {
         #expect(
             (try? TextureResource.load(named: sprite.assetName)) != nil,
             "\(sprite.assetName) is missing from Assets.xcassets"
+        )
+    }
+
+    /// The success screen's three stars.
+    ///
+    /// `Image(_:)` has NO failure path — a name that does not resolve draws an empty
+    /// view and logs once, so `Image("cheese-star")` against an imageset called
+    /// `cheese_star` cost the celebration its stars and reported nothing. A string
+    /// literal naming a resource is only ever verified by loading it.
+    @Test("the cheese star is in the asset catalogue under the name the view asks for")
+    func cheeseStarResolves() {
+        #expect(
+            UIImage(named: CheeseStarRow.assetName) != nil,
+            "\(CheeseStarRow.assetName) is missing from Assets.xcassets"
         )
     }
 

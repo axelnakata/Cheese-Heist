@@ -51,6 +51,10 @@ enum GearTwinEntityFactory {
     static func make(type: GearType) -> GearTwin? {
         guard let mesh = GearMeshFactory.entity(for: type) else { return nil }
 
+        // Still the part's own materials — just not blown out by the scene's key light.
+        // See `GearTwinShading` for why this is on the gear and not on the light.
+        GearTwinShading.dim(mesh)
+
         let holder = Entity()
         let spin = Entity()
         spin.addChild(mesh)

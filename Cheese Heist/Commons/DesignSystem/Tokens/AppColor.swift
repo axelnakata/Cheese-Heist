@@ -61,6 +61,17 @@ enum AppColor {
 
     // MARK: - AR overlays
 
+    /// Behind an on-camera control, so it is legible over ANY camera feed.
+    ///
+    /// The crank is white on white the moment the child points the iPad at a pale desk,
+    /// and no choice of stroke colour fixes that — the background is a photograph of an
+    /// arbitrary room. A dark plate underneath makes the surroundings the app's to
+    /// choose, and the white on top then contrasts by construction.
+    static let controlBackdrop = Palette.ink.opacity(0.42)
+
+    /// Under the crank's knob, for the same reason at a smaller scale.
+    static let controlShadow = Palette.ink.opacity(0.5)
+
     /// Holographic gear twin material.
     static let hologram = Palette.hologramCyan
 

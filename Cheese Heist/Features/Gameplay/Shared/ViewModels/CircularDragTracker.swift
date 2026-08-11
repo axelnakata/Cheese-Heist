@@ -57,6 +57,21 @@ struct CircularDragTracker {
         ) / elapsed
     }
 
+    /// One render frame's worth of "has anything arrived lately?".
+    ///
+    /// ═══ A STATIONARY FINGER IS NOT CRANKING. ═══
+    ///
+    /// `update` is the only thing that recomputes the velocity, and SwiftUI sends a drag
+    /// change only when the finger MOVES. So a child who put a thumb on the ring and
+    /// left it there stayed `.engaged` indefinitely, and the gears turned and the cheese
+    /// climbed with nobody cranking anything — which is precisely the wrong lesson about
+    /// what the crank is for. This expires the last sample on the same clock the physics
+    /// runs on, so stopping the finger stops the gears within a frame or two.
+    mutating func settle(at timestamp: TimeInterval) {
+        guard let lastTimestamp, timestamp - lastTimestamp >= Self.staleAfter else { return }
+        angularVelocity = 0
+    }
+
     /// The finger left the ring.
     mutating func end() {
         lastAngle = nil

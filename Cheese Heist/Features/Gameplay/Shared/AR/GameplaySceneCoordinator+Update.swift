@@ -28,13 +28,19 @@ extension GameplaySceneCoordinator: CraneSceneProviding {
         setLayout(next)
 
         // No re-skinning. The twins wear the Technic part's own colours and a role swap
-        // does not change which part is which — only the label and the ring move.
-        move(mouseSprite?.entity, to: next.mousePerch, animated: animated)
+        // does not change which part is which — only the label and where the mouse
+        // stands. Both entities here are PLACEMENT holders whose orientation nothing
+        // else writes; the billboarded sprites hang underneath them.
+        move(mousePlacement, to: next.mousePerch, animated: animated)
         move(payloadHolder, to: next.ropeAnchor, animated: animated)
     }
 
     private func move(_ entity: Entity?, to position: simd_float3, animated: Bool) {
         guard let entity else { return }
+
+        // A second swap arriving mid-flight must REPLACE the first, not blend with it.
+        entity.stopAllAnimations()
+
         guard animated else {
             entity.position = position
             return
@@ -65,15 +71,45 @@ extension GameplaySceneCoordinator: CraneSceneProviding {
 
     /// Moves the cheese up from its resting position and shortens the rope to match.
     ///
-    /// The rope ends where the cheese's TOP is; the cheese hangs its own half-height
-    /// below that. Without the lift the wedge's centre sits on the table and half of it
-    /// is underneath — invisible at 32mm, obvious at 48mm.
-    private func setPayloadHeight(_ height: Float) {
+    /// ═══ THE ROPE ENDS INSIDE THE CHEESE, NOT ABOVE IT. ═══
+    ///
+    /// `drop` is how far the cheese's UNDERSIDE hangs below the axle, so at rest the
+    /// wedge stands on the table rather than half inside it.
+    ///
+    /// The rope then runs from the axle down to the cheese's CENTRE. Stopping at the top
+    /// of its bounding box — the obvious answer, and the one that shipped — leaves a
+    /// visible gap, because the box's top corner is the wedge's point and the point is
+    /// off to one side: directly under the rope the silhouette is a couple of
+    /// centimetres lower. Running into the middle instead means the last stretch of rope
+    /// is INSIDE the wedge, and the wedge is opaque and 19mm thick with the rope through
+    /// the centre of it, so the front half hides exactly the part that would otherwise
+    /// be drawn over the cheese. The rope appears to end wherever the cheese begins,
+    /// from any angle, without anything having to know the silhouette.
+    ///
+    /// The clamp is what "fully pulled" MEANS geometrically: the cheese cannot rise past
+    /// the axle it hangs from, and at that point there is no rope left to draw.
+    func setPayloadHeight(_ height: Float) {
         guard let rope = ropeLine else { return }
         setAppliedHeight(height)
-        let drop = max(rope.restingDrop - height, 0.001)
-        rope.setLength(drop)
+
+        let drop = max(rope.restingDrop - height, cheeseHeight)
+        let isFullyWound = drop - cheeseHeight < Self.woundInTolerance
+        rope.setLength(isFullyWound ? 0 : drop - cheeseRestingLift)
         cheeseEntity?.position = simd_float3(0, -drop + cheeseRestingLift, 0)
+    }
+
+    /// The whole cheese, top to bottom.
+    private var cheeseHeight: Float { cheeseRestingLift * 2 }
+
+    /// How far the cheese can travel before its top reaches the follower's axle.
+    ///
+    /// MEASURED, NOT TUNED. `tuning.liftHeight` is a fixed 6cm, and the drop to the
+    /// table is whatever the child built — so a crane 12cm tall finished its lift with
+    /// half the rope still paid out and the cheese hanging in mid-air, and the level
+    /// declared it secured. The travel is now the drop that actually exists.
+    var maximumLift: Float {
+        guard let rope = ropeLine else { return 0 }
+        return max(rope.restingDrop - cheeseHeight, Self.minimumLift)
     }
 
     // MARK: - Choreography
@@ -83,14 +119,8 @@ extension GameplaySceneCoordinator: CraneSceneProviding {
     }
 
     func setRopeVisible(_ visible: Bool) {
-        ropeLine?.entity.isEnabled = visible
+        ropeLine?.setVisible(visible)
         cheeseEntity?.isEnabled = visible
-    }
-
-    func setHighlightedGears(_ ids: Set<UUID>) {
-        for (id, ring) in ringsByID {
-            ring.isEnabled = ids.contains(id)
-        }
     }
 
     // MARK: - Per-frame ticks

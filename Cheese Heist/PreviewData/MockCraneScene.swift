@@ -27,9 +27,11 @@ final class MockCraneScene: CraneSceneProviding {
     /// anything being drawn in 3D.
     private(set) var pose: MouseSprite = .happy
     private(set) var isRopeVisible = true
-    private(set) var highlighted: Set<UUID> = []
     private(set) var lastState = GearTrainState()
     private(set) var isTornDown = false
+
+    /// A plausible desk-height crane: 9cm of rope less a 5cm wedge.
+    var maximumLift: Float = 0.04
 
     init(pair: GearPair = PreviewGearPair.smallAndLarge) {
         let driver = GearPlacement(
@@ -65,6 +67,5 @@ final class MockCraneScene: CraneSceneProviding {
     func apply(state: GearTrainState, ratio: Double) { lastState = state }
     func setMousePose(_ pose: MouseSprite) { self.pose = pose }
     func setRopeVisible(_ visible: Bool) { isRopeVisible = visible }
-    func setHighlightedGears(_ ids: Set<UUID>) { highlighted = ids }
     func teardown() { isTornDown = true }
 }

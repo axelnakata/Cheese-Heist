@@ -52,6 +52,17 @@ final class GameplaySceneCoordinator {
     /// follower's axle.
     static let fallbackRestingDrop: Float = 0.09
 
+    /// The shortest lift the level will ever ask for, in metres.
+    ///
+    /// A crane built so low that the cheese is already touching its follower gear would
+    /// otherwise have a travel of zero, and a lift that cannot move is a level that
+    /// cannot be finished. 2cm is short enough to be honest and long enough to crank.
+    static let minimumLift: Float = 0.02
+
+    /// How close to fully wound counts as fully wound, in metres. Below this the rope is
+    /// taken off screen entirely rather than left as a stub inside the cheese.
+    static let woundInTolerance: Float = 0.0005
+
     private(set) var placements: [GearPlacement] = []
     private(set) var screenTargets: [GearScreenTarget] = []
     private(set) var mouseScreenAnchor: CGPoint?
@@ -64,11 +75,14 @@ final class GameplaySceneCoordinator {
     private(set) var contentRoot: Entity?
 
     private var twins: [UUID: GearTwin] = [:]
-    private var rings: [UUID: ModelEntity] = [:]
     private var mouse: MouseSpriteEntity?
+
+    /// Positioned by the role layout; the sprite hangs underneath it. See `buildEntities`.
+    private var mouseHolder: Entity?
+
     private var ropeCheeseHolder: Entity?
     private var rope: RopeEntity?
-    private var cheese: Entity?
+    private var cheese: CheeseProp?
 
     // MARK: Collaborators
 
@@ -134,43 +148,6 @@ final class GameplaySceneCoordinator {
         simd_float3(local.x, local.y, 0)
     }
 
-    private func buildEntities(root: Entity) {
-        for placement in placements {
-            guard let twin = GearTwinEntityFactory.make(type: placement.type) else { continue }
-            twin.holder.position = placement.local
-            root.addChild(twin.holder)
-            twins[placement.id] = twin
-
-            let ring = GearHighlightRing.make(for: placement.type)
-            ring.isEnabled = false
-            twin.holder.addChild(ring)
-            rings[placement.id] = ring
-        }
-
-        if let sprite = MouseSpriteEntity() {
-            root.addChild(sprite.entity)
-            billboards.register(sprite.entity)
-            mouse = sprite
-        }
-
-        let holder = Entity()
-        root.addChild(holder)
-        ropeCheeseHolder = holder
-
-        let drop = Self.fallbackRestingDrop
-        let line = RopeEntity(restingDrop: drop)
-        holder.addChild(line.entity)
-        rope = line
-
-        if let wedge = CheeseEntity.make() {
-            cheeseLift = CheeseEntity.restingLift(of: wedge)
-            wedge.position = simd_float3(0, -drop + cheeseLift, 0)
-            holder.addChild(wedge)
-            billboards.register(wedge)
-            cheese = wedge
-        }
-    }
-
     // MARK: - Teardown
 
     /// Removes everything this coordinator owns. **Never** pauses the ARSession.
@@ -191,8 +168,8 @@ final class GameplaySceneCoordinator {
         contentRoot = nil
         projector = nil
         twins = [:]
-        rings = [:]
         mouse = nil
+        mouseHolder = nil
         rope = nil
         cheese = nil
         ropeCheeseHolder = nil
@@ -208,17 +185,92 @@ final class GameplaySceneCoordinator {
     var currentLayout: SceneLayout? { layout }
     func setLayout(_ next: SceneLayout?) { layout = next }
     var twinsByID: [UUID: GearTwin] { twins }
-    var ringsByID: [UUID: ModelEntity] { rings }
     var mouseSprite: MouseSpriteEntity? { mouse }
+    var mousePlacement: Entity? { mouseHolder }
     var ropeLine: RopeEntity? { rope }
-    var cheeseEntity: Entity? { cheese }
+    var cheeseEntity: Entity? { cheese?.holder }
     var payloadHolder: Entity? { ropeCheeseHolder }
     var view: ARView? { arView }
     var currentLiftHeight: Float { liftHeight }
     var lastAppliedHeight: Float { appliedHeight }
     func setAppliedHeight(_ next: Float) { appliedHeight = next }
+
+    /// Half the cheese's own height, and so also how far its top sits above its origin.
     var cheeseRestingLift: Float { cheeseLift }
     func setAssignment(_ next: GearRoleAssignment) { assignment = next }
     func setScreenTargets(_ next: [GearScreenTarget]) { screenTargets = next }
     func setMouseScreenAnchor(_ next: CGPoint?) { mouseScreenAnchor = next }
+}
+
+// MARK: - Building the scene graph
+
+/// An extension in this file rather than the next one, because construction is the one
+/// thing outside `init` that legitimately writes the private handles above — and because
+/// the class body is at its size limit without it.
+private extension GameplaySceneCoordinator {
+
+    func buildEntities(root: Entity) {
+        for placement in placements {
+            guard let twin = GearTwinEntityFactory.make(type: placement.type) else { continue }
+            twin.holder.position = placement.local
+            root.addChild(twin.holder)
+            twins[placement.id] = twin
+        }
+
+        buildLighting(root: root)
+        buildMouse(root: root)
+        buildPayload(root: root)
+    }
+
+    /// The key and fill that stop the virtual parts rendering darker than the real ones
+    /// they sit on. Billboarded like the sprites, so the lit face is always the face the
+    /// child is looking at — see `SceneLightingRig`.
+    func buildLighting(root: Entity) {
+        let rig = SceneLightingRig.make()
+        root.addChild(rig)
+        billboards.register(rig)
+
+        view?.environment.lighting.intensityExponent = SceneLightingRig.environmentBoost
+    }
+
+    /// ═══ THE PERCH GOES ON THE HOLDER, THE BILLBOARD ON THE SPRITE. ═══
+    ///
+    /// The same split as the gear twin, for the same reason. A role swap ANIMATES the
+    /// mouse to the other gear over 300ms, and `BillboardSystem` rewrites orientation on
+    /// every one of the sixty frames that animation is playing. Two writers on one
+    /// transform is a race, and the way it lost was spectacular: the mouse left the crane
+    /// altogether and stood on the desk, several times too big for the scene it belonged
+    /// to. With the holder carrying position and the sprite carrying facing, neither
+    /// writer can see the other's transform.
+    func buildMouse(root: Entity) {
+        guard let sprite = MouseSpriteEntity() else { return }
+
+        let holder = Entity()
+        holder.addChild(sprite.entity)
+        root.addChild(holder)
+
+        billboards.register(sprite.entity)
+        mouse = sprite
+        mouseHolder = holder
+    }
+
+    /// The rope and the cheese share one holder, which sits at the follower's axle.
+    /// Same split again: the physics writes the cheese's HEIGHT every frame it lifts.
+    func buildPayload(root: Entity) {
+        let holder = Entity()
+        root.addChild(holder)
+        ropeCheeseHolder = holder
+
+        let line = RopeEntity(restingDrop: Self.fallbackRestingDrop)
+        holder.addChild(line.entity)
+        rope = line
+
+        guard let wedge = CheeseEntity.make() else { return }
+        cheeseLift = CheeseEntity.restingLift(of: wedge.holder)
+        holder.addChild(wedge.holder)
+        billboards.register(wedge.facing)
+        cheese = wedge
+
+        setPayloadHeight(0)
+    }
 }

@@ -12,7 +12,8 @@ enum Level1Tuning {
         noLoadAngularVelocity: 12.0, // rad/s, ~1.9 rev/s unloaded
         meshEfficiency: 0.94,        // single spur mesh
         winchRadius: 0.0025,         // LEGO axle, in metres
-        liftHeight: 0.06,            // 6 cm of travel
-        minLiftDuration: 1.2         // presentation floor on rope speed, seconds
+        liftHeight: 0.06,            // fallback only — the travel is measured off the crane
+        minLiftDuration: 1.2,        // presentation floor on rope speed, seconds
+        maxLiftDuration: 15.0        // …and the ceiling, for a crane with a long rope
     )
 }

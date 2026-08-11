@@ -26,10 +26,9 @@ struct Level1SceneDirector {
     }
 
     /// Everything the scene should look like in this phase, applied at once.
-    func stage(_ phase: Level1Phase, assignment: GearRoleAssignment?) {
+    func stage(_ phase: Level1Phase) {
         scene.setMousePose(mousePose(for: phase))
         scene.setRopeVisible(true)
-        scene.setHighlightedGears(highlighted(for: phase, assignment: assignment))
     }
 
     /// Which pose the mouse wears — `happy`, the whole way through Level 1.
@@ -43,28 +42,13 @@ struct Level1SceneDirector {
         .happy
     }
 
-    /// Which gears pulse.
-    ///
-    /// Both of them during role selection — the child is being asked to choose, so both
-    /// have to read as choosable. Just the one being talked about while teaching.
-    func highlighted(
-        for phase: Level1Phase, assignment: GearRoleAssignment?
-    ) -> Set<UUID> {
-        guard let assignment else { return [] }
-
-        switch phase {
-        case .teachingDriver:
-            return [assignment.driverID]
-        case .teachingFollower:
-            return [assignment.followerID]
-        case .selectingRoles:
-            return [assignment.driverID, assignment.followerID]
-        default:
-            return []
-        }
-    }
-
     /// Where the teaching spotlight is cut, if anywhere.
+    ///
+    /// This is now the ONLY thing that singles a gear out during a teaching beat. The
+    /// gears also wore a wireframe ring, which was meant to read as an annotation and
+    /// on a real grey Technic gear read as a white scribble drawn across it. A hole in
+    /// the scrim points at the gear without covering it, and it scales itself to the
+    /// gear because the gear's on-screen radius is projected every frame.
     func spotlight(for phase: Level1Phase) -> SpotlightSubject {
         switch phase {
         case .teachingDriver:    return .driverGear

@@ -41,9 +41,18 @@ final class Level1ViewModel {
 
     // MARK: - The whole machine
 
+    /// ═══ AN EVENT THE MACHINE REJECTS HAS NO EFFECTS EITHER. ═══
+    ///
+    /// The payload used to be applied BEFORE the machine was consulted, so an event the
+    /// current phase ignores still rewrote the state it carried. `observeDetection()`
+    /// republishes `.detectionLocked` on every tracking update — several times a second,
+    /// for the whole level — and each one re-seeded the roles from
+    /// `initialAssignment`. The child tapped the 40T, the mouse started walking to it,
+    /// and a fifth of a second later the driver was the left gear again. That is the
+    /// whole of "I can't choose which gear is the driver".
     func handle(_ event: Level1Event) {
-        applyPayload(of: event)
         guard let next = Level1PhaseMachine.next(from: phase, on: event) else { return }
+        applyPayload(of: event)
         phase = next
         inputGate = Level1InputGate.of(next)
         Level1PhaseCommands.apply(next, in: context)
@@ -57,8 +66,9 @@ final class Level1ViewModel {
         )
     }
 
-    /// The part of an event that is data rather than a transition. Runs BEFORE the
-    /// machine, so the entry effects see the assignment the event carried.
+    /// The part of an event that is data rather than a transition. Runs after the
+    /// machine has ACCEPTED the event and before the entry effects, so those see the
+    /// assignment the event carried.
     private func applyPayload(of event: Level1Event) {
         switch event {
         case .detectionLocked(let pair, let assignment),
@@ -94,12 +104,24 @@ final class Level1ViewModel {
         self.runner = runner
     }
 
+    /// Retry. Drops this attempt's scene and then asks the host to start the next one.
+    ///
+    /// ═══ THE SECOND HALF IS NOT OPTIONAL. ═══
+    ///
+    /// `onTeardownRequested` was wired up in `AppServices` and never called, and the
+    /// symptom was the whole of "retry goes back to the calibration screen and then just
+    /// sits there". Two things were left undone by dropping the handles here. The
+    /// detector had already been reset by `Level1PhaseCommands` and nobody ever started
+    /// it looking again, so no lock could arrive; and `AppServices` still held the torn
+    /// down coordinator, so even a lock that did arrive took the "already built" branch
+    /// and corrected the alignment of a scene with no entities left in it.
     private func tearDownScene() {
         scene?.teardown()
         scene = nil
         director = nil
         runner = nil
         dialogue.reset()
+        onTeardownRequested?()
     }
 
     private func pairFor(_ assignment: GearRoleAssignment) -> GearPair? {
@@ -126,7 +148,12 @@ final class Level1ViewModel {
     }
 
     /// One render frame, fanned out by `SceneUpdateTicker`.
+    ///
+    /// The crank is refreshed here rather than only on a gesture callback: a finger held
+    /// still on the ring sends nothing, and "nothing" has to mean disengaged rather than
+    /// "whatever it was last time".
     func advance(deltaTime: Double) {
+        crank.refresh()
         runner?.isCranking = inputGate.joystickEnabled && crank.isCranking
         runner?.advance(deltaTime: deltaTime)
     }

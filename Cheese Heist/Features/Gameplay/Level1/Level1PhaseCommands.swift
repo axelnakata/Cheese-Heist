@@ -34,7 +34,7 @@ enum Level1PhaseCommands {
     /// Everything that happens on the way INTO `phase`.
     static func apply(_ phase: Level1Phase, in context: Level1PhaseContext) {
         context.dialogue.present(Level1PhasePresentation.beats(for: phase))
-        context.director?.stage(phase, assignment: context.selection.assignment)
+        context.director?.stage(phase)
 
         // The crank is released on every transition. A phase that does not accept
         // cranking must not inherit a finger that was already down when it started.

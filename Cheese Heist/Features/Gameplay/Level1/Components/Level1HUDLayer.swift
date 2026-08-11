@@ -18,6 +18,7 @@ struct Level1HUDLayer: View {
     let targets: [GearScreenTarget]
     let gate: Level1InputGate
     let showsRoleLabels: Bool
+    var engagement: CrankEngagement = .disengaged
     let onDrag: (CGPoint, CGPoint) -> Void
     let onRelease: () -> Void
     let onPull: () -> Void
@@ -58,7 +59,8 @@ struct Level1HUDLayer: View {
                         .transition(.scale.combined(with: .opacity))
                 } else if gate.joystickEnabled {
                     CircularJoystickView(
-                        isEnabled: true, onDrag: onDrag, onRelease: onRelease
+                        isEnabled: true, engagement: engagement,
+                        onDrag: onDrag, onRelease: onRelease
                     )
                     .transition(.scale.combined(with: .opacity))
                 }
