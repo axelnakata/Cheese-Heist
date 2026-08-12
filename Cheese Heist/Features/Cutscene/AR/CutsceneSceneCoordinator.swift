@@ -99,6 +99,7 @@ final class CutsceneSceneCoordinator: CutsceneSceneProviding {
         entity.addChild(root)
         buildCheese(root: root)
         buildCat(root: root)
+        buildLighting(root: root)
         Logger.cutscene.info("cutscene scene placed")
     }
 
@@ -132,6 +133,14 @@ final class CutsceneSceneCoordinator: CutsceneSceneProviding {
         guard let cat = CatEntity.make() else { return }
         root.addChild(cat.holder)
         catDriver = CatOrbitDriver(cat: cat)
+    }
+
+    /// Key and fill lights so the cat and cheese are not rendered in whatever gloom the
+    /// room happens to be in — the same rig Level 1 uses (see `SceneLightingRig`).
+    private func buildLighting(root: Entity) {
+        let rig = SceneLightingRig.make()
+        root.addChild(rig)
+        arView?.environment.lighting.intensityExponent = SceneLightingRig.environmentBoost
     }
 
     // MARK: - Per-frame
