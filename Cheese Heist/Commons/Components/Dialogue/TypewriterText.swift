@@ -5,6 +5,14 @@
 //  PRD §11.3 — dialogue reveals at 40 chars/s. Tapping during the reveal completes it
 //  instantly, which the owner does by setting `isComplete`.
 //
+//  ═══ IT IS LAID OUT FOR THE WHOLE LINE FROM THE FIRST CHARACTER. ═══
+//
+//  The full text is measured and hidden, and the revealed prefix is drawn over it. The
+//  obvious implementation — render the prefix and let it grow — makes the SPEECH BUBBLE
+//  grow with it, since the bubble hugs its text: it starts as a small blob and inflates
+//  for the length of the line, dragging its tail across the mouse's head as it goes.
+//  Reserving the final size means only the letters animate.
+//
 
 import SwiftUI
 
@@ -21,7 +29,9 @@ struct TypewriterText: View {
     @State private var revealedCount = 0
 
     var body: some View {
-        Text(revealedText)
+        Text(text)
+            .hidden()
+            .overlay(alignment: .topLeading) { Text(revealedText) }
             .task(id: text) { await reveal() }
             .onChange(of: isComplete) { _, complete in
                 if complete { revealedCount = text.characters.count }

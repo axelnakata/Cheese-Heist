@@ -23,3 +23,8 @@ xcuserdata/
 .LSOverride
 Icon
 ._*
+
+# Documentation
+Docs/
+@Docs/
+

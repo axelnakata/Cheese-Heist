@@ -3,19 +3,15 @@
 //  Cheese Heist
 //
 //  PRD §7.6 — Figma 639:65. 88.54 × 86.54, radius .pill, icon-only, SF Symbol at 36 pt.
+//  The success frame draws the same button at `.celebration` — see `LargeCTAButtonSize`.
 //
 
 import SwiftUI
 
 struct LargeCTAButton: View {
 
-    private enum Metric {
-        static let width: CGFloat = 88.54
-        static let height: CGFloat = 86.54
-        static let symbolSize: CGFloat = 36
-    }
-
     let icon: LargeCTAButtonIcon
+    var size: LargeCTAButtonSize = .standard
     let action: () -> Void
 
     @Environment(\.layoutScale) private var scale
@@ -24,11 +20,11 @@ struct LargeCTAButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: icon.systemName)
-                .font(.system(size: Metric.symbolSize * scale, weight: .bold))
+                .font(.system(size: size.symbolSize * scale, weight: .bold))
                 .foregroundStyle(AppColor.textOnAccent)
-                .frame(width: Metric.width * scale, height: Metric.height * scale)
+                .frame(width: size.width * scale, height: size.height * scale)
         }
-        .buttonStyle(AccentPillButtonStyle())
+        .buttonStyle(AccentPillButtonStyle(cornerRadius: size.cornerRadius))
         .opacity(isEnabled ? 1 : 0.45)
         .accessibilityLabel(icon.accessibilityLabel)
     }
@@ -48,6 +44,15 @@ struct LargeCTAButton: View {
         ForEach(LargeCTAButtonIcon.allCases, id: \.self) { icon in
             LargeCTAButton(icon: icon) {}
         }
+    }
+    .previewBackdrop(.cameraFeed)
+}
+
+#Preview("Celebration size — camera feed") {
+    HStack(spacing: AppSpacing.m) {
+        LargeCTAButton(icon: .retry, size: .celebration) {}
+        LargeCTAButton(icon: .next, size: .standard) {}
+        LargeCTAButton(icon: .next, size: .celebration) {}
     }
     .previewBackdrop(.cameraFeed)
 }

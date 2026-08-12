@@ -10,10 +10,15 @@ import SwiftUI
 
 struct AccentPillButtonStyle: ButtonStyle {
 
+    /// Design-scale corner radius. The §7.5 pill suits every control built to the
+    /// standard button height; `LargeCTAButton` passes its own, because that token stops
+    /// reading as a capsule once the button is larger than twice it.
+    var cornerRadius: CGFloat = AppRadius.pill
+
     @Environment(\.layoutScale) private var scale
 
     func makeBody(configuration: Configuration) -> some View {
-        let shape = RoundedRectangle(cornerRadius: AppRadius.pill * scale, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: cornerRadius * scale, style: .continuous)
 
         return configuration.label
             .background(configuration.isPressed ? AppColor.accentPressed : AppColor.accent, in: shape)
