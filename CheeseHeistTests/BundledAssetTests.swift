@@ -143,4 +143,47 @@ struct BundledAssetTests {
         let bounds = ModelBounds.measure(mouse.entity)
         #expect(abs((bounds?.extents.y ?? 0) - MouseSpriteEntity.height) < 0.001)
     }
+
+    // MARK: - Cutscene assets
+
+    @Test("thundercat.usdz loads from the bundle")
+    func thundercatLoads() {
+        #expect(
+            (try? Entity.load(named: "thundercat")) != nil,
+            "thundercat.usdz is missing from Resources/3DModels/Characters/"
+        )
+    }
+
+    @Test("blueprint_scroll resolves in the asset catalogue")
+    func blueprintScrollResolves() {
+        #expect(
+            UIImage(named: "blueprint_scroll") != nil,
+            "blueprint_scroll is missing from Assets.xcassets"
+        )
+    }
+
+    @Test("position_guideline resolves in the asset catalogue")
+    func positionGuidelineResolves() {
+        #expect(
+            UIImage(named: "position_guideline") != nil,
+            "position_guideline is missing from Assets.xcassets"
+        )
+    }
+
+    @Test("surface_invalid resolves in the asset catalogue")
+    func surfaceInvalidResolves() {
+        #expect(
+            UIImage(named: "surface_invalid") != nil,
+            "surface_invalid is missing from Assets.xcassets"
+        )
+    }
+
+    @Test("blueprint_glow resolves in the asset catalogue")
+    func blueprintGlowResolves() {
+        #expect(
+            UIImage(named: "blueprint_glow") != nil,
+            "blueprint_glow is missing from Assets.xcassets"
+        )
+    }
 }
+

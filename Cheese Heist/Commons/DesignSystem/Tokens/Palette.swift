@@ -25,4 +25,11 @@ enum Palette {
     /// raster mockups. Pending design sign-off, tracked as OQ-1 (PRD §14).
     static let successGreen = Color(hex: "#4CAF50")
     static let warningRed = Color(hex: "#E53935")
+
+    /// The surface-scan ring's two greens, read off `ring-yes.svg` rather than the
+    /// Design System frame — the ring is drawn as two stacked strokes, a bright face
+    /// over a darker edge, and flattening it to one `successGreen` loses the bevel that
+    /// makes it read as a solid object lying on the table. Same OQ-1 provenance.
+    static let ringGreen = Color(hex: "#55B93A")
+    static let ringGreenDeep = Color(hex: "#399420")
 }
