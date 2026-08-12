@@ -15,8 +15,10 @@ enum DialogueBeatText {
 
         for emphasis in beat.emphasis {
             guard let range = string.range(of: emphasis.phrase) else { continue }
-            string[range].foregroundColor = colour(for: emphasis.role)
             string[range].inlinePresentationIntent = .stronglyEmphasized
+            if let role = emphasis.role {
+                string[range].foregroundColor = colour(for: role)
+            }
         }
 
         return string

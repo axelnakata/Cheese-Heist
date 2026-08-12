@@ -10,6 +10,8 @@ struct RootView: View {
     var body: some View {
         Group {
             switch services.router.route {
+            case .cutscene:
+                CutsceneView(services: services)
             case .level1:
                 Level1View(services: services)
             case .unsupportedDevice:

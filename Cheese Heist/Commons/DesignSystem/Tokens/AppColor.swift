@@ -81,4 +81,9 @@ enum AppColor {
     static let stateValid = Palette.successGreen
     /// Rejected surface.
     static let stateInvalid = Palette.warningRed
+
+    /// The surface-scan ring's bright face, as it lies on the detected plane.
+    static let surfaceRing = Palette.ringGreen
+    /// The ring's darker outer edge, which is what gives it thickness.
+    static let surfaceRingEdge = Palette.ringGreenDeep
 }

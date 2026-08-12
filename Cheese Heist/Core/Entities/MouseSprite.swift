@@ -18,6 +18,7 @@ enum MouseSprite: String, CaseIterable, Sendable {
     case talkStruggle = "mouse_talk_struggle"
     case shockHappy = "mouse_shock_happy"
     case happy = "mice_happy"
+    case think = "mouse_think"
 
     var assetName: String { rawValue }
 
@@ -26,6 +27,10 @@ enum MouseSprite: String, CaseIterable, Sendable {
         switch self {
         case .talkIdle, .talkStruggle, .shockHappy: return 881.0 / 1200.0
         case .happy: return 1004.0 / 1200.0
+        // Re-cut from `mouse think 1.svg`'s 4096 × 3413 raster to the same 1200 px
+        // height as the other four. The first import was the SVG's own crop — the mouse
+        // sliced off at the waist and shoved into a landscape box.
+        case .think: return 1003.0 / 1200.0
         }
     }
 

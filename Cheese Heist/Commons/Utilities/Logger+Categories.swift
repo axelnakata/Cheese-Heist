@@ -12,4 +12,5 @@ extension Logger {
     static let crane     = Logger(subsystem: subsystem, category: "Crane")
     static let scene     = Logger(subsystem: subsystem, category: "Scene")
     static let gameplay  = Logger(subsystem: subsystem, category: "Gameplay")
+    static let cutscene  = Logger(subsystem: subsystem, category: "Cutscene")
 }
