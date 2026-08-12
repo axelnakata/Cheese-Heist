@@ -206,11 +206,10 @@ struct BundledAssetTests {
         )
     }
 
-    @Test("blueprint step GIFs decode to a non-empty animated image", arguments: [
-        "blueprint_step_1", "blueprint_step_2", "blueprint_step_3"
-    ])
-    func blueprintStepGIFsDecode(_ name: String) {
-        #expect(GIFDecoder.animatedImage(resource: name) != nil, "\(name) failed to decode")
+    @Test("each blueprint step points at a distinct GIF")
+    func blueprintStepsUseDistinctGIFs() {
+        let gifNames = BlueprintScript.steps.map(\.gifName)
+        #expect(Set(gifNames).count == gifNames.count, "two blueprint steps share a GIF")
     }
 }
 

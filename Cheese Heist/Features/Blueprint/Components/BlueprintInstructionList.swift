@@ -2,45 +2,36 @@
 //  BlueprintInstructionList.swift
 //  Cheese Heist
 //
-//  Numbered instructions with bold spans, resolved to `AttributedString` here — the one
-//  place a `BlueprintStep.Instruction`'s bold phrases meet SwiftUI, mirroring
-//  `DialogueBeatText`.
+//  Numbered instructions with markdown bold spans — ported from the reference build,
+//  which renders `**phrase**` through `Text(LocalizedStringKey)` directly rather than a
+//  hand-rolled `AttributedString` pass.
 //
 
 import SwiftUI
 
 struct BlueprintInstructionList: View {
 
-    let instructions: [BlueprintStep.Instruction]
-
-    @Environment(\.layoutScale) private var scale
+    let instructions: [LocalizedStringKey]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.m * scale) {
+        VStack(alignment: .leading, spacing: 20) {
             ForEach(Array(instructions.enumerated()), id: \.offset) { index, instruction in
                 row(number: index + 1, instruction: instruction)
             }
         }
-        .foregroundStyle(AppColor.textInverted)
     }
 
-    @ViewBuilder
-    private func row(number: Int, instruction: BlueprintStep.Instruction) -> some View {
-        HStack(alignment: .top, spacing: AppSpacing.xs * scale) {
+    private func row(number: Int, instruction: LocalizedStringKey) -> some View {
+        HStack(alignment: .top, spacing: 8) {
             if instructions.count > 1 {
-                Text("\(number).").appText(AppFont.body)
+                Text("\(number).")
+                    .font(.system(size: 25, weight: .regular))
             }
-            Text(Self.attributed(instruction)).appText(AppFont.body)
+            Text(instruction)
+                .font(.system(size: 25, weight: .regular))
+                .fixedSize(horizontal: false, vertical: true)
         }
-    }
-
-    private static func attributed(_ instruction: BlueprintStep.Instruction) -> AttributedString {
-        var string = AttributedString(instruction.text)
-        for phrase in instruction.boldPhrases {
-            guard let range = string.range(of: phrase) else { continue }
-            string[range].inlinePresentationIntent = .stronglyEmphasized
-        }
-        return string
+        .foregroundColor(.white)
     }
 }
 

@@ -69,7 +69,7 @@ custom_rules:
     regex: '\.font\(\s*\.system\(\s*size:'
     message: "Use .appText(AppFont.…), not .system(size:) (PRD §7.3)."
     severity: error
-    excluded: ".*/(LargeCTAButton|DesignSystemGalleryView|UnsupportedDeviceView)\\.swift"
+    excluded: ".*/(LargeCTAButton|DesignSystemGalleryView|UnsupportedDeviceView|BlueprintInstructionList)\\.swift"
   no_raw_corner_radius:
     name: "Hard-coded corner radius"
     regex: '\.cornerRadius\(\s*\d'

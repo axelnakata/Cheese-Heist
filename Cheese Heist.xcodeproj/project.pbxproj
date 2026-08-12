@@ -54,7 +54,6 @@
 				Features/Splash/Components/.gitkeep,
 				Features/Unsupported/.gitkeep,
 				PreviewData/.gitkeep,
-				Resources/3DModels/Characters/.gitkeep,
 				Resources/3DModels/Gears/.gitkeep,
 				Resources/3DModels/Props/.gitkeep,
 				Resources/Audio/.gitkeep,
@@ -405,7 +404,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 3LU8LUNSN3;
+				DEVELOPMENT_TEAM = 2677875KRJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
@@ -419,7 +418,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "axelnakata.Cheese-Heist";
+				PRODUCT_BUNDLE_IDENTIFIER = "rio.Cheese-Heist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -438,7 +437,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 3LU8LUNSN3;
+				DEVELOPMENT_TEAM = 2677875KRJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
@@ -452,7 +451,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "axelnakata.Cheese-Heist";
+				PRODUCT_BUNDLE_IDENTIFIER = "rio.Cheese-Heist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
