@@ -33,6 +33,10 @@ struct SplashView: View {
                 tapToPlayButton
             }
         }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            handleTap()
+        }
         .ignoresSafeArea()
         .statusBarHidden()
         .onAppear { viewModel.startAnimations() }
