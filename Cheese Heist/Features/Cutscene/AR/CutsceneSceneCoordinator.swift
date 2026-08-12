@@ -126,6 +126,18 @@ final class CutsceneSceneCoordinator: CutsceneSceneProviding {
         wedge.holder.scale *= factor
         // Measured on the unscaled hierarchy, so the factor comes back out here.
         wedge.holder.position.y = CheeseEntity.restingLift(of: wedge.holder) * factor
+
+        // In Level 1 the cheese is billboarded — its `facing` entity always turns toward
+        // the camera, and the `presentation` rotation inside `normalised` is designed for
+        // that pairing. The cutscene does NOT billboard, so the combined orientation makes
+        // the wedge stand up on its side instead of lying flat. Overriding `facing` to lay
+        // the wedge on its flat bottom: tip it forward (about X) so the holed top-face
+        // points up at the viewer looking down from above.
+        wedge.facing.orientation = simd_quatf(
+            angle: -.pi / 2,
+            axis: simd_float3(1, 0, 0)
+        )
+
         root.addChild(wedge.holder)
     }
 
