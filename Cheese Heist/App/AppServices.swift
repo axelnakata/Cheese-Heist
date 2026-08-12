@@ -36,9 +36,10 @@ final class AppServices {
     ///
     /// `RootView` calls this from `onAppear`, which is not a once-only hook — it fires
     /// again whenever the view it is attached to is re-established. That was harmless
-    /// while boot's destination WAS the app's only screen; now that the cutscene hands
-    /// off to Level 1, an unguarded re-entry throws the child straight back to the
-    /// surface scan the moment they arrive at the crane.
+    /// while boot's destination WAS the app's only screen; now that splash hands off to
+    /// the cutscene, which hands off to the blueprint, which hands off to Level 1, an
+    /// unguarded re-entry throws the child straight back to the splash screen the
+    /// moment they arrive anywhere downstream.
     func boot() {
         guard !hasBooted else { return }
         hasBooted = true
@@ -47,7 +48,7 @@ final class AppServices {
             router.navigate(to: .unsupportedDevice)
             return
         }
-        router.navigate(to: .cutscene)
+        router.navigate(to: .splash)
     }
 
     // MARK: - Cutscene
@@ -82,7 +83,7 @@ final class AppServices {
 
         viewModel.onHandoff = { [weak self] in
             self?.cutsceneCoordinator = nil
-            self?.router.navigate(to: .level1)
+            self?.router.navigate(to: .blueprint)
         }
     }
 

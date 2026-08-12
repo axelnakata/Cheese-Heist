@@ -185,5 +185,32 @@ struct BundledAssetTests {
             "blueprint_glow is missing from Assets.xcassets"
         )
     }
+
+    // MARK: - Splash & Blueprint assets
+
+    @Test("splash and blueprint imagesets resolve in the asset catalogue", arguments: [
+        "bg_kitchen", "logo_title", "mouse_hole", "splash_mouse",
+        "gear_big", "gear_small", "blueprint_bg"
+    ])
+    func splashAndBlueprintImagesResolve(_ name: String) {
+        #expect(UIImage(named: name) != nil, "\(name) is missing from Assets.xcassets")
+    }
+
+    @Test("blueprint step GIFs are bundled", arguments: [
+        "blueprint_step_1", "blueprint_step_2", "blueprint_step_3"
+    ])
+    func blueprintStepGIFsAreBundled(_ name: String) {
+        #expect(
+            Bundle.main.url(forResource: name, withExtension: "gif") != nil,
+            "\(name).gif is missing from Resources/Media/BlueprintSteps/"
+        )
+    }
+
+    @Test("blueprint step GIFs decode to a non-empty animated image", arguments: [
+        "blueprint_step_1", "blueprint_step_2", "blueprint_step_3"
+    ])
+    func blueprintStepGIFsDecode(_ name: String) {
+        #expect(GIFDecoder.animatedImage(resource: name) != nil, "\(name) failed to decode")
+    }
 }
 
