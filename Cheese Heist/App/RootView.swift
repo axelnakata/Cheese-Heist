@@ -10,8 +10,12 @@ struct RootView: View {
     var body: some View {
         Group {
             switch services.router.route {
+            case .splash:
+                SplashView(onTapToPlay: { services.router.navigate(to: .cutscene) })
             case .cutscene:
                 CutsceneView(services: services)
+            case .blueprint:
+                BlueprintView(onFinished: { services.router.navigate(to: .level1) })
             case .level1:
                 Level1View(services: services)
             case .unsupportedDevice:

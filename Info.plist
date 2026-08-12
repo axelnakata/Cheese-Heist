@@ -2,14 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!--
-	  Kept as a separate file only because GENERATE_INFOPLIST_FILE has no
-	  INFOPLIST_KEY_ mapping for UIAppFonts. Everything else still comes from the
-	  INFOPLIST_KEY_* build settings and is merged into this file at build time.
-
-	  Values are FILENAMES. The names the code asks for are POSTSCRIPT names, and the
-	  two differ for Mickies — see AppFont.Family / AppFontResolver.
-	-->
 	<key>UIAppFonts</key>
 	<array>
 		<string>Mickies.otf</string>
