@@ -11,13 +11,19 @@ struct RootView: View {
         Group {
             switch services.router.route {
             case .splash:
-                SplashView(onTapToPlay: { services.router.navigate(to: .cutscene) })
+                SplashView(
+                    onTapToPlay: { services.router.navigate(to: .cutscene) },
+                    onDevLevel1: { services.router.navigate(to: .level1) },
+                    onDevLevel2: { services.router.navigate(to: .level2) }
+                )
             case .cutscene:
                 CutsceneView(services: services)
             case .blueprint:
                 BlueprintView(onFinished: { services.router.navigate(to: .level1) })
             case .level1:
                 Level1View(services: services)
+            case .level2:
+                Level2View(services: services)
             case .unsupportedDevice:
                 UnsupportedDeviceView()
             default:

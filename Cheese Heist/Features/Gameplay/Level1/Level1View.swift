@@ -39,15 +39,17 @@ struct Level1View: View {
                 SuccessOverlay(
                     title: Level1Script.successTitle,
                     subtitle: Level1Script.successSubtitle,
+                    earnedStars: viewModel.earnedStars,
                     onRetry: { withAnimation { viewModel.handle(.tappedRetry) } },
-                    onNext: { viewModel.handle(.tappedNext) }
+                    onNext: { services.router.navigate(to: .level2) }
                 )
                 .transition(.opacity)
             }
         }
         .statusBarHidden()
         .animation(.easeInOut(duration: AppDuration.transition), value: viewModel.phase)
-        .onAppear { services.startLevel1(with: viewModel) }
+        .onAppear { services.startLevel1(with: viewModel)
+            viewModel.playMainAudio()}
         .onChange(of: services.detection.trackingVersion) { _, _ in
             viewModel.observeDetection()
         }

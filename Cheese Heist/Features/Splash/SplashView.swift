@@ -17,6 +17,10 @@ struct SplashView: View {
     /// Set by `RootView` to `router.navigate(to: .cutscene)`.
     let onTapToPlay: () -> Void
 
+    /// Developer navigation shortcuts.
+    var onDevLevel1: (() -> Void)?
+    var onDevLevel2: (() -> Void)?
+
     @State private var viewModel = SplashViewModel()
 
     var body: some View {
@@ -32,10 +36,50 @@ struct SplashView: View {
                 Spacer()
                 tapToPlayButton
             }
+
+            VStack {
+                HStack {
+                    Spacer()
+                    devShortcutsOverlay
+                }
+                Spacer()
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            handleTap()
         }
         .ignoresSafeArea()
         .statusBarHidden()
-        .onAppear { viewModel.startAnimations() }
+        .onAppear { viewModel.startAnimations()
+            viewModel.playSplashAudio()}
+    }
+
+    private var devShortcutsOverlay: some View {
+        HStack(spacing: AppSpacing.s) {
+            Button("Level 1") {
+                onDevLevel1?()
+            }
+            .appText(AppFont.subtitle)
+            .foregroundStyle(AppColor.textOnCamera)
+            .padding(.horizontal, AppSpacing.s)
+            .padding(.vertical, AppSpacing.xs)
+            .background(AppColor.surfaceInstruction)
+            .clipShape(Capsule())
+
+            Button("Level 2") {
+                onDevLevel2?()
+            }
+            .appText(AppFont.subtitle)
+            .foregroundStyle(AppColor.textOnCamera)
+            .padding(.horizontal, AppSpacing.s)
+            .padding(.vertical, AppSpacing.xs)
+            .background(AppColor.surfaceInstruction)
+            .clipShape(Capsule())
+        }
+        .padding(.top, AppSpacing.l)
+        .padding(.trailing, AppSpacing.l)
+        .zIndex(10)
     }
 
     private var logoGroup: some View {
@@ -104,6 +148,7 @@ struct SplashView: View {
     }
 
     private func handleTap() {
+        AudioManager.shared.playSFX(.tap1)
         guard viewModel.tapToPlay() else { return }
         onTapToPlay()
     }

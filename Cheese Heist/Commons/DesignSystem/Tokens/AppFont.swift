@@ -49,6 +49,16 @@ enum AppFont {
         fontName: Family.regular, size: 24, lineHeight: 26, tracking: standardTracking
     )
 
+    /// Nunito Bold 14. Small labels under icons (gear attribute bars).
+    static let caption = TextStyle(
+        fontName: Family.bold, size: 14, lineHeight: 18, tracking: standardTracking
+    )
+
+    /// Nunito Regular 38. Time remaining on result screens.
+    static let resultTime = TextStyle(
+        fontName: Family.regular, size: 38, lineHeight: 42, tracking: standardTracking
+    )
+
     /// Every token, for the font-registration check and design-system previews.
-    static let allStyles: [TextStyle] = [largeTitle, title, subtitle, body, dialogue]
+    static let allStyles: [TextStyle] = [largeTitle, title, subtitle, body, dialogue, caption, resultTime]
 }

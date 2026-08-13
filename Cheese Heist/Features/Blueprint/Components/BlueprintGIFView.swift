@@ -16,49 +16,45 @@ struct BlueprintGIFView: UIViewRepresentable {
 
     let gifName: String
 
-    func makeUIView(context: Context) -> WKWebView {
-        let webView = WKWebView()
-        webView.isOpaque = false
-        webView.backgroundColor = .clear
-        webView.scrollView.isScrollEnabled = false
-        webView.scrollView.bounces = false
-        return webView
-    }
+        func makeUIView(context: Context) -> UIImageView {
+            let imageView = UIImageView()
+            imageView.contentMode = .scaleAspectFit
+            imageView.clipsToBounds = true
+            return imageView
+        }
 
-    func updateUIView(_ uiView: WKWebView, context: Context) {
-        guard let url = Bundle.main.url(forResource: gifName, withExtension: "gif") else { return }
+        func updateUIView(_ uiView: UIImageView, context: Context) {
+            guard let url = Bundle.main.url(forResource: gifName, withExtension: "gif"),
+                  let data = try? Data(contentsOf: url),
+                  let source = CGImageSourceCreateWithData(data as CFData, nil) else {
+                return
+            }
 
-        let html = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body, html {
-                    margin: 0;
-                    padding: 0;
-                    width: 100%;
-                    height: 100%;
-                    overflow: hidden;
-                    background-color: transparent;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
+            var images: [UIImage] = []
+            var totalDuration: Double = 0
+            let count = CGImageSourceGetCount(source)
+
+            for index in 0..<count {
+                if let cgImage = CGImageSourceCreateImageAtIndex(source, index, nil) {
+                    images.append(UIImage(cgImage: cgImage))
+
+                    // Ambil durasi per frame
+                    let frameProperties = CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [String: Any]
+                    let gifProperties = frameProperties?[kCGImagePropertyGIFDictionary as String] as? [String: Any]
+                    let frameDuration = gifProperties?[kCGImagePropertyGIFUnclampedDelayTime as String] as? Double
+                        ?? gifProperties?[kCGImagePropertyGIFDelayTime as String] as? Double
+                        ?? 0.1
+
+                    totalDuration += frameDuration
                 }
-                img {
-                    max-width: 100%;
-                    max-height: 100%;
-                    object-fit: contain;
-                }
-            </style>
-        </head>
-        <body>
-            <img src="\(url.lastPathComponent)">
-        </body>
-        </html>
-        """
-        uiView.loadHTMLString(html, baseURL: url.deletingLastPathComponent())
+            }
+
+            uiView.animationImages = images
+            uiView.animationDuration = totalDuration
+            uiView.animationRepeatCount = 0
+            uiView.startAnimating()
+        }
     }
-}
 
 #Preview {
     BlueprintGIFView(gifName: "blueprint_step_1")

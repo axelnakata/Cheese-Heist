@@ -33,4 +33,9 @@ final class BlueprintViewModel {
         stepIndex += 1
         return false
     }
+    func onAppear() {
+            // Otomatis memutar BGM "Blueprint.wav"
+            // Musik "main menu" dari Splash/Cutscene akan otomatis diganti dengan BGM ini
+            AudioManager.shared.playBGM(.page2)
+        }
 }

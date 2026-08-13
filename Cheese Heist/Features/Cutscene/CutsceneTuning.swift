@@ -31,7 +31,7 @@ enum CutsceneTuning {
     static let catForwardYaw: Float = 0
 
     /// Orbit radius around the cheese, in metres (PRD-Cutscene §6.3).
-    static let orbitRadius: Double = 0.18
+    static let orbitRadius: Double = 0.30
 
     /// Cat's ground speed around the orbit, in metres per second (PRD-Cutscene §6.3).
     static let orbitSpeed: Double = 0.04

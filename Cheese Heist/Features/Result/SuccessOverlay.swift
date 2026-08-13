@@ -18,27 +18,62 @@
 //  pinned to the top with the frame's own gaps between its rows, so each element lands
 //  where 800:197 puts it whatever the ones above it measure.
 //
+//  Extended for Level 2: variable star count, time remaining display, mouse pose
+//  selection (happy vs panic), and optional Next button.
+//
 
 import SwiftUI
 
 struct SuccessOverlay: View {
 
-    /// Copy is passed in, not read from a level's script — every level ends here and
-    /// only the words differ.
     let title: String
     let subtitle: String
     let onRetry: () -> Void
-    let onNext: () -> Void
+    var onNext: (() -> Void)?
+
+    /// How many cheese stars are "earned" (0–3). Defaults to 3 for L1 compatibility.
+    var starCount: Int = 3
+
+    /// Seconds remaining when the cheese was secured, or nil to hide.
+    var timeRemaining: Int?
+
+    /// The mouse image asset to use. Defaults to `mice_happy` for L1 compatibility.
+    var mouseAssetName: String = MouseSprite.happy.assetName
+
+    /// Whether the Next/Continue button is shown. False on fail screens.
+    var showNext: Bool = true
+
+    /// Initializer supporting both `earnedStars` (L1) and `starCount` (L2).
+    init(
+        title: String,
+        subtitle: String,
+        earnedStars: Int? = nil,
+        onRetry: @escaping () -> Void,
+        onNext: (() -> Void)? = nil,
+        starCount: Int = 3,
+        timeRemaining: Int? = nil,
+        mouseAssetName: String = MouseSprite.happy.assetName,
+        showNext: Bool = true
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.onRetry = onRetry
+        self.onNext = onNext
+        self.starCount = earnedStars ?? starCount
+        self.timeRemaining = timeRemaining
+        self.mouseAssetName = mouseAssetName
+        self.showNext = showNext
+    }
 
     @Environment(\.layoutScale) private var scale
     @State private var hasEntered = false
 
-    /// Figma 800:197, at the 1366 × 1024 design scale.
     private enum Metric {
         static let titleTop: CGFloat = 111
         static let subtitleGap: CGFloat = 0
         static let starsGap: CGFloat = 63
-        static let mouseGap: CGFloat = 100
+        static let timeRemainingGap: CGFloat = 16
+        static let mouseGap: CGFloat = 80
 
         /// `mice_happy` — the pose that is holding the cheese. 331pt is the frame's,
         /// measured off the export; the mouse was previously drawn at 445.
@@ -49,14 +84,23 @@ struct SuccessOverlay: View {
         ZStack {
             ScrimOverlay()
             celebration
-            SuccessActionsRow(onRetry: onRetry, onNext: onNext)
+            SuccessActionsRow(
+                onRetry: onRetry,
+                onNext: onNext,
+                showNext: showNext
+            )
         }
         .opacity(hasEntered ? 1 : 0)
         .scaleEffect(hasEntered ? 1 : 0.92)
-        .onAppear {
+        .task {
+            // 1. Jalankan animasi masuk overlay
             withAnimation(.easeOut(duration: AppDuration.celebrationEntry)) {
                 hasEntered = true
             }
+
+            // 2. Putar audio Success/Fail secara instan (non-blocking) agar keju langsung dapat dianimasikan
+            let statusTrack: AudioTrack = starCount > 0 ? .success : .fail
+            AudioManager.shared.playSFX(statusTrack)
         }
     }
 
@@ -74,11 +118,19 @@ struct SuccessOverlay: View {
 
             Spacer().frame(height: Metric.starsGap * scale)
 
-            CheeseStarRow()
+            CheeseStarRow(earnedStars: starCount)
 
-            Spacer().frame(height: Metric.mouseGap * scale)
+            if let timeRemaining {
+                Spacer().frame(height: Metric.timeRemainingGap * scale)
+                (Text("time remain: ") + Text("\(timeRemaining)s").bold())
+                    .appText(AppFont.resultTime)
+                    .foregroundStyle(AppColor.textOnCamera)
+                Spacer().frame(height: (Metric.mouseGap / 2) * scale)
+            } else {
+                Spacer().frame(height: Metric.mouseGap * scale)
+            }
 
-            Image(MouseSprite.happy.assetName)
+            Image(mouseAssetName)
                 .resizable()
                 .scaledToFit()
                 .frame(height: Metric.mouseHeight * scale)
@@ -90,12 +142,49 @@ struct SuccessOverlay: View {
     }
 }
 
-#Preview {
+#Preview("L1 — Success") {
     SuccessOverlay(
         title: "CHEESE SECURED!",
         subtitle: "Great job!",
+        earnedStars: 3,
         onRetry: {},
         onNext: {}
+    )
+    .previewBackdrop(.cameraFeed)
+}
+
+#Preview("L2 — 3 Stars") {
+    SuccessOverlay(
+        title: "CHEESE SECURED!",
+        subtitle: "Great gear combination! Just the right mix!",
+        onRetry: {},
+        onNext: {},
+        starCount: 3,
+        timeRemaining: 13
+    )
+        .previewBackdrop(.cameraFeed)
+}
+
+#Preview("L2 — 1 Star") {
+    SuccessOverlay(
+        title: "Phew, got it!",
+        subtitle: "Your gears pulled through!",
+        onRetry: {},
+        onNext: {},
+        starCount: 1,
+        timeRemaining: 2
+    )
+        .previewBackdrop(.cameraFeed)
+}
+
+#Preview("L2 — Fail Weak") {
+    SuccessOverlay(
+        title: "Let's use a stronger gear!",
+        subtitle: "Try switching which gear i should turn!",
+        onRetry: {},
+        starCount: 0,
+        mouseAssetName: "mouse_panic1",
+        showNext: false
     )
         .previewBackdrop(.cameraFeed)
 }

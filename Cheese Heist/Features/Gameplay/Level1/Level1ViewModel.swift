@@ -19,6 +19,8 @@ import Observation
 @MainActor
 @Observable
 final class Level1ViewModel {
+    
+    var earnedStars: Int = 3
 
     private(set) var phase: Level1Phase = .aligningCrane
     private(set) var inputGate = Level1InputGate.of(.aligningCrane)
@@ -170,4 +172,8 @@ final class Level1ViewModel {
     /// Whether a speech bubble is on screen right now. The bubble prints its own
     /// tap-to-continue hint, so the full-screen one stands down while it is up.
     var hasDialogue: Bool { dialogue.current != nil }
+    
+    func playMainAudio() {
+            AudioManager.shared.playBGM(.page1)
+        }
 }

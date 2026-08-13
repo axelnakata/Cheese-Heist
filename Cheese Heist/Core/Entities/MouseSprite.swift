@@ -17,8 +17,9 @@ enum MouseSprite: String, CaseIterable, Sendable {
     case talkIdle = "mouse_talk_idle"
     case talkStruggle = "mouse_talk_struggle"
     case shockHappy = "mouse_shock_happy"
-    case happy = "mice_happy"
+    case happy = "mouse_happy"
     case think = "mouse_think"
+    case panic1 = "mouse_panic1"
 
     var assetName: String { rawValue }
 
@@ -31,6 +32,7 @@ enum MouseSprite: String, CaseIterable, Sendable {
         // height as the other four. The first import was the SVG's own crop — the mouse
         // sliced off at the waist and shoved into a landscape box.
         case .think: return 1003.0 / 1200.0
+        case .panic1: return 986.0 / 1200.0
         }
     }
 
