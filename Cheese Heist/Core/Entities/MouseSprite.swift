@@ -17,7 +17,7 @@ enum MouseSprite: String, CaseIterable, Sendable {
     case talkIdle = "mouse_talk_idle"
     case talkStruggle = "mouse_talk_struggle"
     case shockHappy = "mouse_shock_happy"
-    case happy = "mice_happy"
+    case happy = "mouse_happy"
     case think = "mouse_think"
 
     var assetName: String { rawValue }

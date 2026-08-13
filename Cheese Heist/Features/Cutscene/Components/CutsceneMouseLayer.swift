@@ -33,8 +33,8 @@ struct CutsceneMouseLayer: View {
     private enum Metric {
         /// Mouse height in design points — Figma `mice happy 1`, 590 tall, bleeding off
         /// the bottom of the frame exactly as in the mockups.
-        static let mouseHeight: CGFloat = 590
-        static let leadingInset: CGFloat = 20
+        static let mouseHeight: CGFloat = 550
+        static let leadingInset: CGFloat = 10
         /// Where on the mouse the bubble's tail points, as a fraction of its box.
         static let headX: CGFloat = 0.90
         static let headY: CGFloat = 0.68
@@ -49,6 +49,7 @@ struct CutsceneMouseLayer: View {
                         .scaledToFit()
                         .frame(height: Metric.mouseHeight * scale)
                         .padding(.leading, Metric.leadingInset * scale)
+                        .offset(y:150)
                         .allowsHitTesting(false)
                 }
 
@@ -68,12 +69,19 @@ struct CutsceneMouseLayer: View {
 
     /// The mouse's head, in this layer's coordinate space.
     private func headAnchor(in size: CGSize, pose: MouseSprite?) -> CGPoint? {
-        guard let pose, size.height > 0 else { return nil }
+        guard size.height > 0 else { return nil }
+        
         let height = Metric.mouseHeight * scale
-        let width = height * pose.aspectRatio
         let left = Metric.leadingInset * scale
         let top = size.height - height
-        return CGPoint(x: left + width * Metric.headX, y: top + height * Metric.headY)
+        
+        let referenceWidth = height * 1.0
+        let anchorX = left + referenceWidth * Metric.headX
+        
+        let currentPoseHeight = pose != nil ? height : height
+        let anchorY = top + currentPoseHeight * Metric.headY + 100
+        
+        return CGPoint(x: anchorX, y: anchorY)
     }
 }
 
