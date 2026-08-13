@@ -24,10 +24,10 @@ enum CutsceneTuning {
 
     /// Yaw applied to the cat so its nose points along the direction of travel.
     ///
-    /// CALIBRATE. `thundercat.usdz` carries a −90°-about-X correction from its Blender
-    /// export, so which local axis ends up as "forward" is not something we can read off
-    /// the file — it has to be looked at. Quarter-turns here are cheap: if the cat orbits
-    /// sideways, this is the only number that needs to move.
+    /// CALIBRATE. The RCP-authored axis correction in `meong.usdz` fixes the cat's own
+    /// export rotations, but "forward" along the orbit is a separate question from
+    /// "upright" — it still has to be looked at. Quarter-turns here are cheap: if the
+    /// cat orbits sideways, this is the only number that needs to move.
     static let catForwardYaw: Float = 0
 
     /// Orbit radius around the cheese, in metres (PRD-Cutscene §6.3).
@@ -40,13 +40,15 @@ enum CutsceneTuning {
     /// the orientation every frame made the walk look like a turntable.
     static let catTurnRate: Float = 4.0
 
-    /// The walk cycle's slice of `thundercat.usdz`'s baked take, in seconds.
+    /// The walk cycle's slice of the cat's baked take, in seconds.
     ///
-    /// Straight out of `C5.usda`: the RealityKit `AnimationLibrary` there cuts the take
-    /// `"default subtree animation"` at startTimes [0, 5.227722, 5.704193] and the
-    /// timeline plays the middle slice — 0.4765 s — sixteen times over.
-    static let catWalkClipStart: TimeInterval = 5.2277
-    static let catWalkClipEnd: TimeInterval = 5.7042
+    /// The cat (`tooncat`, inside `meong.usdz`) carries exactly one take — `Action`,
+    /// frames 1–21 at 24 fps in the source `.usda` (≈0.833 s) — so the "slice" is the
+    /// whole take rather than a cut out of a longer performance. CALIBRATE: confirm
+    /// against the duration `CatEntity` logs at runtime (`Logger.cutscene`, "cat
+    /// takes: …") on first device run and correct if RealityKit reports it differently.
+    static let catWalkClipStart: TimeInterval = 0
+    static let catWalkClipEnd: TimeInterval = 0.8333
 
     // MARK: - Cheese
 

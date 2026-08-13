@@ -146,12 +146,14 @@ struct BundledAssetTests {
 
     // MARK: - Cutscene assets
 
-    @Test("thundercat.usdz loads from the bundle")
-    func thundercatLoads() {
-        #expect(
-            (try? Entity.load(named: "thundercat")) != nil,
-            "thundercat.usdz is missing from Resources/3DModels/Characters/"
-        )
+    @Test("meong.usdz loads and the cat builds out of it")
+    func catBuildsFromMeong() {
+        guard let cat = CatEntity.make() else {
+            Issue.record("meong.usdz did not yield a \"tooncat\" child from the bundle")
+            return
+        }
+
+        #expect(ModelBounds.measure(cat.holder) != nil)
     }
 
     @Test("blueprint_scroll resolves in the asset catalogue")

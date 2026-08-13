@@ -2,19 +2,29 @@
 //  CatEntity.swift
 //  Cheese Heist
 //
-//  PRD-Cutscene §7.5 — loads `thundercat.usdz` and pulls the walk cycle out of it.
+//  PRD-Cutscene §7.5 — loads `meong.usdz` and pulls the cat and its walk cycle out of it.
 //
-//  ═══ THE FILE CARRIES MORE THAN ONE ANIMATION, AND ONLY A SLICE OF ONE IS WANTED. ═══
+//  `meong.usdz` is a Reality Composer Pro scene authored to hold the cat NEXT TO a
+//  reference cheese, purely so the axis mess `tooncat.usdz`'s Blender/Sketchfab export
+//  chain leaves behind could be corrected by eye in the RCP viewport instead of by
+//  guessing quaternions blind. Only the cat is pulled out of it at runtime — the
+//  reference cheese in the file (`Cheese_2`) is authoring scaffolding, not the payload;
+//  the cutscene's actual cheese still comes from `CheeseEntity`, which is shared with
+//  Level 1 and has no business depending on a cutscene-only composite file.
 //
-//  `thundercat.usdz` is a flattened Reality Composer Pro scene: a Blender `SkelRoot`
-//  with a baked take, wrapped in an RCP layer that adds a Timeline of orbit and spin
-//  actions. Taking `availableAnimations.first` is a coin toss between the two, and the
-//  Timeline's orbit is precisely the thing we drive in code instead — playing it would
-//  fight `OrbitPatrolModel` for the cat's transform.
+//  The cat's TRANSLATION from being positioned next to that reference cheese is
+//  discarded on extraction — `OrbitPatrolModel`/`CatOrbitDriver` own `holder`'s position
+//  every frame, computed fresh from the orbit angle, and a leftover authoring offset
+//  would just add a constant error to it. Only the ROTATION is kept: that is the actual
+//  axis correction, and it replaces what used to be a hand-tuned `axisCorrection`
+//  constant here.
 //
-//  So the take is chosen by duration, then trimmed to the walk cycle. `C5.usda` records
-//  the slice exactly: the RCP `AnimationLibrary` cuts at [0, 5.227722, 5.704193] and
-//  loops the middle 0.4765 s. Those two numbers are `CutsceneTuning.catWalkClip*`.
+//  The file carries one baked take, `Action` (~0.833 s), no Timeline animating the
+//  cat's own transform — nothing here fights `OrbitPatrolModel` for it. The
+//  selection-by-duration and trim-to-`CutsceneTuning.catWalkClip*` machinery below is
+//  kept anyway, so a future asset that ships multiple takes (idle vs. walk, say) still
+//  trims correctly without a code change; on a single-take file it degrades to trivially
+//  picking that take and copying its full range.
 //
 //  The animation is also played on the entity that actually owns it, not on `holder`.
 //  `holder` is a bare `Entity` we create here for the orbit to write into; animations
@@ -24,6 +34,7 @@
 
 import RealityKit
 import os
+import simd
 
 struct CatProp {
     /// Positioned and turned by the orbit. Never carries the model's own transform.
@@ -38,17 +49,26 @@ struct CatProp {
 enum CatEntity {
 
     static func make() -> CatProp? {
-        guard let model = try? Entity.load(named: "thundercat") else {
-            Logger.cutscene.error("thundercat.usdz is not in the bundle")
+        guard let scene = try? Entity.load(named: "meong") else {
+            Logger.cutscene.error("meong.usdz is not in the bundle")
             return nil
         }
+        guard let cat = scene.findEntity(named: "tooncat") else {
+            Logger.cutscene.error("meong.usdz has no \"tooncat\" child")
+            return nil
+        }
+        cat.removeFromParent()
 
-        LoadedModelSanitiser.strip(from: model)
+        // Keep the RCP-authored axis correction (rotation); drop the authoring-only
+        // position next to the reference cheese — see the header comment.
+        cat.transform = Transform(scale: .one, rotation: cat.orientation, translation: .zero)
+
+        LoadedModelSanitiser.strip(from: cat)
 
         guard let normalised = GearMeshNormaliser.normalisedProp(
-            model, targetLongestEdge: CutsceneTuning.catBodyLength
+            cat, targetLongestEdge: CutsceneTuning.catBodyLength
         ) else {
-            Logger.cutscene.error("thundercat.usdz has no measurable volume")
+            Logger.cutscene.error("tooncat has no measurable volume")
             return nil
         }
 
@@ -61,15 +81,24 @@ enum CatEntity {
 
     // MARK: - Animation
 
-    /// Breadth-first search for the first descendant carrying animations.
+    /// The DEEPEST descendant carrying animations, not the first.
+    ///
+    /// `availableAnimations` is not confined to the entity that owns the animation — it
+    /// propagates up the whole ancestor chain above it too. On `tooncat.usdz` every
+    /// entity from the loaded root down to the `SkelRoot`'s own parent reports a
+    /// non-empty list, so a first-hit search grabbed an outer Xform instead of the
+    /// `SkelRoot` itself, and played the walk cycle on an entity with no skin binding —
+    /// which is what sent the cat to some other transform entirely rather than doing
+    /// nothing. The deepest hit is always the true owner: nothing propagates downward.
     private static func animationOwner(in root: Entity) -> Entity? {
+        var deepest: Entity?
         var queue = [root]
         while !queue.isEmpty {
             let entity = queue.removeFirst()
-            if !entity.availableAnimations.isEmpty { return entity }
+            if !entity.availableAnimations.isEmpty { deepest = entity }
             queue.append(contentsOf: entity.children)
         }
-        return nil
+        return deepest
     }
 
     /// The walk cycle, trimmed out of the longest take and set to loop.
@@ -81,7 +110,7 @@ enum CatEntity {
     private static func walkClip(from entity: Entity) -> AnimationResource? {
         let takes = entity.availableAnimations
         guard !takes.isEmpty else {
-            Logger.cutscene.error("thundercat.usdz exposed no animations")
+            Logger.cutscene.error("tooncat exposed no animations")
             return nil
         }
 
