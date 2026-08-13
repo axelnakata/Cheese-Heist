@@ -47,7 +47,7 @@ extension Level2ViewModel {
 
     /// The mouse sprite for the result screen.
     var resultMouseSprite: String {
-        isFail ? "mouse_panic1" : MouseSprite.happy.assetName
+        isFail ? MouseSprite.panic1.assetName : MouseSprite.happy.assetName
     }
 
     /// Final star count for the result screen.
