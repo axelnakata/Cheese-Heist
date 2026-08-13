@@ -18,6 +18,8 @@ struct RootView: View {
                 BlueprintView(onFinished: { services.router.navigate(to: .level1) })
             case .level1:
                 Level1View(services: services)
+            case .level2:
+                Level2View(services: services)
             case .unsupportedDevice:
                 UnsupportedDeviceView()
             default:

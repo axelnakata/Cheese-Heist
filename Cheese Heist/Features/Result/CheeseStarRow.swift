@@ -25,6 +25,10 @@ struct CheeseStarRow: View {
     /// The imageset in `Assets.xcassets`. Published so a test can assert it loads.
     static let assetName = "cheese_star"
 
+    /// How many cheese are "earned" (solid). Stars beyond this count render as outlines.
+    /// Defaults to 3 for backward compatibility with Level 1.
+    var starCount: Int = 3
+
     @Environment(\.layoutScale) private var scale
 
     @State private var showStars = [false, false, false]
@@ -67,8 +71,8 @@ struct CheeseStarRow: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: frameSide * scale, height: frameSide * scale)
+                    .opacity(showStars[index] ? (index < starCount ? 1.0 : 0.25) : 0.0)
                     .scaleEffect(showStars[index] ? 1.0 : 0.0)
-                    .opacity(showStars[index] ? 1.0 : 0.0)
                     .animation(
                         .spring(response: 0.5, dampingFraction: 0.6)
                         .delay(Double(index) * 0.2),

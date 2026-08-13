@@ -40,7 +40,7 @@ struct Level1View: View {
                     title: Level1Script.successTitle,
                     subtitle: Level1Script.successSubtitle,
                     onRetry: { withAnimation { viewModel.handle(.tappedRetry) } },
-                    onNext: { viewModel.handle(.tappedNext) }
+                    onNext: { services.router.navigate(to: .level2) }
                 )
                 .transition(.opacity)
             }

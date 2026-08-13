@@ -17,7 +17,8 @@ import SwiftUI
 struct SuccessActionsRow: View {
 
     let onRetry: () -> Void
-    let onNext: () -> Void
+    var onNext: (() -> Void)?
+    var showNext: Bool = true
 
     @Environment(\.layoutScale) private var scale
 
@@ -31,7 +32,9 @@ struct SuccessActionsRow: View {
         HStack {
             LargeCTAButton(icon: .retry, size: .celebration, action: onRetry)
             Spacer()
-            LargeCTAButton(icon: .next, size: .celebration, action: onNext)
+            if showNext, let onNext {
+                LargeCTAButton(icon: .next, size: .celebration, action: onNext)
+            }
         }
         .padding(.horizontal, Metric.sideInset * scale)
         .padding(.bottom, Metric.bottomInset * scale)
