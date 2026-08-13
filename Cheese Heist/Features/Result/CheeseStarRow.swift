@@ -67,11 +67,11 @@ struct CheeseStarRow: View {
     var body: some View {
         HStack(spacing: spacing * scale) {
             ForEach(0..<3, id: \.self) { index in
-                Image(Self.assetName)
+                Image(index < starCount ? Self.assetName : "cheese_empty")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: frameSide * scale, height: frameSide * scale)
-                    .opacity(showStars[index] ? (index < starCount ? 1.0 : 0.25) : 0.0)
+                    .opacity(showStars[index] ? 1.0 : 0.0)
                     .scaleEffect(showStars[index] ? 1.0 : 0.0)
                     .animation(
                         .spring(response: 0.5, dampingFraction: 0.6)

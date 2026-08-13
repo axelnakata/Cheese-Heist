@@ -36,11 +36,11 @@ struct Level1HUDLayer: View {
             }
 
             VStack {
+                Spacer()
                 if let chip {
                     InstructionChip(chip)
-                        .padding(.top, AppSpacing.xl * scale)
+                        .padding(.bottom, AppSpacing.xl * scale)
                 }
-                Spacer()
             }
             .frame(maxWidth: .infinity)
 

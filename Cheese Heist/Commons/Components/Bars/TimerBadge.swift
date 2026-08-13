@@ -16,9 +16,10 @@ struct TimerBadge: View {
     @Environment(\.layoutScale) private var scale
 
     private enum Metric {
-        static let width: CGFloat = 68
-        static let height: CGFloat = 48
-        static let cornerRadius: CGFloat = 14
+        static let width: CGFloat = 96
+        static let height: CGFloat = 64
+        static let cornerRadius: CGFloat = 20
+        static let borderWidth: CGFloat = 2
     }
 
     var body: some View {
@@ -29,6 +30,10 @@ struct TimerBadge: View {
             .background(
                 RoundedRectangle(cornerRadius: Metric.cornerRadius * scale)
                     .fill(AppColor.surfaceInstruction)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Metric.cornerRadius * scale)
+                    .strokeBorder(Color.white, lineWidth: Metric.borderWidth * scale)
             )
     }
 }

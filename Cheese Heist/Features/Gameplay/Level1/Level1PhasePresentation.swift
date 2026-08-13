@@ -37,6 +37,6 @@ enum Level1PhasePresentation {
 
     /// Whether the alignment illustration and its scrim are on screen.
     static func showsAlignmentIllustration(_ phase: Level1Phase) -> Bool {
-        phase == .aligningCrane
+        phase == .aligningCrane || phase == .detectingGears
     }
 }

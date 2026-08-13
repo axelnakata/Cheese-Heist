@@ -89,11 +89,22 @@ final class AppServices {
         }
     }
 
+    /// Tears down any existing AR 3D scene, resets vision detection, and clears active level references
+    /// so the next level calibration starts fresh from scratch.
+    func resetARGameplay() {
+        coordinator?.teardown()
+        coordinator = nil
+        detection.reset()
+        level1 = nil
+        level2 = nil
+    }
+
     // MARK: - Level 1
 
     /// Starts the session and the detector for a Level 1 attempt, and stands up the
     /// scene the moment a pair locks.
     func startLevel1(with viewModel: Level1ViewModel) {
+        resetARGameplay()
         level1 = viewModel
         viewModel.onTeardownRequested = { [weak self] in self?.restartAttempt() }
 
@@ -110,6 +121,7 @@ final class AppServices {
     /// Starts the session and the detector for a Level 2 attempt.
     /// Same wiring as Level 1 but uses Level 2 tuning and scene director.
     func startLevel2(with viewModel: Level2ViewModel) {
+        resetARGameplay()
         level2 = viewModel
         viewModel.onTeardownRequested = { [weak self] in self?.restartAttempt() }
 
@@ -204,6 +216,7 @@ final class AppServices {
     private func restartAttempt() {
         coordinator?.teardown()
         coordinator = nil
+        detection.reset()
         detection.start(source: arSessionManager)
     }
 }

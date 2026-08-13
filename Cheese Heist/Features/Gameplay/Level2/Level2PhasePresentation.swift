@@ -14,7 +14,7 @@ enum Level2PhasePresentation {
 
     /// Whether the alignment illustration should be shown.
     static func showsAlignmentIllustration(_ phase: Level2Phase) -> Bool {
-        phase == .aligningCrane
+        phase == .aligningCrane || phase == .detectingGears
     }
 
     /// Whether the strength/speed bars should be visible.
@@ -25,12 +25,9 @@ enum Level2PhasePresentation {
         }
     }
 
-    /// Whether the cheese countdown icons should be visible.
+    /// Whether the cheese countdown icons should be visible in the HUD.
     static func showsCheeseCountdown(_ phase: Level2Phase) -> Bool {
-        switch phase {
-        case .cranking, .stallShaking: return true
-        default: return false
-        }
+        false
     }
 
     /// Whether the timer badge should be visible.
@@ -43,14 +40,9 @@ enum Level2PhasePresentation {
         }
     }
 
-    /// Whether the role labels should be visible.
+    /// Whether the role labels should be visible. Shown during gear setup only, hidden when cranking.
     static func showsRoleLabels(_ phase: Level2Phase) -> Bool {
-        switch phase {
-        case .rolesChosen, .cranking, .stallShaking:
-            return true
-        default:
-            return false
-        }
+        phase == .rolesChosen
     }
 
     /// Whether a result overlay (success or fail) should be shown.

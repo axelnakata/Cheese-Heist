@@ -18,7 +18,7 @@ final class Level2PhaseMachineTests: XCTestCase {
     }
 
     func testDetectionToRolesSelection() {
-        let pair = GearPair(driver: .z12, follower: .z36)
+        let pair = GearPair(driver: .eightTooth, follower: .fortyTooth)
         let assignment = GearRoleAssignment(driverID: UUID(), followerID: UUID())
 
         XCTAssertEqual(
@@ -59,14 +59,25 @@ final class Level2PhaseMachineTests: XCTestCase {
         )
     }
 
-    func testRetryResetsToSelectingRoles() {
+    func testRetryResetsToAligningCrane() {
         XCTAssertEqual(
             Level2PhaseMachine.next(from: .failedWeak, on: .tappedRetry),
-            .selectingRoles
+            .aligningCrane
         )
         XCTAssertEqual(
             Level2PhaseMachine.next(from: .succeeded, on: .tappedRetry),
-            .selectingRoles
+            .aligningCrane
+        )
+    }
+
+    func testRestartFromAnyPhase() {
+        XCTAssertEqual(
+            Level2PhaseMachine.next(from: .cranking, on: .tappedRestart),
+            .aligningCrane
+        )
+        XCTAssertEqual(
+            Level2PhaseMachine.next(from: .failedWeak, on: .tappedRestart),
+            .aligningCrane
         )
     }
 }

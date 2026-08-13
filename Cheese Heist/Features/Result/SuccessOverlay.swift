@@ -98,12 +98,13 @@ struct SuccessOverlay: View {
 
             if let timeRemaining {
                 Spacer().frame(height: Metric.timeRemainingGap * scale)
-                Text("time remain: **\(timeRemaining)s**")
-                    .appText(AppFont.body)
+                (Text("time remain: ") + Text("\(timeRemaining)s").bold())
+                    .appText(AppFont.resultTime)
                     .foregroundStyle(AppColor.textOnCamera)
+                Spacer().frame(height: (Metric.mouseGap / 2) * scale)
+            } else {
+                Spacer().frame(height: Metric.mouseGap * scale)
             }
-
-            Spacer().frame(height: Metric.mouseGap * scale)
 
             Image(mouseAssetName)
                 .resizable()

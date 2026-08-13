@@ -67,12 +67,12 @@ struct Level2HUDLayer: View {
             .padding(.trailing, Metric.cornerInset * scale)
             .padding(.top, Metric.topInset * scale)
 
-            // Centre: instruction chip
+            // Bottom: instruction chip
             if let chip {
                 VStack {
-                    InstructionChip(chip)
-                        .padding(.top, AppSpacing.xl * scale)
                     Spacer()
+                    InstructionChip(chip)
+                        .padding(.bottom, AppSpacing.xl * scale)
                 }
                 .frame(maxWidth: .infinity)
             }

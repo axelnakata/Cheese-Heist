@@ -12,7 +12,7 @@ final class Level2OutcomeEvaluatorTests: XCTestCase {
 
     func testOutcomeEvaluationForSufficientTorque() {
         // Driver = 24t, Follower = 40t => ratio = 40 / 24 = 1.667 (> 1.0)
-        let pair = GearPair(driver: .z24, follower: .z40)
+        let pair = GearPair(driver: .twentyFourTooth, follower: .fortyTooth)
         let outcome = Level2GearOutcomeEvaluator.evaluate(pair: pair)
 
         XCTAssertTrue(outcome.canLift, "24t -> 40t should be able to lift 120g payload")
@@ -21,7 +21,7 @@ final class Level2OutcomeEvaluatorTests: XCTestCase {
 
     func testOutcomeEvaluationForInsufficientTorque() {
         // Driver = 40t, Follower = 8t => ratio = 8 / 40 = 0.2 (< 1.0)
-        let pair = GearPair(driver: .z40, follower: .z8)
+        let pair = GearPair(driver: .fortyTooth, follower: .eightTooth)
         let outcome = Level2GearOutcomeEvaluator.evaluate(pair: pair)
 
         XCTAssertFalse(outcome.canLift, "40t -> 8t should stall under 120g payload")

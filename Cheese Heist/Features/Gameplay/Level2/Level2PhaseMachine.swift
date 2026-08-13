@@ -63,12 +63,9 @@ enum Level2PhaseMachine {
         case (.failedSlow, .tappedRetry):
             return .aligningCrane
 
-        // — Restart from anywhere except result screens and alignment
-        case (.selectingRoles, .tappedRestart),
-             (.rolesChosen, .tappedRestart),
-             (.cranking, .tappedRestart),
-             (.stallShaking, .tappedRestart):
-            return .aligningCrane
+        // — Restart from anywhere
+        case (_, .tappedRestart):
+            return phase == .aligningCrane ? nil : .aligningCrane
 
         default:
             return nil
