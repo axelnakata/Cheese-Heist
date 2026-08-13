@@ -28,9 +28,11 @@ final class AppServices {
     @ObservationIgnored let ticker = SceneUpdateTicker()
     @ObservationIgnored private(set) var coordinator: GameplaySceneCoordinator?
     @ObservationIgnored private weak var level1: Level1ViewModel?
+    @ObservationIgnored private weak var level2: Level2ViewModel?
     @ObservationIgnored private(set) var cutsceneCoordinator: CutsceneSceneCoordinator?
     @ObservationIgnored private var hasBooted = false
     @ObservationIgnored private var level1TickerID: UUID?
+    @ObservationIgnored private var level2TickerID: UUID?
 
     /// Chooses the first route. Runs once per process.
     ///
@@ -87,11 +89,22 @@ final class AppServices {
         }
     }
 
+    /// Tears down any existing AR 3D scene, resets vision detection, and clears active level references
+    /// so the next level calibration starts fresh from scratch.
+    func resetARGameplay() {
+        coordinator?.teardown()
+        coordinator = nil
+        detection.reset()
+        level1 = nil
+        level2 = nil
+    }
+
     // MARK: - Level 1
 
     /// Starts the session and the detector for a Level 1 attempt, and stands up the
     /// scene the moment a pair locks.
     func startLevel1(with viewModel: Level1ViewModel) {
+        resetARGameplay()
         level1 = viewModel
         viewModel.onTeardownRequested = { [weak self] in self?.restartAttempt() }
 
@@ -103,7 +116,24 @@ final class AppServices {
         startLevel1Ticker()
     }
 
-    // MARK: - The two clocks
+    // MARK: - Level 2
+
+    /// Starts the session and the detector for a Level 2 attempt.
+    /// Same wiring as Level 1 but uses Level 2 tuning and scene director.
+    func startLevel2(with viewModel: Level2ViewModel) {
+        resetARGameplay()
+        level2 = viewModel
+        viewModel.onTeardownRequested = { [weak self] in self?.restartAttempt() }
+
+        arSessionManager.startSession()
+        detection.onTrackingUpdate = { [weak self] frame, gears in
+            self?.trackingUpdateLevel2(frame: frame, gears: gears)
+        }
+        detection.start(source: arSessionManager)
+        startLevel2Ticker()
+    }
+
+    // MARK: - The two clocks (Level 1)
 
     /// FAST PATH, ~6 Hz. Builds the scene on the first locked solution, then does
     /// nothing but hand later measurements to the alignment filter.
@@ -127,20 +157,11 @@ final class AppServices {
         coordinator?.correctAlignment(toward: frame, session: arSessionManager.session)
     }
 
-    /// RENDER CLOCK, 60 Hz, in the PRD-Level1 §6.1 order: alignment first so physics
-    /// writes into an already-corrected frame, projection last so the SwiftUI overlay
-    /// reads the same frame it draws.
-    /// Registers the 60 Hz fan-out, once.
-    ///
-    /// `Level1View.onAppear` is the caller, and `onAppear` is not once-only — arriving
-    /// from the cutscene is itself a fresh appearance. Registering unconditionally
-    /// stacked a second copy of the whole fan-out on the ticker, which does not fail
-    /// loudly: it just advances the lift twice per frame.
+    /// RENDER CLOCK, 60 Hz, in the PRD-Level1 §6.1 order.
     private func startLevel1Ticker() {
         guard level1TickerID == nil else { return }
 
         let arView = arSessionManager.setupARView()
-        // The cutscene may already have started it; `start` replaces the subscription.
         ticker.start(in: arView)
 
         level1TickerID = ticker.register { [weak self] deltaTime in
@@ -151,12 +172,51 @@ final class AppServices {
         }
     }
 
+    // MARK: - The two clocks (Level 2)
+
+    /// FAST PATH for Level 2 — identical structure, different scene director.
+    private func trackingUpdateLevel2(frame: CraneFrame, gears: [DetectedGear]) {
+        guard let level2, let arView = arSessionManager.arView else { return }
+
+        if coordinator == nil {
+            let ordered = GearOrdering.leftToRight(gears, in: frame)
+            guard let assignment = Level2SceneDirector.initialAssignment(leftToRight: ordered)
+            else { return }
+            let scene = GameplaySceneCoordinator()
+            scene.build(
+                frame: frame, gears: gears, assignment: assignment,
+                liftHeight: Float(Level2Tuning.value.liftHeight), in: arView
+            )
+            coordinator = scene
+            level2.attach(scene: scene)
+            return
+        }
+
+        coordinator?.correctAlignment(toward: frame, session: arSessionManager.session)
+    }
+
+    /// RENDER CLOCK for Level 2.
+    private func startLevel2Ticker() {
+        guard level2TickerID == nil else { return }
+
+        let arView = arSessionManager.setupARView()
+        ticker.start(in: arView)
+
+        level2TickerID = ticker.register { [weak self] deltaTime in
+            guard let self else { return }
+            coordinator?.smoothAlignment(deltaTime: deltaTime)
+            level2?.advance(deltaTime: Double(deltaTime))
+            coordinator?.refreshProjection(session: arSessionManager.session)
+        }
+    }
+
     /// Retry. The scene goes and the detector starts looking again; the session does
     /// not move. A fresh coordinator is built on the next lock, which is how one
     /// attempt per coordinator and one `session.run` per process coexist.
     private func restartAttempt() {
         coordinator?.teardown()
         coordinator = nil
+        detection.reset()
         detection.start(source: arSessionManager)
     }
 }

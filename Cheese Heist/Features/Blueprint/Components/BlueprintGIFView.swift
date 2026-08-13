@@ -34,12 +34,12 @@ struct BlueprintGIFView: UIViewRepresentable {
             var totalDuration: Double = 0
             let count = CGImageSourceGetCount(source)
 
-            for i in 0..<count {
-                if let cgImage = CGImageSourceCreateImageAtIndex(source, i, nil) {
+            for index in 0..<count {
+                if let cgImage = CGImageSourceCreateImageAtIndex(source, index, nil) {
                     images.append(UIImage(cgImage: cgImage))
 
                     // Ambil durasi per frame
-                    let frameProperties = CGImageSourceCopyPropertiesAtIndex(source, i, nil) as? [String: Any]
+                    let frameProperties = CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [String: Any]
                     let gifProperties = frameProperties?[kCGImagePropertyGIFDictionary as String] as? [String: Any]
                     let frameDuration = gifProperties?[kCGImagePropertyGIFUnclampedDelayTime as String] as? Double
                         ?? gifProperties?[kCGImagePropertyGIFDelayTime as String] as? Double
@@ -48,10 +48,10 @@ struct BlueprintGIFView: UIViewRepresentable {
                     totalDuration += frameDuration
                 }
             }
-            
+
             uiView.animationImages = images
             uiView.animationDuration = totalDuration
-            uiView.animationRepeatCount = 0 
+            uiView.animationRepeatCount = 0
             uiView.startAnimating()
         }
     }

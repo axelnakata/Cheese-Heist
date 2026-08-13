@@ -42,6 +42,9 @@ struct BlueprintView: View {
             }
         }
         .statusBarHidden()
+        .onAppear {
+                    viewModel.onAppear()
+                }
     }
 
     private var sheet: some View {

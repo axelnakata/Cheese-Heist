@@ -29,4 +29,9 @@ final class SplashViewModel {
         hasTapped = true
         return true
     }
+    
+    func playSplashAudio() {
+            // Audio Splash & Cutscene sama yaitu "main menu" (page1)
+            AudioManager.shared.playBGM(.page1)
+        }
 }
