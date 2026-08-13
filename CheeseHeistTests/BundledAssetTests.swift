@@ -131,6 +131,14 @@ struct BundledAssetTests {
         )
     }
 
+    @Test("the empty cheese star is in the asset catalogue under cheese_empty")
+    func cheeseEmptyResolves() {
+        #expect(
+            UIImage(named: "cheese_empty") != nil,
+            "cheese_empty is missing from Assets.xcassets"
+        )
+    }
+
     @Test("the mouse sprite builds at the height the perch was computed for")
     func mouseSpriteBuilds() {
         guard let mouse = MouseSpriteEntity() else {

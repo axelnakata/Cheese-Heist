@@ -156,16 +156,21 @@ struct CheeseStarRow: View {
 
     private func animateAndPlayStars() async {
         let starTracks: [AudioTrack] = [.star1, .star2, .star3]
-        
-        // Loop sebanyak bintang yang didapatkan pemain
-        for i in 0..<min(earnedStars, 3) {
-            // 1. Tampilkan animasi bintang di UI
-            withAnimation {
-                showStars[i] = true
+
+        // Loop 3 kali untuk memunculkan 3 keju (baik keju utuh maupun keju kosong) satu per satu dengan irama yang pas
+        for starIndex in 0..<3 {
+            // Jika keju didapatkan, putar audio bintang secara instan (non-blocking)
+            if starIndex < min(earnedStars, 3) {
+                AudioManager.shared.playSFX(starTracks[starIndex])
             }
-            
-            // 2. Putar SFX Bintang yang sesuai dan tunggu hingga selesai sebelum lanjut
-            await AudioManager.shared.playSFXAndWait(track: starTracks[i])
+
+            // Tampilkan animasi pop keju (baik keju utuh maupun kosong)
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+                showStars[starIndex] = true
+            }
+
+            // Interval 350ms antarkeju agar suara setiap bintang terdengar terpisah dan jelas satu per satu
+            try? await Task.sleep(nanoseconds: 350_000_000)
         }
     }
 }

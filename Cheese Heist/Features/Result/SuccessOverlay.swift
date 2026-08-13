@@ -67,7 +67,6 @@ struct SuccessOverlay: View {
 
     @Environment(\.layoutScale) private var scale
     @State private var hasEntered = false
-    @State private var canStartStarAnimation = false
 
     private enum Metric {
         static let titleTop: CGFloat = 111
@@ -98,13 +97,10 @@ struct SuccessOverlay: View {
             withAnimation(.easeOut(duration: AppDuration.celebrationEntry)) {
                 hasEntered = true
             }
-            
-            // 2. Putar audio Success/Fail terlebih dahulu
+
+            // 2. Putar audio Success/Fail secara instan (non-blocking) agar keju langsung dapat dianimasikan
             let statusTrack: AudioTrack = starCount > 0 ? .success : .fail
-            await AudioManager.shared.playSFXAndWait(track: statusTrack)
-            
-            // 3. Setelah audio Success/Fail selesai, izinkan animasi Bintang dimulai
-            canStartStarAnimation = true
+            AudioManager.shared.playSFX(statusTrack)
         }
     }
 
@@ -122,14 +118,7 @@ struct SuccessOverlay: View {
 
             Spacer().frame(height: Metric.starsGap * scale)
 
-            // Bintang hanya akan dirender dan memutar suaranya jika audio Success sudah selesai
-            if canStartStarAnimation {
-                CheeseStarRow(earnedStars: starCount)
-            } else {
-                // Placeholder kasat mata untuk menjaga layout/spacing SwiftUI tetap konsisten
-                CheeseStarRow(earnedStars: 0)
-                    .hidden()
-            }
+            CheeseStarRow(earnedStars: starCount)
 
             if let timeRemaining {
                 Spacer().frame(height: Metric.timeRemainingGap * scale)
