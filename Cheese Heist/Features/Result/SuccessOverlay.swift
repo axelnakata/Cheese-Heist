@@ -26,8 +26,6 @@ import SwiftUI
 
 struct SuccessOverlay: View {
 
-    /// Copy is passed in, not read from a level's script — every level ends here and
-    /// only the words differ.
     let title: String
     let subtitle: String
     let onRetry: () -> Void
@@ -45,10 +43,32 @@ struct SuccessOverlay: View {
     /// Whether the Next/Continue button is shown. False on fail screens.
     var showNext: Bool = true
 
+    /// Initializer supporting both `earnedStars` (L1) and `starCount` (L2).
+    init(
+        title: String,
+        subtitle: String,
+        earnedStars: Int? = nil,
+        onRetry: @escaping () -> Void,
+        onNext: (() -> Void)? = nil,
+        starCount: Int = 3,
+        timeRemaining: Int? = nil,
+        mouseAssetName: String = MouseSprite.happy.assetName,
+        showNext: Bool = true
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.onRetry = onRetry
+        self.onNext = onNext
+        self.starCount = earnedStars ?? starCount
+        self.timeRemaining = timeRemaining
+        self.mouseAssetName = mouseAssetName
+        self.showNext = showNext
+    }
+
     @Environment(\.layoutScale) private var scale
     @State private var hasEntered = false
+    @State private var canStartStarAnimation = false
 
-    /// Figma 800:197, at the 1366 × 1024 design scale.
     private enum Metric {
         static let titleTop: CGFloat = 111
         static let subtitleGap: CGFloat = 0
@@ -73,10 +93,18 @@ struct SuccessOverlay: View {
         }
         .opacity(hasEntered ? 1 : 0)
         .scaleEffect(hasEntered ? 1 : 0.92)
-        .onAppear {
+        .task {
+            // 1. Jalankan animasi masuk overlay
             withAnimation(.easeOut(duration: AppDuration.celebrationEntry)) {
                 hasEntered = true
             }
+            
+            // 2. Putar audio Success/Fail terlebih dahulu
+            let statusTrack: AudioTrack = starCount > 0 ? .success : .fail
+            await AudioManager.shared.playSFXAndWait(track: statusTrack)
+            
+            // 3. Setelah audio Success/Fail selesai, izinkan animasi Bintang dimulai
+            canStartStarAnimation = true
         }
     }
 
@@ -94,7 +122,14 @@ struct SuccessOverlay: View {
 
             Spacer().frame(height: Metric.starsGap * scale)
 
-            CheeseStarRow(starCount: starCount)
+            // Bintang hanya akan dirender dan memutar suaranya jika audio Success sudah selesai
+            if canStartStarAnimation {
+                CheeseStarRow(earnedStars: starCount)
+            } else {
+                // Placeholder kasat mata untuk menjaga layout/spacing SwiftUI tetap konsisten
+                CheeseStarRow(earnedStars: 0)
+                    .hidden()
+            }
 
             if let timeRemaining {
                 Spacer().frame(height: Metric.timeRemainingGap * scale)
@@ -122,10 +157,11 @@ struct SuccessOverlay: View {
     SuccessOverlay(
         title: "CHEESE SECURED!",
         subtitle: "Great job!",
+        earnedStars: 3,
         onRetry: {},
         onNext: {}
     )
-        .previewBackdrop(.cameraFeed)
+    .previewBackdrop(.cameraFeed)
 }
 
 #Preview("L2 — 3 Stars") {

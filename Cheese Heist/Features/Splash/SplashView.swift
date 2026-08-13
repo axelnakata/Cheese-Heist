@@ -51,7 +51,8 @@ struct SplashView: View {
         }
         .ignoresSafeArea()
         .statusBarHidden()
-        .onAppear { viewModel.startAnimations() }
+        .onAppear { viewModel.startAnimations()
+            viewModel.playSplashAudio()}
     }
 
     private var devShortcutsOverlay: some View {
@@ -147,6 +148,7 @@ struct SplashView: View {
     }
 
     private func handleTap() {
+        AudioManager.shared.playSFX(.tap1)
         guard viewModel.tapToPlay() else { return }
         onTapToPlay()
     }
