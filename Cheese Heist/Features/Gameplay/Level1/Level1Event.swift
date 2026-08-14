@@ -20,14 +20,9 @@ enum Level1Event: Equatable, Sendable {
     /// A pair was locked, with the roles the teaching run starts on.
     case detectionLocked(pair: GearPair, assignment: GearRoleAssignment)
 
-    /// Twelve seconds without a lock.
+    /// Twelve seconds without a lock. There is no manual fallback — "Try looking
+    /// again" restarts the detector and waits for a real lock, same as the first try.
     case detectionTimedOut
-
-    /// The child picked the pair themselves from the fallback sheet.
-    case manualPairChosen(pair: GearPair, assignment: GearRoleAssignment)
-
-    /// A tap anywhere the current phase treats as "next".
-    case tappedContinue
 
     /// The lift reached this phase's ceiling.
     case liftReachedCeiling
@@ -35,8 +30,9 @@ enum Level1Event: Equatable, Sendable {
     /// A gear was tapped during role selection.
     case tappedGear(id: UUID)
 
-    /// PULL. Locks the assignment and swaps in the joystick.
-    case tappedPull
+    /// The child turned the joystick for the first time. Locks the assignment and
+    /// starts the free run — mirrors `Level2Event.joystickEngaged`.
+    case joystickEngaged
 
     case tappedRetry
     case tappedNext

@@ -2,9 +2,10 @@
 //  Level2PlayingLayer.swift
 //  Cheese Heist
 //
-//  PRD-Level2 §6 — the bottom overlay during the cranking phase:
-//    • Strength/speed bar pair (bottom-centre-left)
-//    • Joystick (bottom-right)
+//  PRD-Level2 §6 / Figma 857:94 — the bottom overlay during the cranking phase:
+//    • Strength/speed bar pair, on its own navy card, bottom-centre
+//    • Joystick, bottom-right corner — independent of the card, so the card stays
+//      centred instead of being pushed off-centre by the joystick sharing its row
 //
 
 import SwiftUI
@@ -24,36 +25,45 @@ struct Level2PlayingLayer: View {
     private enum Metric {
         static let cornerInset: CGFloat = 64
         static let barBottomInset: CGFloat = 48
+        static let cardHorizontalPadding: CGFloat = 28
+        static let cardVerticalPadding: CGFloat = 20
     }
 
     var body: some View {
         ZStack {
-            // Bottom: bars + joystick
-            VStack {
-                Spacer()
-                HStack(alignment: .bottom) {
-                    if showsBars {
-                        GearAttributeBarPair(
-                            strengthLevel: strengthLevel,
-                            speedLevel: speedLevel
-                        )
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
-                    }
-
+            if showsBars {
+                VStack {
                     Spacer()
+                    GearAttributeBarPair(strengthLevel: strengthLevel, speedLevel: speedLevel)
+                        .padding(.horizontal, Metric.cardHorizontalPadding * scale)
+                        .padding(.vertical, Metric.cardVerticalPadding * scale)
+                        .background(cardShape.fill(AppColor.surfaceInstruction))
+                        .overlay(cardShape.strokeBorder(AppColor.strokeChip, lineWidth: AppStroke.chip * scale))
+                        .padding(.bottom, Metric.barBottomInset * scale)
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                }
+                .frame(maxWidth: .infinity)
+            }
 
-                    if joystickEnabled {
+            if joystickEnabled {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
                         CircularJoystickView(
                             isEnabled: true, engagement: engagement,
                             onDrag: onDrag, onRelease: onRelease
                         )
-                        .transition(.scale.combined(with: .opacity))
                     }
                 }
-                .padding(.horizontal, Metric.cornerInset * scale)
-                .padding(.bottom, Metric.barBottomInset * scale)
+                .padding(Metric.cornerInset * scale)
+                .transition(.scale.combined(with: .opacity))
             }
         }
+    }
+
+    private var cardShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: AppRadius.chip * scale, style: .continuous)
     }
 }
 

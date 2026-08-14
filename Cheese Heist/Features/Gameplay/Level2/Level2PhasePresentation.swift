@@ -13,8 +13,12 @@ enum Level2PhasePresentation {
     }
 
     /// Whether the alignment illustration should be shown.
+    ///
+    /// Includes `manualFallback`: there is no manual picker, only "try looking again",
+    /// which restarts the detector without changing the phase — the illustration has
+    /// to already be behind the sheet so it is what's left once the sheet dismisses.
     static func showsAlignmentIllustration(_ phase: Level2Phase) -> Bool {
-        phase == .aligningCrane || phase == .detectingGears
+        phase == .aligningCrane || phase == .detectingGears || phase == .manualFallback
     }
 
     /// Whether the strength/speed bars should be visible.

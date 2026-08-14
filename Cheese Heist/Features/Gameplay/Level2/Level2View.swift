@@ -89,7 +89,6 @@ struct Level2View: View {
         if viewModel.phase == .manualFallback, let failure = services.detection.phase.failure {
             DetectionManualFallbackSheet(
                 failure: failure,
-                onChoose: { viewModel.chooseManualPair($0, $1) },
                 onRetry: { services.detection.start(source: services.arSessionManager) }
             )
         }

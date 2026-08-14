@@ -19,7 +19,7 @@ import Observation
 @MainActor
 @Observable
 final class Level1ViewModel {
-    
+
     var earnedStars: Int = 3
 
     private(set) var phase: Level1Phase = .aligningCrane
@@ -73,8 +73,7 @@ final class Level1ViewModel {
     /// assignment the event carried.
     private func applyPayload(of event: Level1Event) {
         switch event {
-        case .detectionLocked(let pair, let assignment),
-             .manualPairChosen(let pair, let assignment):
+        case .detectionLocked(let pair, let assignment):
             selection.begin(assignment: assignment)
             runner?.setPair(pair)
             scene?.apply(assignment: assignment, animated: false)
@@ -86,7 +85,7 @@ final class Level1ViewModel {
             // swaps the ratio, which is the whole point of letting them choose.
             if let pair = pairFor(next) { runner?.setPair(pair) }
 
-        case .tappedPull:
+        case .joystickEngaged:
             selection.commit()
 
         default:
@@ -135,21 +134,9 @@ final class Level1ViewModel {
 
     // MARK: - Input
 
-    /// A tap anywhere the current phase treats as "next".
-    func tapToContinue() {
-        guard inputGate.tapAdvances else { return }
-        guard dialogue.beats.isEmpty || dialogue.advance() else { return }
-        handle(.tappedContinue)
-    }
-
     func tapGear(_ id: UUID) {
         guard inputGate.gearsTappable else { return }
         handle(.tappedGear(id: id))
-    }
-
-    func tapPull() {
-        guard inputGate.pullVisible else { return }
-        handle(.tappedPull)
     }
 
     /// One render frame, fanned out by `SceneUpdateTicker`.
@@ -157,8 +144,16 @@ final class Level1ViewModel {
     /// The crank is refreshed here rather than only on a gesture callback: a finger held
     /// still on the ring sends nothing, and "nothing" has to mean disengaged rather than
     /// "whatever it was last time".
+    ///
+    /// The first turn is what locks the assignment in and starts the free run — mirrors
+    /// `Level2ViewModel.advance`.
     func advance(deltaTime: Double) {
         crank.refresh()
+
+        if phase == .rolesChosen && inputGate.joystickEnabled && crank.isCranking {
+            handle(.joystickEngaged)
+        }
+
         runner?.isCranking = inputGate.joystickEnabled && crank.isCranking
         runner?.advance(deltaTime: deltaTime)
     }
@@ -168,15 +163,12 @@ final class Level1ViewModel {
     var screenTargets: [GearScreenTarget] { scene?.screenTargets ?? [] }
     var mouseAnchor: CGPoint? { scene?.mouseScreenAnchor }
     var chipText: String? { Level1PhasePresentation.chip(for: phase) }
-    var spotlight: SpotlightSubject { director?.spotlight(for: phase) ?? .none }
+    var showsRoleLabels: Bool { Level1PhasePresentation.showsRoleLabels(phase) }
+    var showsJoystickHint: Bool { Level1PhasePresentation.showsJoystickHint(phase) }
     var isSucceeded: Bool { phase == .succeeded }
     var liftProgress: Double { runner?.progress ?? 0 }
 
-    /// Whether a speech bubble is on screen right now. The bubble prints its own
-    /// tap-to-continue hint, so the full-screen one stands down while it is up.
-    var hasDialogue: Bool { dialogue.current != nil }
-    
     func playMainAudio() {
-            AudioManager.shared.playBGM(.page1)
-        }
+        AudioManager.shared.playBGM(.page1)
+    }
 }

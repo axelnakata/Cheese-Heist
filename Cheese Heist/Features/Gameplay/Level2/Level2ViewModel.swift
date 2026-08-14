@@ -79,8 +79,7 @@ final class Level2ViewModel {
 
     private func applyPayload(of event: Level2Event) {
         switch event {
-        case .detectionLocked(let pair, let assignment),
-             .manualPairChosen(let pair, let assignment):
+        case .detectionLocked(let pair, let assignment):
             selection.begin(assignment: assignment)
             currentPair = pair
             runner?.setPair(pair)

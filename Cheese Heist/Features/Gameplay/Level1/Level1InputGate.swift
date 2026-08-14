@@ -12,8 +12,6 @@
 struct Level1InputGate: Equatable, Sendable {
     let gearsTappable: Bool
     let joystickEnabled: Bool
-    let pullVisible: Bool
-    let tapAdvances: Bool
 
     static func of(_ phase: Level1Phase) -> Level1InputGate {
         switch phase {
@@ -23,19 +21,17 @@ struct Level1InputGate: Equatable, Sendable {
         case .aligningCrane, .detectingGears, .manualFallback:
             return .none
 
-        case .introDialogue, .teachingDriver, .teachingJoystick,
-             .teachingFollower, .handOver:
-            return .init(gearsTappable: false, joystickEnabled: false,
-                         pullVisible: false, tapAdvances: true)
-
-        case .guidedCrankToHalf, .guidedCrankToFull, .freeCrank:
-            return .init(gearsTappable: false, joystickEnabled: true,
-                         pullVisible: false, tapAdvances: false)
-
-        // PULL visible means the roles stay changeable — D-2.
+        // Gears are pickable straight away — no PULL button. Tapping stays live in
+        // `rolesChosen` too, so the choice is still theirs right up to the moment they
+        // actually turn the joystick — see `Level1PhaseMachine`.
         case .selectingRoles:
-            return .init(gearsTappable: true, joystickEnabled: false,
-                         pullVisible: true, tapAdvances: false)
+            return .init(gearsTappable: true, joystickEnabled: false)
+
+        case .rolesChosen:
+            return .init(gearsTappable: true, joystickEnabled: true)
+
+        case .freeCrank:
+            return .init(gearsTappable: false, joystickEnabled: true)
 
         // The success overlay owns its own buttons.
         case .succeeded:
@@ -43,7 +39,5 @@ struct Level1InputGate: Equatable, Sendable {
         }
     }
 
-    static let none = Level1InputGate(
-        gearsTappable: false, joystickEnabled: false, pullVisible: false, tapAdvances: false
-    )
+    static let none = Level1InputGate(gearsTappable: false, joystickEnabled: false)
 }

@@ -47,8 +47,9 @@ enum Level1PhaseCommands {
     /// Where the cheese is allowed to go, and when it drops back.
     private static func applyLift(_ phase: Level1Phase, in context: Level1PhaseContext) {
         // The cheese returns to the table while the child is still CHOOSING, not when
-        // the free run starts. They see it re-armed before they commit to a driver.
-        guard phase != .selectingRoles else {
+        // the free run starts — whether they have picked a driver yet or are still
+        // free to change it.
+        guard phase != .selectingRoles, phase != .rolesChosen else {
             context.runner?.reset()
             return
         }

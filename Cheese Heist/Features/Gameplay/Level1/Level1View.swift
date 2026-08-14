@@ -81,33 +81,23 @@ struct Level1View: View {
             chip: viewModel.chipText,
             targets: viewModel.screenTargets,
             gate: viewModel.inputGate,
-            showsRoleLabels: viewModel.inputGate.gearsTappable,
+            showsRoleLabels: viewModel.showsRoleLabels,
             engagement: viewModel.crank.engagement,
             onDrag: { point, centre in viewModel.crank.drag(to: point, centre: centre) },
-            onRelease: { viewModel.crank.release() },
-            onPull: { viewModel.tapPull() }
+            onRelease: { viewModel.crank.release() }
         )
 
         Level1TutorialLayer(
-            subject: viewModel.spotlight,
-            targets: viewModel.screenTargets,
+            showsJoystickHint: viewModel.showsJoystickHint,
             beat: viewModel.dialogue.current,
             isRevealComplete: viewModel.dialogue.isRevealComplete,
             mouseAnchor: viewModel.mouseAnchor,
             onRevealComplete: { viewModel.dialogue.markRevealComplete() }
         )
 
-        if viewModel.inputGate.tapAdvances {
-            Level1HandOverLayer(
-                onContinue: { viewModel.tapToContinue() },
-                showsHint: !viewModel.hasDialogue
-            )
-        }
-
         if viewModel.phase == .manualFallback, let failure = services.detection.phase.failure {
             DetectionManualFallbackSheet(
                 failure: failure,
-                onChoose: { viewModel.chooseManualPair($0, $1) },
                 onRetry: { services.detection.start(source: services.arSessionManager) }
             )
         }
