@@ -2,8 +2,8 @@
 //  WinchModelTests.swift
 //  CheeseHeistTests
 //
-//  PRD §12.1 — height monotonicity, the clamp at the ceiling, and the rule that
-//  `minLiftDuration` clamps SPEED and never the ratio or the sign.
+//  Total lift duration is a designed property of the gear combination, not of crane
+//  height — `designedRopeSpeed` is the single formula that makes that true.
 //
 
 import Testing
@@ -11,57 +11,34 @@ import Testing
 
 struct WinchModelTests {
 
-    let tuning = Level1Tuning.value
-
-    @Test("rope speed is the magnitude of the follower's speed times the drum radius")
-    func ropeSpeedIsUnsigned() {
-        let forward = WinchModel.ropeSpeed(followerAngularVelocity: 4, winchRadius: 0.0025)
-        let reverse = WinchModel.ropeSpeed(followerAngularVelocity: -4, winchRadius: 0.0025)
-
-        #expect(forward == reverse)
-        #expect(forward == 4 * 0.0025)
+    @Test("designed speed is height over duration")
+    func speedIsHeightOverDuration() {
+        #expect(WinchModel.designedRopeSpeed(liftHeight: 0.10, duration: 5) == 0.02)
     }
 
-    /// The presentation floor applies to the rope, not to the gearing. A 25x spread in
-    /// lift time between the child's two role choices is the lesson; clamping the ratio
-    /// would flatten it.
-    @Test("minLiftDuration caps speed at liftHeight / minLiftDuration")
-    func speedClamp() {
-        let cap = tuning.liftHeight / tuning.minLiftDuration
+    /// The whole point of the feature: two cranes of different height, same gear pair,
+    /// finish at the same instant — only the rope speed differs.
+    @Test("the same duration at two different heights finishes in the same time, at different speeds")
+    func heightIndependentDuration() {
+        let duration = 5.0
+        let shortCrane = WinchModel.designedRopeSpeed(liftHeight: 0.05, duration: duration)
+        let tallCrane = WinchModel.designedRopeSpeed(liftHeight: 0.25, duration: duration)
 
-        #expect(WinchModel.clampedRopeSpeed(rawSpeed: cap * 10, tuning: tuning) == cap)
-        #expect(WinchModel.clampedRopeSpeed(rawSpeed: cap / 10, tuning: tuning) == cap / 10)
+        #expect(tallCrane > shortCrane)
+        #expect(0.05 / shortCrane == duration)
+        #expect(0.25 / tallCrane == duration)
     }
 
-    /// Evaluated once against the FULL height, so no per-segment special case exists —
-    /// the half-height run is capped by the same number as the full one.
-    @Test("the speed cap is independent of the segment being run")
-    func capIgnoresSegment() {
-        let cap = tuning.liftHeight / tuning.minLiftDuration
-        #expect(cap == 0.06 / 1.2)
-    }
-
-    /// The mirror of the floor, and the reason it exists: `liftHeight` is measured off
-    /// the crane now, so a child who builds a tall one puts 25cm of rope on the drum,
-    /// and at the slow pairing's honest speed that is most of a minute of cranking.
-    @Test("maxLiftDuration floors speed at liftHeight / maxLiftDuration")
-    func speedFloor() {
-        let floor = tuning.liftHeight / tuning.maxLiftDuration
-
-        #expect(WinchModel.clampedRopeSpeed(rawSpeed: floor / 10, tuning: tuning) == floor)
-        #expect(WinchModel.clampedRopeSpeed(rawSpeed: floor * 2, tuning: tuning) == floor * 2)
-    }
-
-    /// The two bounds must not cross, or one of them silently wins everywhere.
-    @Test("the floor is below the cap")
-    func boundsAreOrdered() {
-        #expect(tuning.maxLiftDuration > tuning.minLiftDuration)
+    @Test("a non-positive duration yields no speed rather than dividing by zero or going negative")
+    func nonPositiveDurationIsZeroSpeed() {
+        #expect(WinchModel.designedRopeSpeed(liftHeight: 0.10, duration: 0) == 0)
+        #expect(WinchModel.designedRopeSpeed(liftHeight: 0.10, duration: -1) == 0)
     }
 
     @Test("height never decreases and never passes the ceiling")
     func monotonicAndClamped() {
         var height: Double = 0
-        let ceiling = tuning.liftHeight
+        let ceiling = Level1Tuning.value.liftHeight
 
         for _ in 0..<1_000 {
             let next = WinchModel.advanceHeight(

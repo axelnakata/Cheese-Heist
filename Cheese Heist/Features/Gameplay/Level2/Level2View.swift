@@ -69,6 +69,7 @@ struct Level2View: View {
             showsRoleLabels: viewModel.showsRoleLabels,
             showsTimer: viewModel.showsTimer,
             timerSeconds: viewModel.timerRemaining,
+            isTimerRunning: viewModel.isTimerRunning,
             showsCheeseCountdown: viewModel.showsCheeseCountdown,
             solidCheeseCount: viewModel.starCount,
             showsRestart: viewModel.inputGate.restartVisible,
@@ -88,7 +89,6 @@ struct Level2View: View {
         if viewModel.phase == .manualFallback, let failure = services.detection.phase.failure {
             DetectionManualFallbackSheet(
                 failure: failure,
-                onChoose: { viewModel.chooseManualPair($0, $1) },
                 onRetry: { services.detection.start(source: services.arSessionManager) }
             )
         }

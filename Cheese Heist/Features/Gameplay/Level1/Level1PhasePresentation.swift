@@ -13,30 +13,38 @@ enum Level1PhasePresentation {
     /// what to do, the bubble is the MOUSE talking. No phase uses both.
     static func chip(for phase: Level1Phase) -> String? {
         switch phase {
-        // `aligningCrane` deliberately has NO chip: `CraneAlignmentLayer` draws that
-        // title itself, as bare white text. Returning it here too would render the same
-        // sentence twice, once in a navy chip and once under it.
-        case .detectingGears: return Level1Script.detecting
-        case .handOver, .selectingRoles: return Level1Script.handOver
-        case .teachingJoystick, .guidedCrankToHalf, .guidedCrankToFull, .freeCrank:
-            return Level1Script.crankPrompt
-        default:
-            return nil
+        case .selectingRoles: return Level1Script.selectingRoles
+        default: return nil
         }
     }
 
-    /// The mouse's lines for this phase, or empty when it has nothing to say.
+    /// The mouse's one line, said once as the joystick arms — empty everywhere else.
     static func beats(for phase: Level1Phase) -> [DialogueBeat] {
         switch phase {
-        case .introDialogue:    return Level1Script.intro
-        case .teachingDriver:   return Level1Script.teachDriver
-        case .teachingFollower: return Level1Script.teachFollower
-        default:                return []
+        case .rolesChosen: return Level1Script.teachDriverFollower
+        default:           return []
         }
     }
 
     /// Whether the alignment illustration and its scrim are on screen.
+    ///
+    /// Includes `manualFallback`: there is no manual picker, only "try looking again",
+    /// and that button restarts the detector without changing the phase — the
+    /// illustration has to already be behind the sheet so it is what's left once the
+    /// sheet dismisses.
     static func showsAlignmentIllustration(_ phase: Level1Phase) -> Bool {
-        phase == .aligningCrane || phase == .detectingGears
+        phase == .aligningCrane || phase == .detectingGears || phase == .manualFallback
+    }
+
+    /// Driver/follower labels and the rope, shown once a driver has been picked and
+    /// hidden again the moment the free run starts — mirrors `Level2PhasePresentation`.
+    static func showsRoleLabels(_ phase: Level1Phase) -> Bool {
+        phase == .rolesChosen
+    }
+
+    /// The circular drag-direction hint over the joystick — live only while the choice
+    /// is still open, same window as the role labels.
+    static func showsJoystickHint(_ phase: Level1Phase) -> Bool {
+        phase == .rolesChosen
     }
 }

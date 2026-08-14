@@ -3,11 +3,7 @@
 //  Cheese Heist
 //
 //  The persistent furniture: the instruction chip at the top, the role labels on their
-//  leader lines, and whichever of PULL or the joystick belongs in the bottom-right
-//  corner right now.
-//
-//  D-2 is a layout fact here: the two controls occupy the SAME corner and never share
-//  it, so tapping PULL reads as the button turning into the crank.
+//  leader lines, and the joystick in the bottom-right corner once it is live.
 //
 
 import SwiftUI
@@ -21,7 +17,6 @@ struct Level1HUDLayer: View {
     var engagement: CrankEngagement = .disengaged
     let onDrag: (CGPoint, CGPoint) -> Void
     let onRelease: () -> Void
-    let onPull: () -> Void
 
     @Environment(\.layoutScale) private var scale
 
@@ -54,10 +49,7 @@ struct Level1HUDLayer: View {
             Spacer()
             HStack {
                 Spacer()
-                if gate.pullVisible {
-                    PullButton(action: onPull)
-                        .transition(.scale.combined(with: .opacity))
-                } else if gate.joystickEnabled {
+                if gate.joystickEnabled {
                     CircularJoystickView(
                         isEnabled: true, engagement: engagement,
                         onDrag: onDrag, onRelease: onRelease
@@ -72,13 +64,12 @@ struct Level1HUDLayer: View {
 
 #Preview {
     Level1HUDLayer(
-        chip: Level1Script.handOver,
+        chip: Level1Script.selectingRoles,
         targets: [],
         gate: .of(.selectingRoles),
         showsRoleLabels: false,
         onDrag: { _, _ in },
-        onRelease: {},
-        onPull: {}
+        onRelease: {}
     )
     .previewBackdrop(.cameraFeed)
 }

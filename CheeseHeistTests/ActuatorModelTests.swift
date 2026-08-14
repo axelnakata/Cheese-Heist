@@ -21,9 +21,7 @@ struct ActuatorModelTests {
             noLoadAngularVelocity: tuning.noLoadAngularVelocity,
             meshEfficiency: tuning.meshEfficiency,
             winchRadius: tuning.winchRadius,
-            liftHeight: tuning.liftHeight,
-            minLiftDuration: tuning.minLiftDuration,
-            maxLiftDuration: tuning.maxLiftDuration
+            liftHeight: tuning.liftHeight
         )
 
         let omega = ActuatorModel.driverAngularVelocity(ratio: 1, tuning: unloaded)
@@ -40,9 +38,7 @@ struct ActuatorModelTests {
             noLoadAngularVelocity: tuning.noLoadAngularVelocity,
             meshEfficiency: tuning.meshEfficiency,
             winchRadius: tuning.winchRadius,
-            liftHeight: tuning.liftHeight,
-            minLiftDuration: tuning.minLiftDuration,
-            maxLiftDuration: tuning.maxLiftDuration
+            liftHeight: tuning.liftHeight
         )
 
         for pair in GearRatioCalculatorTests.allPairs {
@@ -59,9 +55,7 @@ struct ActuatorModelTests {
             noLoadAngularVelocity: tuning.noLoadAngularVelocity,
             meshEfficiency: tuning.meshEfficiency,
             winchRadius: tuning.winchRadius,
-            liftHeight: tuning.liftHeight,
-            minLiftDuration: tuning.minLiftDuration,
-            maxLiftDuration: tuning.maxLiftDuration
+            liftHeight: tuning.liftHeight
         )
 
         let gearedUp = GearPair(driver: .eightTooth, follower: .fortyTooth)
@@ -74,8 +68,6 @@ struct ActuatorModelTests {
     /// Level 1 is unfailable by design — the child cannot pick a losing pair.
     @Test("every Level 1 pair lifts")
     func level1IsUnfailable() {
-        #expect(LiftFeasibilityEvaluator.allPairsSucceed(
-            gears: GearType.allCases, tuning: tuning
-        ))
+        #expect(LiftFeasibilityEvaluator.allPairsSucceed(gears: GearType.allCases))
     }
 }

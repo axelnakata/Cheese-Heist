@@ -42,22 +42,6 @@ struct Level1SceneDirector {
         .happy
     }
 
-    /// Where the teaching spotlight is cut, if anywhere.
-    ///
-    /// This is now the ONLY thing that singles a gear out during a teaching beat. The
-    /// gears also wore a wireframe ring, which was meant to read as an annotation and
-    /// on a real grey Technic gear read as a white scribble drawn across it. A hole in
-    /// the scrim points at the gear without covering it, and it scales itself to the
-    /// gear because the gear's on-screen radius is projected every frame.
-    func spotlight(for phase: Level1Phase) -> SpotlightSubject {
-        switch phase {
-        case .teachingDriver:    return .driverGear
-        case .teachingJoystick:  return .joystick
-        case .teachingFollower:  return .followerGearAndRope
-        default:                 return .none
-        }
-    }
-
     /// Level 1's teaching run starts on the LEFT gear as driver.
     ///
     /// Left and right, not small and large, because this assignment is the first thing

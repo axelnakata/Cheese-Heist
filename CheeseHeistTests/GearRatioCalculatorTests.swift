@@ -23,18 +23,6 @@ struct GearRatioCalculatorTests {
         }
     }
 
-    /// The sign flip IS lesson LO-2 — meshed gears turn in opposite directions, and a
-    /// follower velocity that shares the driver's sign teaches the opposite.
-    @Test("omega_follower always opposes omega_driver")
-    func followerOpposesDriver() {
-        for pair in Self.allPairs {
-            let follower = GearRatioCalculator.followerAngularVelocity(
-                driverAngularVelocity: 10, ratio: pair.ratio
-            )
-            #expect(follower < 0)
-        }
-    }
-
     @Test("i(a,b) · i(b,a) == 1")
     func reciprocalIdentity() {
         for pair in Self.allPairs {

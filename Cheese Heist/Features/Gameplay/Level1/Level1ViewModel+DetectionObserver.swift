@@ -50,24 +50,4 @@ extension Level1ViewModel {
         else { return nil }
         return (pair, assignment)
     }
-
-    /// The child chose the gears themselves after a timeout. The same entry effects
-    /// run as for an automatic lock — there is no second scene-building path.
-    func chooseManualPair(_ first: GearType, _ second: GearType) {
-        guard let assignment = Level1SceneDirector.initialAssignment(
-            leftToRight: detection.gearsLeftToRight
-        ) ?? placeholderAssignment() else { return }
-
-        let ordered = first.teeth <= second.teeth ? (first, second) : (second, first)
-        handle(.manualPairChosen(
-            pair: GearPair(driver: ordered.0, follower: ordered.1),
-            assignment: assignment
-        ))
-    }
-
-    /// A manual choice can arrive with no detected gears at all, in which case there is
-    /// nothing on screen to assign roles to and the ids are freshly minted.
-    private func placeholderAssignment() -> GearRoleAssignment? {
-        GearRoleAssignment(driverID: UUID(), followerID: UUID())
-    }
 }

@@ -36,21 +36,4 @@ extension Level2ViewModel {
         else { return nil }
         return (pair, assignment)
     }
-
-    /// The child chose the gears themselves after a timeout.
-    func chooseManualPair(_ first: GearType, _ second: GearType) {
-        guard let assignment = Level2SceneDirector.initialAssignment(
-            leftToRight: detection.gearsLeftToRight
-        ) ?? placeholderAssignment() else { return }
-
-        let ordered = first.teeth <= second.teeth ? (first, second) : (second, first)
-        handle(.manualPairChosen(
-            GearPair(driver: ordered.0, follower: ordered.1),
-            assignment
-        ))
-    }
-
-    private func placeholderAssignment() -> GearRoleAssignment? {
-        GearRoleAssignment(driverID: UUID(), followerID: UUID())
-    }
 }

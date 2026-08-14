@@ -39,6 +39,11 @@ struct GameplayDialogueLayer: View {
 
     let onRevealComplete: () -> Void
 
+    /// False when nothing in this phase advances on a tap — Level 1's post-pick beat
+    /// sits until the joystick turns, not until it is tapped, and the hint would be a
+    /// promise the bubble does not keep.
+    var showsContinueHint: Bool = true
+
     @Environment(\.layoutScale) private var scale
     @State private var revealFlag = false
     @State private var bubbleSize: CGSize = .zero
@@ -68,7 +73,7 @@ struct GameplayDialogueLayer: View {
     private var bubble: some View {
         SpeechBubbleView(text: text, style: style, isRevealComplete: $revealFlag)
             .overlay(alignment: .bottomTrailing) {
-                if revealFlag {
+                if revealFlag && showsContinueHint {
                     TapToContinueHint(title: "tap to continue..")
                         .offset(y: (AppFont.body.lineHeight + AppSpacing.xs) * scale)
                         .transition(.opacity)

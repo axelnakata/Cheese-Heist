@@ -81,6 +81,11 @@ enum AppColor {
     static let stateValid = Palette.successGreen
     /// Rejected surface.
     static let stateInvalid = Palette.warningRed
+    /// Mid-way state — neither valid nor rejected outright (e.g. the countdown timer's
+    /// 2★ zone, a bar's middle segment). Same hex as `accent`, its own semantic name
+    /// because the two mean different things, same as `crustAmber` backing both
+    /// `accentPressed` and `roleFollower`.
+    static let stateCaution = Palette.cheeseYellow
 
     /// The surface-scan ring's bright face, as it lies on the detected plane.
     static let surfaceRing = Palette.ringGreen

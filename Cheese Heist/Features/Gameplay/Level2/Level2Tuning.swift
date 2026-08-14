@@ -12,11 +12,19 @@ enum Level2Tuning {
         noLoadAngularVelocity: 12.0, // same mouse as L1
         meshEfficiency: 0.94,        // single spur mesh
         winchRadius: 0.0025,         // LEGO axle
-        liftHeight: 0.06,            // fallback — travel is measured off the crane
-        minLiftDuration: 1.2,        // presentation floor
-        maxLiftDuration: 15.0        // ceiling
+        liftHeight: 0.06             // fallback — travel is measured off the crane
     )
 
     /// How long the child has to lift the cheese, in seconds.
     static let timerDuration: Int = 15
+
+    /// How long the gear-clash shake plays before a stalled combo fails, in seconds.
+    static let stallShakeDuration: Double = 5.0
+
+    /// Peak wobble angle of the gear-clash shake, in radians. Small on purpose — "not
+    /// too dramatic," a strain, not a spin. ~3°.
+    static let stallShakeAmplitudeRadians: Double = 0.05
+
+    /// How fast the wobble oscillates, in Hz.
+    static let stallShakeFrequencyHz: Double = 6.0
 }

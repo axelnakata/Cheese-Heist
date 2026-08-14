@@ -11,6 +11,8 @@ struct GearTrainState: Equatable, Sendable {
 
     /// Follower angle derived from driver — never integrated independently.
     /// Independent integration accumulates float drift and the teeth visibly unmesh.
+    /// The SIGN FLIP is the whole of LO-2 (meshed gears turn opposite ways) and must
+    /// never be shortcut.
     func followerAngle(ratio: Double) -> Double {
         -driverAngle / ratio
     }

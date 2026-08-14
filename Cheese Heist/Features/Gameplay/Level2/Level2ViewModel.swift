@@ -9,7 +9,8 @@
 //
 //  What is new compared to Level 1:
 //   • A 15-second countdown timer that starts when the joystick is first engaged.
-//   • A stall-detection path that shakes for 3 seconds, then transitions to failedWeak.
+//   • A stall-detection path that shakes for `Level2Tuning.stallShakeDuration` seconds,
+//     then transitions to failedWeak.
 //   • Gear-outcome evaluation (strength/speed bars, star scoring).
 //   • No dialogue sequencer — Level 2 has no tutorial.
 //
@@ -78,8 +79,7 @@ final class Level2ViewModel {
 
     private func applyPayload(of event: Level2Event) {
         switch event {
-        case .detectionLocked(let pair, let assignment),
-             .manualPairChosen(let pair, let assignment):
+        case .detectionLocked(let pair, let assignment):
             selection.begin(assignment: assignment)
             currentPair = pair
             runner?.setPair(pair)
@@ -116,7 +116,10 @@ final class Level2ViewModel {
         self.scene = scene
         director = Level2SceneDirector(scene: scene)
 
-        let runner = LiftRunner(tuning: tuning, scene: scene)
+        let runner = LiftRunner(
+            tuning: tuning, scene: scene,
+            durationProvider: { Level2GearOutcomeEvaluator.evaluate(pair: $0).estimatedLiftTime }
+        )
         runner.onReachedCeiling = { [weak self] in self?.handle(.liftReachedCeiling) }
         self.runner = runner
     }
@@ -185,15 +188,19 @@ final class Level2ViewModel {
         }
     }
 
-    /// Called every render frame during stallShaking — check if 3 seconds have passed.
-    private func tickShake() {
+    /// Called every render frame. Drives the gear-clash shake visual whenever the phase
+    /// is `.stallShaking` and clears it everywhere else, then checks whether
+    /// `stallShakeDuration` has passed.
+    private func tickShake(deltaTime: Double) {
+        scene?.setGearStrain(phase == .stallShaking, deltaTime: deltaTime)
         guard phase == .stallShaking else { return }
 
         if shakeStartTime == nil {
             shakeStartTime = Date()
         }
 
-        if let start = shakeStartTime, Date().timeIntervalSince(start) >= 3.0 {
+        if let start = shakeStartTime,
+            Date().timeIntervalSince(start) >= Level2Tuning.stallShakeDuration {
             handle(.shakeCompleted)
         }
     }
@@ -223,6 +230,6 @@ final class Level2ViewModel {
         runner?.advance(deltaTime: deltaTime)
 
         tickTimer(deltaTime: deltaTime)
-        tickShake()
+        tickShake(deltaTime: deltaTime)
     }
 }

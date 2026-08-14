@@ -244,8 +244,15 @@ asks what phase it is in.
 8. **The follower's angle is derived from the driver's** (`−driverAngle / i`), never
    integrated independently — independent integration drifts and the teeth visibly unmesh.
    The sign flip *is* lesson LO-2.
-9. **`minLiftDuration` clamps rope speed**, inside `WinchModel`, evaluated once against
-   the full height. Never the ratio, never the sign, no per-segment special case.
+9. **Total lift duration is a designed property of the gear combination, never of crane
+   height.** `WinchModel.designedRopeSpeed(liftHeight:duration:)` is `liftHeight /
+   duration` — `duration` comes from `Level1LiftDurations`/`Level2GearOutcome`'s hardcoded
+   tables, keyed by `GearPair`, never computed from crane height. `liftHeight` is this
+   crane's own measured travel, so a taller crane gets a proportionally faster rope and a
+   shorter one a proportionally slower rope, but every crane with the same gear pair
+   finishes in the same number of seconds. (This replaced an earlier physics-derived
+   speed bounded by `minLiftDuration`/`maxLiftDuration` — those are gone; the duration
+   table is the only bound now.)
 10. **"Stop at 50%" lives only in `LiftSegment`.** `Core/` has no concept of guided vs
     free and contains no phase-shaped branch. The free run is the identical code path
     handed a different `Double`.

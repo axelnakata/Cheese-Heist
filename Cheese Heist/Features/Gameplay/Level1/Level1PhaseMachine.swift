@@ -2,11 +2,10 @@
 //  Level1PhaseMachine.swift
 //  Cheese Heist
 //
-//  The PRD-Level1 §8 transition table, and nothing else.
+//  The Level 1 transition table, and nothing else.
 //
 //  PURE AND TOTAL. `nil` means "ignore this event in this phase" — it is a legitimate
-//  answer, not a failure, and it is what lets the view fire `tappedContinue` on every
-//  tap without asking whether taps mean anything right now.
+//  answer, not a failure.
 //
 //  This is the highest-value test surface in the feature: the entire flow is verifiable
 //  as a table test before a single pixel exists.
@@ -21,8 +20,7 @@ enum Level1PhaseMachine {
         if event == .trackingLost || event == .trackingRegained { return nil }
 
         return detection(from: phase, on: event)
-            ?? teaching(from: phase, on: event)
-            ?? handover(from: phase, on: event)
+            ?? play(from: phase, on: event)
     }
 
     /// Phases 1–3: get a pair of gears, one way or the other.
@@ -38,49 +36,37 @@ enum Level1PhaseMachine {
         // recognised crane behind an illustration that never comes down.
         case (.aligningCrane, .detectionLocked),
              (.detectingGears, .detectionLocked):
-            return .introDialogue
+            return .selectingRoles
 
         case (.aligningCrane, .detectionTimedOut),
              (.detectingGears, .detectionTimedOut):
             return .manualFallback
 
-        // The detector keeps tracking behind the sheet, so a late lock is still taken.
-        case (.manualFallback, .manualPairChosen),
-             (.manualFallback, .detectionLocked):
-            return .introDialogue
+        // The detector keeps tracking behind the sheet, so a late lock is still taken —
+        // there is no manual choice, only "try looking again".
+        case (.manualFallback, .detectionLocked):
+            return .selectingRoles
 
         default:
             return nil
         }
     }
 
-    /// Phases 4–9: the guided run. `introDialogue` is two beats, but the sequencer owns
-    /// the index — this only sees the tap that leaves the last one.
-    private static func teaching(from phase: Level1Phase, on event: Level1Event) -> Level1Phase? {
+    /// Phases 4–7: pick a driver, get shown once what it means while the joystick is
+    /// already live, then the child's own run.
+    private static func play(from phase: Level1Phase, on event: Level1Event) -> Level1Phase? {
         switch (phase, event) {
-        case (.introDialogue, .tappedContinue):     return .teachingDriver
-        case (.teachingDriver, .tappedContinue):    return .teachingJoystick
-        case (.teachingJoystick, .tappedContinue):  return .guidedCrankToHalf
-        case (.guidedCrankToHalf, .liftReachedCeiling):  return .teachingFollower
-        case (.teachingFollower, .tappedContinue):  return .guidedCrankToFull
-        case (.guidedCrankToFull, .liftReachedCeiling):  return .handOver
-        default: return nil
-        }
-    }
-
-    /// Phases 10–13: the child's own run.
-    private static func handover(from phase: Level1Phase, on event: Level1Event) -> Level1Phase? {
-        switch (phase, event) {
-        case (.handOver, .tappedContinue):
-            return .selectingRoles
+        case (.selectingRoles, .tappedGear):
+            return .rolesChosen
 
         // Re-entering the same phase is deliberate: the reassignment is an entry
         // effect, so a tap that swaps the roles runs it exactly like any other
         // transition rather than through a side door.
-        case (.selectingRoles, .tappedGear):
-            return .selectingRoles
+        case (.rolesChosen, .tappedGear):
+            return .rolesChosen
 
-        case (.selectingRoles, .tappedPull):
+        // The first turn of the joystick locks the choice and starts the free run.
+        case (.rolesChosen, .joystickEngaged):
             return .freeCrank
 
         case (.freeCrank, .liftReachedCeiling):
