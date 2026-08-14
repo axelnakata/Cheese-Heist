@@ -19,6 +19,7 @@ struct Level2HUDLayer: View {
     let showsRoleLabels: Bool
     let showsTimer: Bool
     let timerSeconds: Int
+    let isTimerRunning: Bool
     let showsCheeseCountdown: Bool
     let solidCheeseCount: Int
     let showsRestart: Bool
@@ -59,7 +60,7 @@ struct Level2HUDLayer: View {
                             .transition(.opacity)
                     }
                     if showsTimer {
-                        TimerBadge(seconds: timerSeconds)
+                        TimerBadge(seconds: timerSeconds, isRunning: isTimerRunning)
                     }
                 }
                 Spacer()
@@ -87,6 +88,7 @@ struct Level2HUDLayer: View {
         showsRoleLabels: false,
         showsTimer: true,
         timerSeconds: 15,
+        isTimerRunning: false,
         showsCheeseCountdown: false,
         solidCheeseCount: 3,
         showsRestart: false,
@@ -102,6 +104,7 @@ struct Level2HUDLayer: View {
         showsRoleLabels: true,
         showsTimer: true,
         timerSeconds: 8,
+        isTimerRunning: true,
         showsCheeseCountdown: true,
         solidCheeseCount: 2,
         showsRestart: true,

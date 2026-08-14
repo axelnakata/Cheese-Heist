@@ -69,6 +69,7 @@ struct Level2View: View {
             showsRoleLabels: viewModel.showsRoleLabels,
             showsTimer: viewModel.showsTimer,
             timerSeconds: viewModel.timerRemaining,
+            isTimerRunning: viewModel.isTimerRunning,
             showsCheeseCountdown: viewModel.showsCheeseCountdown,
             solidCheeseCount: viewModel.starCount,
             showsRestart: viewModel.inputGate.restartVisible,

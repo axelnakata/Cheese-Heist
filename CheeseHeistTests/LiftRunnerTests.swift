@@ -40,7 +40,10 @@ struct LiftRunnerTests {
     private static func rig(travel: Float = travel) -> Rig {
         let scene = MockCraneScene()
         scene.maximumLift = travel
-        let runner = LiftRunner(tuning: Level1Tuning.value, scene: scene)
+        let runner = LiftRunner(
+            tuning: Level1Tuning.value, scene: scene,
+            durationProvider: { Level1LiftDurations.duration(for: $0) }
+        )
         runner.setPair(pair)
         return Rig(runner: runner, scene: scene)
     }
@@ -132,5 +135,30 @@ struct LiftRunnerTests {
         Self.crank(runner, for: 20)
 
         #expect(runner.state.height > 0)
+    }
+
+    /// The whole point of the designed-duration model: a taller crane and a shorter
+    /// crane, same gear pair, both finish in the same number of simulated ticks — only
+    /// the rope speed differs, never the total time.
+    @Test("two different crane heights with the same pair finish in the same number of ticks")
+    func sameDurationRegardlessOfHeight() {
+        func ticksToCeiling(travel: Float) -> Int {
+            let rig = Self.rig(travel: travel)
+            let runner = rig.runner
+            runner.continueInto(.full)
+            runner.isCranking = true
+
+            let step = 1.0 / 60
+            for tick in 0..<6_000 {
+                runner.advance(deltaTime: step)
+                if runner.progress >= 1 { return tick + 1 }
+            }
+            return .max
+        }
+
+        let short = ticksToCeiling(travel: 0.05)
+        let tall = ticksToCeiling(travel: 0.25)
+
+        #expect(short == tall)
     }
 }

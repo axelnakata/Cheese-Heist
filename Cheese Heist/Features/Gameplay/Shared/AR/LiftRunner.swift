@@ -29,6 +29,12 @@ final class LiftRunner {
     private var pair: GearPair?
     private var hasReportedCeiling = false
 
+    /// How long a full lift takes for a given pair, or nil if that pair can't lift at
+    /// all. A designed property of the gear combination, not of this crane's height —
+    /// see `WinchModel.designedRopeSpeed`. Level 1 and Level 2 each supply their own
+    /// (Level 1's never returns nil; Level 2's does, for the combos that stall).
+    private let durationProvider: (GearPair) -> Double?
+
     /// How far this crane's cheese has to travel, in metres.
     ///
     /// ═══ MEASURED AT THE START OF EACH SEGMENT, NOT TUNED AND NOT PER FRAME. ═══
@@ -42,10 +48,14 @@ final class LiftRunner {
     /// that speeds up and slows down for no reason the child can see.
     private var liftHeight: Double
 
-    init(tuning: LevelTuning, scene: (any CraneSceneProviding)?) {
+    init(
+        tuning: LevelTuning, scene: (any CraneSceneProviding)?,
+        durationProvider: @escaping (GearPair) -> Double?
+    ) {
         self.tuning = tuning
         self.scene = scene
         self.liftHeight = tuning.liftHeight
+        self.durationProvider = durationProvider
     }
 
     /// The two gears this run uses, read ONCE from the assignment.
@@ -81,7 +91,7 @@ final class LiftRunner {
 
         let outcome = GearTrainSimulator.advance(
             state: &state, pair: pair, tuning: measuredTuning,
-            segment: segment, deltaTime: deltaTime
+            segment: segment, liftDuration: durationProvider(pair), deltaTime: deltaTime
         )
 
         scene?.apply(state: state, ratio: pair.ratio)

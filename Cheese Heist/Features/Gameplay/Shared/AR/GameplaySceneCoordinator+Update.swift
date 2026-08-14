@@ -123,6 +123,22 @@ extension GameplaySceneCoordinator: CraneSceneProviding {
         cheeseEntity?.isEnabled = visible
     }
 
+    func setGearStrain(_ isStraining: Bool, deltaTime: Double) {
+        guard isStraining,
+              let layout = currentLayout,
+              let driverSpin = twinsByID[layout.driver.id]?.spin,
+              let followerSpin = twinsByID[layout.follower.id]?.spin
+        else {
+            activeGearShake?.restore()
+            setActiveGearShake(nil)
+            return
+        }
+
+        let shake = activeGearShake ?? GearShakeDriver(driverSpin: driverSpin, followerSpin: followerSpin)
+        setActiveGearShake(shake)
+        shake.advance(deltaTime: Float(deltaTime))
+    }
+
     // MARK: - Per-frame ticks
 
     /// Fed by `SceneUpdateTicker`, FIRST in the fixed order: alignment before physics,

@@ -50,6 +50,13 @@ protocol CraneSceneProviding: AnyObject {
     func setMousePose(_ pose: MouseSprite)
     func setRopeVisible(_ visible: Bool)
 
+    /// Drives the gear-clash shake while a stalled combo strains against a load it
+    /// can't lift. Called every frame from `Level2ViewModel.tickShake()` — `true` while
+    /// `phase == .stallShaking`, `false` everywhere else, which restores the gears to
+    /// wherever cranking left them. `apply(state:ratio:)` stops being called the instant
+    /// the phase leaves `.cranking`, so without this the gears simply freeze.
+    func setGearStrain(_ isStraining: Bool, deltaTime: Double)
+
     /// Removes everything this scene owns, including the session-side anchor.
     /// The ARSession itself is never touched.
     func teardown()

@@ -5,11 +5,11 @@
 //  PRD-Level2 §6.3 — strength and speed bars stacked vertically with icons and labels.
 //
 //  Layout:
-//    [🦾 icon] [████|████|████|    ] [💪 icon]
-//    weak                            strong
+//    [🦾 icon] [████|████|    ] [💪 icon]
+//    weak                       strong
 //
-//    [🐢 icon] [████|████|    |    ] [🐇 icon]
-//    slow                            fast
+//    [🐢 icon] [████|    |    ] [🐇 icon]
+//    slow                       fast
 //
 
 import SwiftUI
@@ -62,33 +62,33 @@ struct GearAttributeBarPair: View {
         }
     }
 
-    /// Strength bar colour: red at 1/4, green at 2+/4.
+    /// Strength bar colour: red at 1/3, green at 2+/3.
     private var strengthColor: Color {
         strengthLevel <= 1 ? AppColor.stateInvalid : AppColor.stateValid
     }
 
-    /// Speed bar colour: red at 1/4, amber at 2/4, green at 3+/4.
+    /// Speed bar colour: red at 1/3, amber at 2/3, green at 3/3.
     private var speedColor: Color {
         if speedLevel <= 1 { return AppColor.stateInvalid }
-        if speedLevel <= 2 { return AppColor.accent }
+        if speedLevel == 2 { return AppColor.stateCaution }
         return AppColor.stateValid
     }
 }
 
 #Preview("Strong & Slow") {
-    GearAttributeBarPair(strengthLevel: 4, speedLevel: 1)
+    GearAttributeBarPair(strengthLevel: 3, speedLevel: 1)
         .padding()
         .previewBackdrop(.cameraFeed)
 }
 
 #Preview("Weak & Fast") {
-    GearAttributeBarPair(strengthLevel: 1, speedLevel: 4)
+    GearAttributeBarPair(strengthLevel: 1, speedLevel: 3)
         .padding()
         .previewBackdrop(.cameraFeed)
 }
 
 #Preview("Balanced") {
-    GearAttributeBarPair(strengthLevel: 2, speedLevel: 3)
+    GearAttributeBarPair(strengthLevel: 2, speedLevel: 2)
         .padding()
         .previewBackdrop(.cameraFeed)
 }

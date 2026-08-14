@@ -13,7 +13,7 @@ enum Level2Phase: String, CaseIterable, Equatable, Sendable {
     case selectingRoles
     case rolesChosen
     case cranking
-    case stallShaking      // gear shakes for 3 seconds before failedWeak
+    case stallShaking      // gear shakes for `Level2Tuning.stallShakeDuration` before failedWeak
     case succeeded
     case failedWeak
     case failedSlow

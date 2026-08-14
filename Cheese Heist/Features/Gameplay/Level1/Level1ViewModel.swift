@@ -101,7 +101,10 @@ final class Level1ViewModel {
         self.scene = scene
         director = Level1SceneDirector(scene: scene)
 
-        let runner = LiftRunner(tuning: tuning, scene: scene)
+        let runner = LiftRunner(
+            tuning: tuning, scene: scene,
+            durationProvider: { Level1LiftDurations.duration(for: $0) }
+        )
         runner.onReachedCeiling = { [weak self] in self?.handle(.liftReachedCeiling) }
         self.runner = runner
     }
