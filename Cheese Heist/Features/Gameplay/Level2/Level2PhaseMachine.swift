@@ -22,7 +22,9 @@ enum Level2PhaseMachine {
         case (.detectingGears, .detectionTimedOut):
             return .manualFallback
 
-        case (.manualFallback, .manualPairChosen):
+        // No manual choice — the detector keeps tracking behind the sheet, so a late
+        // lock is still taken.
+        case (.manualFallback, .detectionLocked):
             return .selectingRoles
 
         // — Role selection

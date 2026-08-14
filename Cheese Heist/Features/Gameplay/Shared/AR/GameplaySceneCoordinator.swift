@@ -77,6 +77,10 @@ final class GameplaySceneCoordinator {
     private var twins: [UUID: GearTwin] = [:]
     private var mouse: MouseSpriteEntity?
 
+    /// The gear-clash shake, while a stalled combo strains against a load it can't lift.
+    /// Owned here so a second `setGearStrain` call replaces rather than orphans one.
+    private var gearShake: GearShakeDriver?
+
     /// Positioned by the role layout; the sprite hangs underneath it. See `buildEntities`.
     private var mouseHolder: Entity?
 
@@ -169,6 +173,7 @@ final class GameplaySceneCoordinator {
         projector = nil
         twins = [:]
         mouse = nil
+        gearShake = nil
         mouseHolder = nil
         rope = nil
         cheese = nil
@@ -185,6 +190,8 @@ final class GameplaySceneCoordinator {
     var currentLayout: SceneLayout? { layout }
     func setLayout(_ next: SceneLayout?) { layout = next }
     var twinsByID: [UUID: GearTwin] { twins }
+    var activeGearShake: GearShakeDriver? { gearShake }
+    func setActiveGearShake(_ next: GearShakeDriver?) { gearShake = next }
     var mouseSprite: MouseSpriteEntity? { mouse }
     var mousePlacement: Entity? { mouseHolder }
     var ropeLine: RopeEntity? { rope }

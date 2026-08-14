@@ -2,7 +2,7 @@
 //  GearAttributeBar.swift
 //  Cheese Heist
 //
-//  PRD-Level2 §6.3 — a single segmented bar with 4 cells.
+//  PRD-Level2 §6.3 — a single segmented bar with 3 cells.
 //  Each cell is a rounded rectangle. Filled cells use `fillColor`;
 //  unfilled cells use a white border with clear fill.
 //
@@ -11,7 +11,7 @@ import SwiftUI
 
 struct GearAttributeBar: View {
 
-    /// How many segments are filled (1–4). Clamped internally.
+    /// How many segments are filled (1–3). Clamped internally.
     let filledCount: Int
 
     /// The colour for filled segments.
@@ -27,11 +27,11 @@ struct GearAttributeBar: View {
         static let borderWidth: CGFloat = 2
     }
 
-    private var clamped: Int { max(0, min(4, filledCount)) }
+    private var clamped: Int { max(0, min(3, filledCount)) }
 
     var body: some View {
         HStack(spacing: Metric.segmentGap * scale) {
-            ForEach(0..<4, id: \.self) { index in
+            ForEach(0..<3, id: \.self) { index in
                 RoundedRectangle(cornerRadius: Metric.segmentRadius * scale)
                     .fill(index < clamped ? fillColor : Color.clear)
                     .overlay(
@@ -55,7 +55,6 @@ struct GearAttributeBar: View {
         GearAttributeBar(filledCount: 1, fillColor: .red)
         GearAttributeBar(filledCount: 2, fillColor: .yellow)
         GearAttributeBar(filledCount: 3, fillColor: .green)
-        GearAttributeBar(filledCount: 4, fillColor: .green)
     }
     .padding()
     .previewBackdrop(.cameraFeed)

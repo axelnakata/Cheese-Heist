@@ -1,50 +1,50 @@
 // Level2GearOutcome.swift — Cheese Heist
 // PRD-Level2 §5 — hardcoded outcome for each driver/follower assignment.
-// The bars and lift feasibility are pure functions of the ratio.
+//
+// Balance table, by exact combo (ratio i = follower.teeth / driver.teeth — higher i
+// means more torque and proportionally slower output, as real gearing works):
+//
+//   Driver→Follower   i       canLift   duration   remaining@15s   outcome
+//   40→8              0.2     NO        —          —               0★ too weak
+//   24→8              0.333   yes       3s         12s              3★
+//   40→24             0.6     yes       4s         11s              3★
+//   24→40             1.667   yes       8s         7s               2★
+//   8→24              3.0     yes       12s        3s               1★
+//   8→40              5.0     yes       17s        (negative)       0★ too slow
+//
+// Bars are coarser than duration — tiered by DRIVER identity only, same rule as
+// `Level1LiftDurations`: small driver = strong+slow, large driver = weak+fast.
 
 import Foundation
 
 /// The predicted outcome for a given driver/follower gear choice in Level 2.
 struct Level2GearOutcome: Equatable, Sendable {
 
-    /// Whether the mouse can lift the cheese at all (i · η · τ_stall > τ_load).
+    /// Whether the mouse can lift the cheese at all.
     let canLift: Bool
 
-    /// How many bars to fill on the strength indicator (1–4).
+    /// How many bars to fill on the strength indicator (1–3).
     let strengthLevel: Int
 
-    /// How many bars to fill on the speed indicator (1–4).
+    /// How many bars to fill on the speed indicator (1–3).
     let speedLevel: Int
 
-    /// Approximate lift time in seconds, or nil if the combo stalls.
+    /// Lift time in seconds, or nil if the combo stalls.
     let estimatedLiftTime: Double?
 }
 
 enum Level2GearOutcomeEvaluator {
 
-    /// Computes the outcome for a driver/follower pair at Level 2 tuning.
+    /// Computes the outcome for a driver/follower pair.
     static func evaluate(pair: GearPair) -> Level2GearOutcome {
-        evaluate(pair: pair, tuning: Level2Tuning.value)
-    }
-
-    /// Testable variant that accepts arbitrary tuning.
-    static func evaluate(pair: GearPair, tuning: LevelTuning) -> Level2GearOutcome {
-        let ratio = pair.ratio
-        let canLift = ActuatorModel.canLift(ratio: ratio, tuning: tuning)
-
-        let strength = strengthLevel(for: ratio)
-        let speed = speedLevel(for: ratio)
-
-        var liftTime: Double?
-        if canLift {
-            liftTime = estimatedLiftTime(ratio: ratio, tuning: tuning)
-        }
+        let (canLift, duration) = liftOutcome(for: pair)
+        let bars = barLevels(forDriver: pair.driver)
 
         return Level2GearOutcome(
             canLift: canLift,
-            strengthLevel: strength,
-            speedLevel: speed,
-            estimatedLiftTime: liftTime
+            strengthLevel: bars.strength,
+            speedLevel: bars.speed,
+            estimatedLiftTime: duration
         )
     }
 
@@ -67,39 +67,30 @@ enum Level2GearOutcomeEvaluator {
 
     // MARK: - Bar levels
 
-    /// Strength is proportional to the gear ratio — higher ratio means more torque
-    /// multiplication, so the mouse is "stronger". PRD-Level2 §5.5.
-    static func strengthLevel(for ratio: Double) -> Int {
-        if ratio >= 4.0 { return 4 }
-        if ratio >= 2.0 { return 3 }
-        if ratio >= 0.5 { return 2 }
-        return 1
+    /// Strength/speed bars are a coarse, driver-only story — independent of which
+    /// follower it's paired with. PRD-Level2 §5.5.
+    private static func barLevels(forDriver driver: GearType) -> (strength: Int, speed: Int) {
+        switch driver {
+        case .eightTooth: return (3, 1)       // small driver — strong, slow
+        case .twentyFourTooth: return (2, 2)  // medium driver — balanced
+        case .fortyTooth: return (1, 3)       // large driver — weak, fast
+        }
     }
 
-    /// Speed is inversely proportional to the ratio — lower ratio means the follower
-    /// spins faster. PRD-Level2 §5.5.
-    static func speedLevel(for ratio: Double) -> Int {
-        if ratio < 0.5 { return 4 }
-        if ratio < 2.0 { return 3 }
-        if ratio < 4.0 { return 2 }
-        return 1
-    }
+    // MARK: - Lift outcome
 
-    // MARK: - Lift time
-
-    private static func estimatedLiftTime(ratio: Double, tuning: LevelTuning) -> Double {
-        let omegaDriver = ActuatorModel.driverAngularVelocity(ratio: ratio, tuning: tuning)
-        guard omegaDriver > 0 else { return .infinity }
-
-        let omegaFollower = GearRatioCalculator.followerAngularVelocity(
-            driverAngularVelocity: omegaDriver, ratio: ratio
-        )
-        let rawSpeed = WinchModel.ropeSpeed(
-            followerAngularVelocity: omegaFollower, winchRadius: tuning.winchRadius
-        )
-        let speed = WinchModel.clampedRopeSpeed(rawSpeed: rawSpeed, tuning: tuning)
-        guard speed > 0 else { return .infinity }
-
-        return tuning.liftHeight / speed
+    /// The hardcoded balance table (module header). Same-tooth pairs are unreachable in
+    /// live play — detection never yields two gears of the same class — so the default
+    /// case is defensive only.
+    private static func liftOutcome(for pair: GearPair) -> (canLift: Bool, duration: Double?) {
+        switch (pair.driver, pair.follower) {
+        case (.fortyTooth, .eightTooth): return (false, nil)
+        case (.twentyFourTooth, .eightTooth): return (true, 3.0)
+        case (.fortyTooth, .twentyFourTooth): return (true, 4.0)
+        case (.twentyFourTooth, .fortyTooth): return (true, 8.0)
+        case (.eightTooth, .twentyFourTooth): return (true, 12.0)
+        case (.eightTooth, .fortyTooth): return (true, 17.0)
+        default: return (true, 5.0)
+        }
     }
 }

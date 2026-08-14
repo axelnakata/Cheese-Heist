@@ -25,7 +25,8 @@ struct GearTrainSimulatorTests {
 
         for tick in 0..<6_000 {
             let outcome = GearTrainSimulator.advance(
-                state: &state, pair: pair, tuning: tuning, segment: segment, deltaTime: step
+                state: &state, pair: pair, tuning: tuning, segment: segment,
+                liftDuration: Level1LiftDurations.duration(for: pair), deltaTime: step
             )
             if outcome == .reachedCeiling { return (state, Double(tick + 1) * step) }
         }
@@ -65,7 +66,8 @@ struct GearTrainSimulatorTests {
         state.isCranking = false
 
         let outcome = GearTrainSimulator.advance(
-            state: &state, pair: pair, tuning: tuning, segment: .full, deltaTime: 1.0 / 60
+            state: &state, pair: pair, tuning: tuning, segment: .full,
+            liftDuration: Level1LiftDurations.duration(for: pair), deltaTime: 1.0 / 60
         )
 
         #expect(outcome == nil)
@@ -91,11 +93,12 @@ struct GearTrainSimulatorTests {
         let step = 1.0 / 60
         for _ in 0..<60 {
             _ = GearTrainSimulator.advance(
-                state: &gearedUp, pair: pair, tuning: tuning, segment: .full, deltaTime: step
+                state: &gearedUp, pair: pair, tuning: tuning, segment: .full,
+                liftDuration: Level1LiftDurations.duration(for: pair), deltaTime: step
             )
             _ = GearTrainSimulator.advance(
-                state: &gearedDown, pair: pair.swapped, tuning: tuning,
-                segment: .full, deltaTime: step
+                state: &gearedDown, pair: pair.swapped, tuning: tuning, segment: .full,
+                liftDuration: Level1LiftDurations.duration(for: pair.swapped), deltaTime: step
             )
         }
 

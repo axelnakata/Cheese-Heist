@@ -10,14 +10,6 @@ enum GearRatioCalculator {
         Double(pair.follower.teeth) / Double(pair.driver.teeth)
     }
 
-    /// ω_follower = −ω_driver / i
-    /// The SIGN FLIP is the whole of LO-2 and must never be shortcut.
-    static func followerAngularVelocity(
-        driverAngularVelocity: Double, ratio: Double
-    ) -> Double {
-        -driverAngularVelocity / ratio
-    }
-
     /// τ_follower = τ_driver · i · η
     static func followerTorque(
         driverTorque: Double, ratio: Double, efficiency: Double

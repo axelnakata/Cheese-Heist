@@ -35,15 +35,13 @@ private struct Level1LayerHarness: View {
                 chip: Level1PhasePresentation.chip(for: phase),
                 targets: scene.screenTargets,
                 gate: .of(phase),
-                showsRoleLabels: Level1InputGate.of(phase).gearsTappable,
+                showsRoleLabels: Level1PhasePresentation.showsRoleLabels(phase),
                 onDrag: { _, _ in },
-                onRelease: {},
-                onPull: {}
+                onRelease: {}
             )
 
             Level1TutorialLayer(
-                subject: Level1SceneDirector(scene: scene).spotlight(for: phase),
-                targets: scene.screenTargets,
+                showsJoystickHint: Level1PhasePresentation.showsJoystickHint(phase),
                 beat: Level1PhasePresentation.beats(for: phase).first,
                 isRevealComplete: true,
                 mouseAnchor: scene.mouseScreenAnchor,
@@ -61,31 +59,19 @@ private struct Level1LayerHarness: View {
     Level1LayerHarness(phase: .detectingGears).previewBackdrop(.cameraFeed)
 }
 
-#Preview("4 · teachingDriver") {
-    Level1LayerHarness(phase: .teachingDriver).previewBackdrop(.cameraFeed)
-}
-
-#Preview("5 · teachingJoystick") {
-    Level1LayerHarness(phase: .teachingJoystick).previewBackdrop(.cameraFeed)
-}
-
-#Preview("7 · teachingFollower") {
-    Level1LayerHarness(phase: .teachingFollower).previewBackdrop(.cameraFeed)
-}
-
-#Preview("8 · guidedCrankToFull") {
-    Level1LayerHarness(phase: .guidedCrankToFull).previewBackdrop(.cameraFeed)
-}
-
-#Preview("10 · selectingRoles") {
+#Preview("3 · selectingRoles") {
     Level1LayerHarness(phase: .selectingRoles).previewBackdrop(.cameraFeed)
 }
 
-#Preview("10 · selectingRoles — parchment") {
+#Preview("3 · selectingRoles — parchment") {
     Level1LayerHarness(phase: .selectingRoles).previewBackdrop(.parchment)
 }
 
-#Preview("11 · freeCrank") {
+#Preview("4 · rolesChosen") {
+    Level1LayerHarness(phase: .rolesChosen).previewBackdrop(.cameraFeed)
+}
+
+#Preview("5 · freeCrank") {
     Level1LayerHarness(phase: .freeCrank).previewBackdrop(.cameraFeed)
 }
 #endif

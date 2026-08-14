@@ -2,7 +2,7 @@
 //  Level1RoleSelectionTests.swift
 //  CheeseHeistTests
 //
-//  "It's your turn — tap a gear to make it the driver" has to actually stick.
+//  "Tap one of the gear to set it as a driver" has to actually stick.
 //
 //  ═══ THE BUG THIS PINS DOWN ═══
 //
@@ -48,12 +48,6 @@ struct Level1RoleSelectionTests {
         )
 
         viewModel.handle(.detectionLocked(pair: pair, assignment: assignment))
-        for event: Level1Event in [
-            .tappedContinue, .tappedContinue, .tappedContinue,
-            .liftReachedCeiling, .tappedContinue, .liftReachedCeiling, .tappedContinue
-        ] {
-            viewModel.handle(event)
-        }
 
         return Flow(viewModel: viewModel, scene: scene, initial: assignment)
     }
@@ -69,13 +63,27 @@ struct Level1RoleSelectionTests {
         #expect(Self.atRoleSelection().viewModel.phase == .selectingRoles)
     }
 
-    @Test("tapping the other gear makes it the driver")
+    @Test("tapping a gear picks it as the driver and arms the joystick")
     func tapAssignsDriver() {
         let flow = Self.atRoleSelection()
         flow.viewModel.handle(.tappedGear(id: flow.rightGear))
 
+        #expect(flow.viewModel.phase == .rolesChosen)
         #expect(flow.viewModel.selection.assignment?.driverID == flow.rightGear)
         #expect(Self.sceneDriver(flow) == flow.rightGear)
+    }
+
+    /// While `rolesChosen`, the choice is still theirs — a second tap swaps it again,
+    /// right up until the joystick actually turns.
+    @Test("re-tapping in rolesChosen still swaps the driver")
+    func retappingWhileChosenStillSwaps() {
+        let flow = Self.atRoleSelection()
+        flow.viewModel.handle(.tappedGear(id: flow.rightGear))
+        flow.viewModel.handle(.tappedGear(id: flow.leftGear))
+
+        #expect(flow.viewModel.phase == .rolesChosen)
+        #expect(flow.viewModel.selection.assignment?.driverID == flow.leftGear)
+        #expect(Self.sceneDriver(flow) == flow.leftGear)
     }
 
     /// The regression. A detector republish arriving while the child is choosing must
@@ -92,19 +100,19 @@ struct Level1RoleSelectionTests {
             flow.viewModel.handle(.detectionLocked(pair: pair, assignment: flow.initial))
         }
 
-        #expect(flow.viewModel.phase == .selectingRoles)
+        #expect(flow.viewModel.phase == .rolesChosen)
         #expect(flow.viewModel.selection.assignment?.driverID == flow.rightGear)
         #expect(Self.sceneDriver(flow) == flow.rightGear)
     }
 
     /// …and it must not silently unlock a committed choice either: `selection.begin`
-    /// clears the PULL lock, so the same republish also handed the gears back after the
+    /// clears the lock, so the same republish also handed the gears back after the
     /// child had committed and started cranking.
     @Test("a detector republish does not unlock a committed choice")
     func republishedLockDoesNotUnlockSelection() {
         let flow = Self.atRoleSelection()
         flow.viewModel.handle(.tappedGear(id: flow.rightGear))
-        flow.viewModel.handle(.tappedPull)
+        flow.viewModel.handle(.joystickEngaged)
 
         let pair = GearPair(
             driver: flow.scene.placements[0].type, follower: flow.scene.placements[1].type
@@ -116,7 +124,8 @@ struct Level1RoleSelectionTests {
         #expect(flow.viewModel.selection.assignment?.driverID == flow.rightGear)
     }
 
-    /// Tapping the gear that is ALREADY the driver changes nothing and breaks nothing.
+    /// Tapping the gear that is ALREADY the driver changes nothing and breaks nothing —
+    /// but it is still a tap, so it re-enters `rolesChosen`.
     @Test("re-tapping the driver is a no-op")
     func retappingDriverIsHarmless() {
         let flow = Self.atRoleSelection()

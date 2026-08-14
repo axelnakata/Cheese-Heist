@@ -29,6 +29,7 @@ final class MockCraneScene: CraneSceneProviding {
     private(set) var isRopeVisible = true
     private(set) var lastState = GearTrainState()
     private(set) var isTornDown = false
+    private(set) var isStraining = false
 
     /// A plausible desk-height crane: 9cm of rope less a 5cm wedge.
     var maximumLift: Float = 0.04
@@ -67,5 +68,6 @@ final class MockCraneScene: CraneSceneProviding {
     func apply(state: GearTrainState, ratio: Double) { lastState = state }
     func setMousePose(_ pose: MouseSprite) { self.pose = pose }
     func setRopeVisible(_ visible: Bool) { isRopeVisible = visible }
+    func setGearStrain(_ isStraining: Bool, deltaTime: Double) { self.isStraining = isStraining }
     func teardown() { isTornDown = true }
 }

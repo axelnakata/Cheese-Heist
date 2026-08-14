@@ -2,7 +2,8 @@
 //  Level1PhaseMachineTests.swift
 //  CheeseHeistTests
 //
-//  PRD §12.1 — every `Level1Phase` × `Level1Event` pair produces the §8 table's result.
+//  PRD §12.1 — every `Level1Phase` × `Level1Event` pair produces the transition table's
+//  result.
 //
 //  The whole flow is verifiable here before a single pixel exists, which is why the
 //  machine was written pure and total in the first place.
@@ -17,26 +18,19 @@ struct Level1PhaseMachineTests {
     static let pair = GearPair(driver: .eightTooth, follower: .fortyTooth)
     static let assignment = GearRoleAssignment(driverID: UUID(), followerID: UUID())
 
-    /// The §8 table, transcribed. Anything not listed here must return nil.
+    /// The transition table, transcribed. Anything not listed here must return nil.
     static let table: [(Level1Phase, Level1Event, Level1Phase)] = [
         (.aligningCrane, .detectionViable, .detectingGears),
         // The detector can reach viability and a lock on the same tick, and nothing
         // orders the two signals — so the illustration must accept a lock directly.
-        (.aligningCrane, .detectionLocked(pair: pair, assignment: assignment), .introDialogue),
+        (.aligningCrane, .detectionLocked(pair: pair, assignment: assignment), .selectingRoles),
         (.aligningCrane, .detectionTimedOut, .manualFallback),
-        (.detectingGears, .detectionLocked(pair: pair, assignment: assignment), .introDialogue),
+        (.detectingGears, .detectionLocked(pair: pair, assignment: assignment), .selectingRoles),
         (.detectingGears, .detectionTimedOut, .manualFallback),
-        (.manualFallback, .manualPairChosen(pair: pair, assignment: assignment), .introDialogue),
-        (.manualFallback, .detectionLocked(pair: pair, assignment: assignment), .introDialogue),
-        (.introDialogue, .tappedContinue, .teachingDriver),
-        (.teachingDriver, .tappedContinue, .teachingJoystick),
-        (.teachingJoystick, .tappedContinue, .guidedCrankToHalf),
-        (.guidedCrankToHalf, .liftReachedCeiling, .teachingFollower),
-        (.teachingFollower, .tappedContinue, .guidedCrankToFull),
-        (.guidedCrankToFull, .liftReachedCeiling, .handOver),
-        (.handOver, .tappedContinue, .selectingRoles),
-        (.selectingRoles, .tappedGear(id: assignment.driverID), .selectingRoles),
-        (.selectingRoles, .tappedPull, .freeCrank),
+        (.manualFallback, .detectionLocked(pair: pair, assignment: assignment), .selectingRoles),
+        (.selectingRoles, .tappedGear(id: assignment.driverID), .rolesChosen),
+        (.rolesChosen, .tappedGear(id: assignment.driverID), .rolesChosen),
+        (.rolesChosen, .joystickEngaged, .freeCrank),
         (.freeCrank, .liftReachedCeiling, .succeeded),
         (.succeeded, .tappedRetry, .aligningCrane)
     ]
@@ -45,11 +39,9 @@ struct Level1PhaseMachineTests {
         .detectionViable,
         .detectionLocked(pair: pair, assignment: assignment),
         .detectionTimedOut,
-        .manualPairChosen(pair: pair, assignment: assignment),
-        .tappedContinue,
         .liftReachedCeiling,
         .tappedGear(id: assignment.driverID),
-        .tappedPull,
+        .joystickEngaged,
         .tappedRetry,
         .tappedNext,
         .trackingLost,
@@ -66,8 +58,7 @@ struct Level1PhaseMachineTests {
         }
     }
 
-    /// Total, not partial: nil is a legitimate answer meaning "ignore this event here",
-    /// which is what lets the view fire `tappedContinue` on every tap.
+    /// Total, not partial: nil is a legitimate answer meaning "ignore this event here".
     @Test("everything not in the table is ignored")
     func unlistedPairsAreIgnored() {
         let listed = Set(Self.table.map { "\($0.0)|\($0.1)" })
@@ -112,9 +103,9 @@ struct Level1PhaseMachineTests {
         let script: [Level1Event] = [
             .detectionViable,
             .detectionLocked(pair: Self.pair, assignment: Self.assignment),
-            .tappedContinue, .tappedContinue, .tappedContinue,
-            .liftReachedCeiling, .tappedContinue, .liftReachedCeiling,
-            .tappedContinue, .tappedPull, .liftReachedCeiling
+            .tappedGear(id: Self.assignment.driverID),
+            .joystickEngaged,
+            .liftReachedCeiling
         ]
 
         var phase = Level1Phase.aligningCrane
@@ -129,14 +120,11 @@ struct Level1PhaseMachineTests {
         #expect(phase == .succeeded)
     }
 
-    @Test("only the crank phases lift, and only guidedCrankToHalf stops at half")
+    @Test("only freeCrank lifts")
     func liftSegments() {
-        #expect(Level1Phase.guidedCrankToHalf.liftSegment == .half)
-        #expect(Level1Phase.guidedCrankToFull.liftSegment == .full)
         #expect(Level1Phase.freeCrank.liftSegment == .full)
 
-        let cranking: Set<Level1Phase> = [.guidedCrankToHalf, .guidedCrankToFull, .freeCrank]
-        for phase in Level1Phase.allCases where !cranking.contains(phase) {
+        for phase in Level1Phase.allCases where phase != .freeCrank {
             #expect(phase.liftSegment == nil)
         }
     }
