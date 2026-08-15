@@ -62,7 +62,7 @@ struct LiftRunnerTests {
         runner.onReachedCeiling = { reachedCeiling = true }
 
         runner.continueInto(.full)
-        runner.isCranking = true
+        runner.drive = .rising
         Self.crank(runner, for: 20)
 
         #expect(reachedCeiling)
@@ -75,7 +75,7 @@ struct LiftRunnerTests {
         let rig = Self.rig()
         let runner = rig.runner
         runner.continueInto(.half)
-        runner.isCranking = true
+        runner.drive = .rising
         Self.crank(runner, for: 20)
 
         #expect(abs(runner.state.height - Double(Self.travel) / 2) < 0.0005)
@@ -86,7 +86,7 @@ struct LiftRunnerTests {
         let rig = Self.rig()
         let runner = rig.runner
         runner.continueInto(.full)
-        runner.isCranking = true
+        runner.drive = .rising
         Self.crank(runner, for: 20)
 
         #expect(abs(runner.progress - 1) < 0.001)
@@ -98,7 +98,7 @@ struct LiftRunnerTests {
         let runner = rig.runner
         let scene = rig.scene
         runner.continueInto(.full)
-        runner.isCranking = false
+        runner.drive = .holding
         Self.crank(runner, for: 5)
 
         #expect(runner.state.height == 0)
@@ -106,22 +106,40 @@ struct LiftRunnerTests {
         #expect(scene.lastState.driverAngle == 0)
     }
 
-    /// Stopping mid-lift holds the cheese where it is — the crane has a ratchet, and
-    /// letting go must not drop the load.
-    @Test("releasing the crank holds the height")
-    func releasingHoldsHeight() {
+    /// Resting a finger on the ring mid-lift holds the cheese where it is — the crane
+    /// has a ratchet, and a stationary finger must not drop the load.
+    @Test("holding the crank steady holds the height")
+    func holdingSteadyHoldsHeight() {
         let rig = Self.rig()
         let runner = rig.runner
         runner.continueInto(.full)
-        runner.isCranking = true
+        runner.drive = .rising
         Self.crank(runner, for: 0.5)
 
         let reached = runner.state.height
         #expect(reached > 0)
 
-        runner.isCranking = false
+        runner.drive = .holding
         Self.crank(runner, for: 5)
         #expect(runner.state.height == reached)
+    }
+
+    /// Lifting the finger off entirely — or cranking the wrong way — is different from
+    /// holding it steady: the rope pays back out, floored at the table it started at.
+    @Test("letting go mid-lift lets the cheese fall back to the table")
+    func releasingLetsItFall() {
+        let rig = Self.rig()
+        let runner = rig.runner
+        runner.continueInto(.full)
+        runner.drive = .rising
+        Self.crank(runner, for: 0.5)
+
+        let reached = runner.state.height
+        #expect(reached > 0)
+
+        runner.drive = .falling
+        Self.crank(runner, for: 20)
+        #expect(runner.state.height == 0)
     }
 
     /// A crane so short that the cheese already touches its follower gear still has to
@@ -131,7 +149,7 @@ struct LiftRunnerTests {
         let rig = Self.rig(travel: 0)
         let runner = rig.runner
         runner.continueInto(.full)
-        runner.isCranking = true
+        runner.drive = .rising
         Self.crank(runner, for: 20)
 
         #expect(runner.state.height > 0)
@@ -146,7 +164,7 @@ struct LiftRunnerTests {
             let rig = Self.rig(travel: travel)
             let runner = rig.runner
             runner.continueInto(.full)
-            runner.isCranking = true
+            runner.drive = .rising
 
             let step = 1.0 / 60
             for tick in 0..<6_000 {

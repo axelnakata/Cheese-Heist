@@ -21,9 +21,9 @@
 //  braces on purpose — a ring that vanishes at a viewing angle is indistinguishable
 //  from a ring that was never built, and this one has to be trusted at a glance.
 //
-//  `UnlitMaterial` and fully opaque, for the same reason `MouseSpriteEntity` is unlit:
-//  the ring is a UI affordance drawn into the world, not a lit object. Tinting with a
-//  sub-1 alpha while `blending` stays `.opaque` is the other way this renders wrong.
+//  `UnlitMaterial` and fully opaque: the ring is a UI affordance drawn into the world,
+//  not a lit object. Tinting with a sub-1 alpha while `blending` stays `.opaque` is the
+//  other way this renders wrong.
 //
 
 import RealityKit

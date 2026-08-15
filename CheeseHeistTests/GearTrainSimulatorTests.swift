@@ -20,7 +20,7 @@ struct GearTrainSimulatorTests {
         segment: LiftSegment, from state: GearTrainState = GearTrainState()
     ) -> (state: GearTrainState, seconds: Double) {
         var state = state
-        state.isCranking = true
+        state.drive = .rising
         let step = 1.0 / 60
 
         for tick in 0..<6_000 {
@@ -58,12 +58,12 @@ struct GearTrainSimulatorTests {
         #expect(result.state.followerAngle(ratio: pair.ratio) == expected)
     }
 
-    /// A ratchet: letting go holds the cheese where it is rather than dropping it.
-    @Test("no crank means no movement")
+    /// A ratchet: holding steady holds the cheese where it is rather than dropping it.
+    @Test("holding the crank steady means no movement")
     func ratchetHoldsHeight() {
         var state = GearTrainState()
         state.height = 0.03
-        state.isCranking = false
+        state.drive = .holding
 
         let outcome = GearTrainSimulator.advance(
             state: &state, pair: pair, tuning: tuning, segment: .full,
@@ -76,10 +76,61 @@ struct GearTrainSimulatorTests {
 
     @Test("reset returns the train to the table")
     func resetClearsState() {
-        var state = GearTrainState(driverAngle: 12, height: 0.05, isCranking: true)
+        var state = GearTrainState(driverAngle: 12, height: 0.05, drive: .rising)
         GearTrainSimulator.reset(state: &state)
 
         #expect(state == GearTrainState())
+    }
+
+    /// Letting go or cranking backwards unwinds the rope, floored at the table — the
+    /// mirror image of the rising run.
+    @Test("falling unwinds the height back toward the table, never past it")
+    func fallingUnwindsToTheFloor() {
+        var state = GearTrainState()
+        state.height = 0.03
+        state.drive = .falling
+        let step = 1.0 / 60
+
+        for _ in 0..<6_000 {
+            _ = GearTrainSimulator.advance(
+                state: &state, pair: pair, tuning: tuning, segment: .full,
+                liftDuration: Level1LiftDurations.duration(for: pair), deltaTime: step
+            )
+        }
+
+        #expect(state.height == 0)
+    }
+
+    /// The driver spins backward while falling — the follower's angle is still derived
+    /// from it, so the teeth stay meshed on the way down as well as the way up.
+    @Test("falling turns the driver backward")
+    func fallingReversesTheDriver() {
+        var state = GearTrainState()
+        state.height = 0.03
+        state.drive = .falling
+
+        _ = GearTrainSimulator.advance(
+            state: &state, pair: pair, tuning: tuning, segment: .full,
+            liftDuration: Level1LiftDurations.duration(for: pair), deltaTime: 1.0 / 60
+        )
+
+        #expect(state.driverAngle < 0)
+    }
+
+    /// A cheese already resting on the table has nothing left to unwind.
+    @Test("falling at the table does nothing")
+    func fallingAtTheFloorIsANoOp() {
+        var state = GearTrainState()
+        state.drive = .falling
+
+        let outcome = GearTrainSimulator.advance(
+            state: &state, pair: pair, tuning: tuning, segment: .full,
+            liftDuration: Level1LiftDurations.duration(for: pair), deltaTime: 1.0 / 60
+        )
+
+        #expect(outcome == nil)
+        #expect(state.height == 0)
+        #expect(state.driverAngle == 0)
     }
 
     /// The `i²` spread between the child's two role choices is the point of the free
@@ -87,7 +138,7 @@ struct GearTrainSimulatorTests {
     @Test("swapping the roles changes how long the lift takes")
     func roleChoiceChangesLiftTime() {
         var gearedUp = GearTrainState()
-        gearedUp.isCranking = true
+        gearedUp.drive = .rising
         var gearedDown = gearedUp
 
         let step = 1.0 / 60

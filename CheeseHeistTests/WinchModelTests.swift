@@ -51,4 +51,18 @@ struct WinchModelTests {
 
         #expect(height == ceiling)
     }
+
+    @Test("unwinding height never passes below the table")
+    func retractingIsFlooredAtZero() {
+        var height = 0.05
+
+        for _ in 0..<1_000 {
+            let next = WinchModel.retractHeight(currentHeight: height, ropeSpeed: 0.01, deltaTime: 1.0 / 60)
+            #expect(next <= height)
+            #expect(next >= 0)
+            height = next
+        }
+
+        #expect(height == 0)
+    }
 }

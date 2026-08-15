@@ -81,7 +81,7 @@ struct Level2View: View {
             strengthLevel: viewModel.strengthLevel,
             speedLevel: viewModel.speedLevel,
             joystickEnabled: viewModel.inputGate.joystickEnabled,
-            engagement: viewModel.crank.engagement,
+            hint: viewModel.crankHint,
             onDrag: { point, centre in viewModel.crank.drag(to: point, centre: centre) },
             onRelease: { viewModel.crank.release() }
         )

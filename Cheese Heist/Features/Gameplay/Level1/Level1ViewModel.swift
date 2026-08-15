@@ -154,7 +154,7 @@ final class Level1ViewModel {
             handle(.joystickEngaged)
         }
 
-        runner?.isCranking = inputGate.joystickEnabled && crank.isCranking
+        runner?.drive = inputGate.joystickEnabled ? crank.drive : .holding
         runner?.advance(deltaTime: deltaTime)
     }
 
@@ -167,6 +167,9 @@ final class Level1ViewModel {
     var showsJoystickHint: Bool { Level1PhasePresentation.showsJoystickHint(phase) }
     var isSucceeded: Bool { phase == .succeeded }
     var liftProgress: Double { runner?.progress ?? 0 }
+    var crankHint: CrankHint {
+        .of(drive: crank.drive, isPressed: crank.isPressed, hasElevation: (runner?.state.height ?? 0) > 0)
+    }
 
     func playMainAudio() {
         AudioManager.shared.playBGM(.page1)

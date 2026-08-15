@@ -18,6 +18,16 @@ final class BlueprintViewModel {
 
     private(set) var stepIndex = 0
 
+    /// Whether the mouse's mid-build check-in is currently showing.
+    private(set) var showsCheckIn = false
+
+    private var checkInTask: Task<Void, Never>?
+
+    private enum CheckInTiming {
+        static let interval: Duration = .seconds(10) /// GANTI DURASI INTERVAL MOUSE CHECK IN
+        static let visibleDuration: Duration = .seconds(3.5)
+    }
+
     var currentStep: BlueprintStep { steps[stepIndex] }
     var isFirstStep: Bool { stepIndex == 0 }
     private var isLastStep: Bool { stepIndex == steps.count - 1 }
@@ -33,9 +43,32 @@ final class BlueprintViewModel {
         stepIndex += 1
         return false
     }
+
     func onAppear() {
-            // Otomatis memutar BGM "Blueprint.wav"
-            // Musik "main menu" dari Splash/Cutscene akan otomatis diganti dengan BGM ini
-            AudioManager.shared.playBGM(.page2)
+        // Otomatis memutar BGM "Blueprint.wav"
+        // Musik "main menu" dari Splash/Cutscene akan otomatis diganti dengan BGM ini
+        AudioManager.shared.playBGM(.page2)
+        startCheckInLoop()
+    }
+
+    func onDisappear() {
+        checkInTask?.cancel()
+    }
+
+    /// Peeks the mouse in on a fixed cadence, for as long as the screen is up.
+    private func startCheckInLoop() {
+        checkInTask?.cancel()
+        checkInTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: CheckInTiming.interval)
+                guard !Task.isCancelled, let self else { return }
+
+                showsCheckIn = true
+                try? await Task.sleep(for: CheckInTiming.visibleDuration)
+                guard !Task.isCancelled else { return }
+
+                showsCheckIn = false
+            }
         }
+    }
 }

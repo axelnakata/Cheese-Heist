@@ -2,18 +2,26 @@
 //  CrankDirectionGuide.swift
 //  Cheese Heist
 //
-//  The animated arrow that circles the crank, saying which way round to turn it.
+//  Three animations sharing one spot beside the knob, one per `CrankHint`. Never more
+//  than one at once, and never while the child is actually cranking correctly — a hint
+//  competing with the thing it is teaching just becomes noise.
 //
-//  It runs CONTINUOUSLY while the joystick is on screen, not only during the tutorial
-//  beat. The beat is over in a few seconds and the free run is not, and a child who
-//  comes back to the crank three minutes later has no way back to the instruction.
+//  ═══ WHY RED CAME BACK. ═══
 //
-//  ═══ IT NEVER TURNS RED ANY MORE. ═══
+//  It used to never turn red: `CrankRatchet` stopped the knob moving backwards at all,
+//  so a wrong turn did nothing and there was nothing to warn about. That is no longer
+//  true — turning backwards now lets the rope fall, so a wrong turn has a consequence
+//  again, and `.wrongWay` gets its own alert back: the same arrow, tinted
+//  `AppColor.stateInvalid` and shaking rather than calmly sweeping.
 //
-//  It used to flash red and speed up when the child cranked backwards. That has been
-//  replaced by `CrankRatchet`, which stops the knob moving backwards at all — the crank
-//  refuses rather than complaining, so there is no wrong state left to colour. What is
-//  left here is one job: showing which way round to turn, slowly enough to be followed.
+//  ═══ WHY IT NOW HIDES WHILE PLAYING. ═══
+//
+//  It used to run continuously, fading only while cranking correctly, on the theory
+//  that a child who came back to the crank minutes later still needed reminding. In
+//  practice a hint faded to 40% is still visible the entire time the child is
+//  successfully doing the right thing, which reads as the app nagging. `.idle` (and
+//  `.wrongWay`, `.falling`) only ever apply while `isPressed` is false or the turn is
+//  actively wrong — see `CrankHint.of`.
 //
 
 import SwiftUI
@@ -21,33 +29,64 @@ import SwiftUI
 struct CrankDirectionGuide: View {
 
     var diameter: CGFloat
-    var engagement: CrankEngagement = .disengaged
+    var hint: CrankHint = .idle
 
     @State private var lead: CGFloat = 0
+    @State private var wobble = false
 
     private enum Metric {
-        /// Seconds per revolution. A demonstration, not a race: at 1.8s this outran any
-        /// speed a child would actually turn the crank, and an arrow moving faster than
-        /// the hand it is instructing reads as decoration rather than as a rate.
-        static let revolution: Double = 3.4
-        /// Faded, not hidden, once they are cranking correctly: still legible if they
-        /// pause, not competing with the thing it was pointing at.
-        static let engagedOpacity: Double = 0.4
+        /// Seconds per revolution while idle. A demonstration, not a race: at 1.8s
+        /// this outran any speed a child would actually turn the crank.
+        static let idleRevolution: Double = 3.4
+        /// Faster while alerting a wrong turn — urgency, not decoration.
+        static let alertRevolution: Double = 1.6
+        static let wobbleAngle: Angle = .degrees(7)
+        static let wobbleDuration: Double = 0.13
+        static let fallingIconFraction: CGFloat = 0.32
     }
 
     var body: some View {
-        CrankArrowShape(lead: lead)
-            .fill(AppColor.accent)
-            .frame(width: diameter, height: diameter)
-            .opacity(engagement == .engaged ? Metric.engagedOpacity : 1)
-            .allowsHitTesting(false)
-            .onAppear {
-                withAnimation(
-                    .linear(duration: Metric.revolution).repeatForever(autoreverses: false)
-                ) {
-                    lead = 1
-                }
+        ZStack {
+            switch hint {
+            case .none:
+                EmptyView()
+
+            case .idle:
+                arrow(tint: AppColor.accent)
+                    .onAppear { startSweep(seconds: Metric.idleRevolution) }
+
+            case .wrongWay:
+                arrow(tint: AppColor.stateInvalid)
+                    .rotationEffect(wobble ? Metric.wobbleAngle : -Metric.wobbleAngle)
+                    .onAppear {
+                        startSweep(seconds: Metric.alertRevolution)
+                        withAnimation(.easeInOut(duration: Metric.wobbleDuration).repeatForever(autoreverses: true)) {
+                            wobble = true
+                        }
+                    }
+
+            case .falling:
+                Image(systemName: "arrow.down.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: diameter * Metric.fallingIconFraction)
+                    .foregroundStyle(AppColor.stateInvalid)
+                    .symbolEffect(.bounce, options: .repeating)
             }
+        }
+        .frame(width: diameter, height: diameter)
+        .allowsHitTesting(false)
+    }
+
+    private func arrow(tint: Color) -> some View {
+        CrankArrowShape(lead: lead)
+            .fill(tint)
+    }
+
+    private func startSweep(seconds: Double) {
+        withAnimation(.linear(duration: seconds).repeatForever(autoreverses: false)) {
+            lead = 1
+        }
     }
 }
 
@@ -56,7 +95,17 @@ struct CrankDirectionGuide: View {
         .previewBackdrop(.cameraFeed)
 }
 
-#Preview("Cranking") {
-    CrankDirectionGuide(diameter: 200, engagement: .engaged)
+#Preview("Cranking — no hint") {
+    CrankDirectionGuide(diameter: 200, hint: .none)
+        .previewBackdrop(.cameraFeed)
+}
+
+#Preview("Wrong way") {
+    CrankDirectionGuide(diameter: 200, hint: .wrongWay)
+        .previewBackdrop(.cameraFeed)
+}
+
+#Preview("Falling") {
+    CrankDirectionGuide(diameter: 200, hint: .falling)
         .previewBackdrop(.cameraFeed)
 }

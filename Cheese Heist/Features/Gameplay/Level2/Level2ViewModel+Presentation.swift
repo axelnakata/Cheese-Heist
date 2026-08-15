@@ -15,6 +15,9 @@ extension Level2ViewModel {
     var chipText: String? { Level2PhasePresentation.chip(for: phase) }
     var isResult: Bool { Level2PhasePresentation.isResult(phase) }
     var liftProgress: Double { runner?.progress ?? 0 }
+    var crankHint: CrankHint {
+        .of(drive: crank.drive, isPressed: crank.isPressed, hasElevation: (runner?.state.height ?? 0) > 0)
+    }
     var showsBars: Bool { Level2PhasePresentation.showsBars(phase) }
     var showsTimer: Bool { Level2PhasePresentation.showsTimer(phase) }
     var showsCheeseCountdown: Bool { Level2PhasePresentation.showsCheeseCountdown(phase) }
@@ -47,8 +50,20 @@ extension Level2ViewModel {
 
     /// The mouse sprite for the result screen.
     var resultMouseSprite: String {
-        isFail ? MouseSprite.panic1.assetName : MouseSprite.happy.assetName
-    }
+        if isFail {
+                return MouseSprite.talkStruggle.assetName
+            }
+            switch resultStarCount {
+            case 3:
+                return MouseSprite.threestars.assetName
+            case 2:
+                return MouseSprite.twostars.assetName
+            case 1:
+                return MouseSprite.onestar.assetName
+            default:
+                return MouseSprite.zerostar.assetName
+            }
+        }
 
     /// Final star count for the result screen.
     var resultStarCount: Int {

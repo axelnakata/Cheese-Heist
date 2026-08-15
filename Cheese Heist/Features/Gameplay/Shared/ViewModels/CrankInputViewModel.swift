@@ -26,10 +26,28 @@ final class CrankInputViewModel {
     /// True while they are turning it backwards — the hint reads off this.
     var isWrongWay: Bool { engagement == .wrongWay }
 
+    /// True while a finger is actually down on the ring — separate from `engagement`,
+    /// which goes `.disengaged` both when a finger rests still AND when it lifts off.
+    /// Distinguishing the two is the whole of the ratchet's third state: resting holds
+    /// the cheese, lifting off lets it fall.
+    private(set) var isPressed = false
+
+    /// Which way the winch should be driven this frame: `.rising` while cranking the
+    /// right way, `.holding` while a finger rests on the ring without turning it, and
+    /// `.falling` on a wrong-way turn or with no finger on the ring at all.
+    var drive: CrankDrive {
+        switch engagement {
+        case .engaged: return .rising
+        case .wrongWay: return .falling
+        case .disengaged: return isPressed ? .holding : .falling
+        }
+    }
+
     @ObservationIgnored private var tracker = CircularDragTracker()
 
     /// Called on every drag change.
     func drag(to point: CGPoint, centre: CGPoint, timestamp: TimeInterval = Date().timeIntervalSince1970) {
+        isPressed = true
         tracker.update(point: point, centre: centre, timestamp: timestamp)
         publish(tracker.engagement)
     }
@@ -44,6 +62,7 @@ final class CrankInputViewModel {
 
     /// Called when the drag ends, and whenever input is gated off.
     func release() {
+        isPressed = false
         tracker.end()
         publish(.disengaged)
     }

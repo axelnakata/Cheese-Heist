@@ -82,7 +82,7 @@ struct Level1View: View {
             targets: viewModel.screenTargets,
             gate: viewModel.inputGate,
             showsRoleLabels: viewModel.showsRoleLabels,
-            engagement: viewModel.crank.engagement,
+            hint: viewModel.crankHint,
             onDrag: { point, centre in viewModel.crank.drag(to: point, centre: centre) },
             onRelease: { viewModel.crank.release() }
         )

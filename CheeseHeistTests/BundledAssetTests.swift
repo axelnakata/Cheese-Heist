@@ -107,8 +107,8 @@ struct BundledAssetTests {
         #expect(bounds.extents.z < diameter)
     }
 
-    /// The mouse is a texture, not a model, and a missing one makes `MouseSpriteEntity`
-    /// fail its initialiser — which reads on device as the mouse simply not being there.
+    /// The 2D poses are dialogue and result-screen portraits, and a missing one draws a
+    /// blank bubble with no failure path — see `MouseSprite`.
     @Test(arguments: MouseSprite.allCases)
     func mouseSpritesAreInTheAssetCatalogue(_ sprite: MouseSprite) {
         #expect(
@@ -139,27 +139,118 @@ struct BundledAssetTests {
         )
     }
 
-    @Test("the mouse sprite builds at the height the perch was computed for")
-    func mouseSpriteBuilds() {
-        guard let mouse = MouseSpriteEntity() else {
-            Issue.record("the mouse sprite did not build")
+    /// `Mouse.usdz` scales to the height the perch is computed for, and comes out
+    /// grounded — a caller's `.position` lands on its feet, not its skeleton's origin.
+    ///
+    /// Measured on the SKELETON, not `ModelBounds.measure` — the mouse is skinned, and
+    /// that reads the bind pose rather than the rest pose the renderer draws. See
+    /// `MouseModelEntity`'s header for the export that got this wrong.
+    @Test("the mouse model builds grounded at the height the perch was computed for")
+    func mouseModelBuilds() {
+        guard let mouse = MouseModelEntity() else {
+            Issue.record("Mouse.usdz did not build")
             return
         }
 
-        #expect(mouse.pose == .happy)
+        guard let bounds = ModelBounds.measureSkeleton(mouse.entity) else {
+            Issue.record("the mouse model has no skeleton in it")
+            return
+        }
 
-        let bounds = ModelBounds.measure(mouse.entity)
-        #expect(abs((bounds?.extents.y ?? 0) - MouseSpriteEntity.height) < 0.001)
+        #expect(abs(bounds.extents.y - MouseModelEntity.height) < 0.002)
+        #expect(abs(bounds.min.y) < 0.001)
+    }
+
+    /// The fixed export's rig carries real joint motion, not just the blend shapes the
+    /// first export was limited to — this is what makes `setAnimating` do anything.
+    @Test("the mouse model exposes a playable animation")
+    func mouseModelAnimates() {
+        guard let mouse = MouseModelEntity() else {
+            Issue.record("Mouse.usdz did not build")
+            return
+        }
+        #expect(mouse.canAnimate)
     }
 
     // MARK: - Cutscene assets
 
-    @Test("thundercat.usdz loads from the bundle")
-    func thundercatLoads() {
-        #expect(
-            (try? Entity.load(named: "thundercat")) != nil,
-            "thundercat.usdz is missing from Resources/3DModels/Characters/"
-        )
+    /// The cheese half of the composite lands at table scale, on the plane.
+    ///
+    /// It is a rigid mesh, so `ModelBounds` is honest about it — which is the whole
+    /// reason the stage's single scale is measured off the CHEESE and not off the cat.
+    @Test("the cutscene cheese loads at cheeseSize and rests on the plane")
+    func cutsceneCheeseIsTableScale() {
+        guard let stage = CutsceneStageEntity.make(),
+              let bounds = ModelBounds.measure(stage.cheese) else {
+            Issue.record("meong.usdz did not yield the stage from the bundle")
+            return
+        }
+
+        let longest = max(bounds.extents.x, max(bounds.extents.y, bounds.extents.z))
+        #expect(abs(longest - CutsceneTuning.cheeseSize) < 0.001)
+        #expect(abs(bounds.min.y) < 0.001)
+    }
+
+    /// The cat comes out cat-shaped, cat-sized and NEAR THE ANCHOR.
+    ///
+    /// Every number here is one the cutscene shipped wrong, and none of them is reachable
+    /// from a pure test — they only exist once the real rig is loaded from the real
+    /// bundle. The cat is skinned, so `ModelBounds` reads its bind-pose box (extents
+    /// 1.795 × 5.765 × 3.706, parked at (0, 113.7, 190.0)) rather than the rest pose the
+    /// renderer draws. Normalising against that box divided by the wrong size AND shoved
+    /// the cat about seven metres from the anchor, which on device read as "the cat is
+    /// tiny like a mosquito". So this measures the SKELETON, which is what renders.
+    @Test("the cat is cat-shaped, cat-sized, grounded, and at the anchor")
+    func catIsCatShapedAndAtTheAnchor() {
+        guard let stage = CutsceneStageEntity.make() else {
+            Issue.record("the stage did not load")
+            return
+        }
+        guard let box = ModelBounds.measureSkeleton(stage.catHolder) else {
+            Issue.record("the cat has no skeleton in it")
+            return
+        }
+
+        // Sized by the RCP-authored cat:cheese ratio, not by a target of its own. A wide
+        // band: joints sit inside the silhouette, so paws, ears and tail all fall outside
+        // this box. It is here to separate "a cat" from "a mosquito" and "a sofa".
+        let longest = max(box.extents.x, max(box.extents.y, box.extents.z))
+        #expect(longest > CutsceneTuning.cheeseSize)
+        #expect(longest < CutsceneTuning.cheeseSize * 3)
+
+        // Upright: a cat is longer than it is tall and taller than it is wide. Dropping
+        // the stage's up-axis correction swaps the first two and stands it on its tail.
+        #expect(box.extents.z > box.extents.y)
+        #expect(box.extents.y > box.extents.x)
+
+        // Feet on the plane, and — the mosquito bug — actually AT the anchor rather than
+        // across the room. The orbit has not run yet, so the holder is still at the
+        // origin and the whole cat has to be within arm's reach of it.
+        #expect(abs(box.min.y) < 0.01)
+        #expect(simd_length(box.center) < 0.5)
+    }
+
+    /// The walk clip has to be a finite take.
+    ///
+    /// Read from `tooncat`, `meong.usdz` exposes three animations all named "default
+    /// subtree animation": two 0.833 s bakes and one of duration `inf` — Reality Composer
+    /// Pro's AnimationLibrary entry with `looping = 1`. Nothing about the name separates
+    /// them, so duration is the only discriminator, and "the longest take" picks the one
+    /// that never ends. Which entity the search lands on decides whether the hazard is
+    /// even in scope, so this asserts the outcome rather than the mechanism.
+    @Test("the cat's walk clip is a finite take, not the infinite library entry")
+    func catWalkClipIsFinite() {
+        guard let stage = CutsceneStageEntity.make() else {
+            Issue.record("the stage did not load")
+            return
+        }
+
+        guard let take = CutsceneStageEntity.walkTake(from: stage.catAnimated) else {
+            Issue.record("the cat exposed no finite take")
+            return
+        }
+        #expect(take.definition.duration.isFinite)
+        #expect(stage.catWalk != nil)
     }
 
     @Test("blueprint_scroll resolves in the asset catalogue")

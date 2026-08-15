@@ -40,11 +40,21 @@ struct BlueprintView: View {
                 sheet
                 Spacer()
             }
+
+            if viewModel.showsCheckIn {
+                BlueprintCheckInBubble(text: BlueprintScript.checkInLine)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+            }
         }
+        .animation(.easeInOut(duration: 0.3), value: viewModel.showsCheckIn)
         .statusBarHidden()
         .onAppear {
-                    viewModel.onAppear()
-                }
+            viewModel.onAppear()
+        }
+        .onDisappear {
+            viewModel.onDisappear()
+        }
     }
 
     private var sheet: some View {

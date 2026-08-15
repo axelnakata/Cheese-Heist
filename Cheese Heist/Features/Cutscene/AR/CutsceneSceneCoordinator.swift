@@ -42,6 +42,7 @@ final class CutsceneSceneCoordinator: CutsceneSceneProviding {
     private var ringAnchorEntity: AnchorEntity?
 
     private var ring: Entity?
+    private let billboards = BillboardSystem()
     private var catDriver: CatOrbitDriver?
     private var isScenePlaced = false
     private var lastPublishedValidity: SurfaceValidity = .noSurface
@@ -97,8 +98,7 @@ final class CutsceneSceneCoordinator: CutsceneSceneProviding {
 
         let root = Entity()
         entity.addChild(root)
-        buildCheese(root: root)
-        buildCat(root: root)
+        buildStage(root: root)
         buildLighting(root: root)
         Logger.cutscene.info("cutscene scene placed")
     }
@@ -120,38 +120,37 @@ final class CutsceneSceneCoordinator: CutsceneSceneProviding {
         return transform
     }
 
-    private func buildCheese(root: Entity) {
-        guard let wedge = CheeseEntity.make() else { return }
-        let factor = CutsceneTuning.cheeseSize / CheeseEntity.longestEdge
-        wedge.holder.scale *= factor
-        // Measured on the unscaled hierarchy, so the factor comes back out here.
-        wedge.holder.position.y = CheeseEntity.restingLift(of: wedge.holder) * factor
-
-        // In Level 1 the cheese is billboarded — its `facing` entity always turns toward
-        // the camera, and the `presentation` rotation inside `normalised` is designed for
-        // that pairing. The cutscene does NOT billboard, so the combined orientation makes
-        // the wedge stand up on its side instead of lying flat. Overriding `facing` to lay
-        // the wedge on its flat bottom: tip it forward (about X) so the holed top-face
-        // points up at the viewer looking down from above.
-        wedge.facing.orientation = simd_quatf(
-            angle: -.pi / 2,
-            axis: simd_float3(1, 0, 0)
-        )
-
-        root.addChild(wedge.holder)
-    }
-
-    private func buildCat(root: Entity) {
-        guard let cat = CatEntity.make() else { return }
-        root.addChild(cat.holder)
-        catDriver = CatOrbitDriver(cat: cat)
+    /// Both props, out of one file, at one scale.
+    ///
+    /// The cheese is not built through `CheeseEntity` here. Level 1's cheese is a
+    /// billboarded sprite-like prop whose `presentation` rotation is designed for that
+    /// pairing, and the cutscene — which does not billboard — had to fight it with a
+    /// hand-picked quarter-turn to stop the wedge standing on its side. `meong.usdz`
+    /// already contains a cheese posed next to the cat by hand in Reality Composer Pro,
+    /// so taking it from there is both fewer moving parts and the pose the designer
+    /// actually approved.
+    private func buildStage(root: Entity) {
+        guard let stage = CutsceneStageEntity.make() else { return }
+        root.addChild(stage.cheese)
+        root.addChild(stage.catHolder)
+        catDriver = CatOrbitDriver(cat: stage)
     }
 
     /// Key and fill lights so the cat and cheese are not rendered in whatever gloom the
     /// room happens to be in — the same rig Level 1 uses (see `SceneLightingRig`).
+    ///
+    /// ═══ AND IT HAS TO BE BILLBOARDED, WHICH IS WHAT WAS MISSING. ═══
+    ///
+    /// The rig is two `DirectionalLight`s aimed off its own local axes, so parenting it
+    /// to a fixed anchor and walking round the scene puts the child behind both of them —
+    /// the cheese and the cat go dull, which is exactly the "unlit assets" this rig exists
+    /// to prevent. Level 1 registers it with `BillboardSystem` for that reason
+    /// (`GameplaySceneCoordinator.buildLighting`); the cutscene did not, and the cutscene
+    /// is the screen where the child is *expected* to walk around the props.
     private func buildLighting(root: Entity) {
         let rig = SceneLightingRig.make()
         root.addChild(rig)
+        billboards.register(rig)
         arView?.environment.lighting.intensityExponent = SceneLightingRig.environmentBoost
     }
 
@@ -162,6 +161,9 @@ final class CutsceneSceneCoordinator: CutsceneSceneProviding {
 
         if isScenePlaced {
             catDriver?.advance(deltaTime: deltaTime)
+            // Last, for the same reason Level 1 runs billboards last: it re-aims the
+            // lighting rig against the frame everything else was just written into.
+            billboards.update(cameraTransform: arView.cameraTransform.matrix)
             return
         }
 
@@ -192,6 +194,7 @@ final class CutsceneSceneCoordinator: CutsceneSceneProviding {
         sceneAnchorEntity = nil
         ringAnchorEntity = nil
         ring = nil
+        billboards.removeAll()
         catDriver = nil
         isScenePlaced = false
         Logger.cutscene.info("cutscene scene torn down")

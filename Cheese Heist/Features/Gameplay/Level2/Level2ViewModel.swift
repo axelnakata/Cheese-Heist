@@ -226,7 +226,7 @@ final class Level2ViewModel {
             handle(.joystickEngaged)
         }
 
-        runner?.isCranking = inputGate.joystickEnabled && crank.isCranking
+        runner?.drive = inputGate.joystickEnabled ? crank.drive : .holding
         runner?.advance(deltaTime: deltaTime)
 
         tickTimer(deltaTime: deltaTime)

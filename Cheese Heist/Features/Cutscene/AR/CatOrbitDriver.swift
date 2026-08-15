@@ -26,13 +26,13 @@ import simd
 @MainActor
 final class CatOrbitDriver {
 
-    private let cat: CatProp
+    private let cat: CutsceneStage
     private var orbit: OrbitPatrolModel
     private var playback: AnimationPlaybackController?
     private var isWalking = false
     private var heading: Float
 
-    init(cat: CatProp, seed: UInt64 = 0) {
+    init(cat: CutsceneStage, seed: UInt64 = 0) {
         self.cat = cat
         self.orbit = OrbitPatrolModel(
             radius: CutsceneTuning.orbitRadius,
@@ -42,7 +42,7 @@ final class CatOrbitDriver {
         self.heading = 0
         place(angle: 0)
         heading = Self.travelHeading(at: 0)
-        cat.holder.orientation = Self.yaw(heading)
+        cat.catHolder.orientation = Self.yaw(heading)
         startWalking()
     }
 
@@ -63,14 +63,14 @@ final class CatOrbitDriver {
 
     private func place(angle: Float) {
         let radius = Float(CutsceneTuning.orbitRadius)
-        cat.holder.position = simd_float3(radius * cos(angle), 0, radius * sin(angle))
+        cat.catHolder.position = simd_float3(radius * cos(angle), 0, radius * sin(angle))
     }
 
     private func ease(toward target: Float, deltaTime: Float) {
         let delta = Self.shortestDelta(from: heading, to: target)
         let step = CutsceneTuning.catTurnRate * deltaTime
         heading += abs(delta) <= step ? delta : (delta < 0 ? -step : step)
-        cat.holder.orientation = Self.yaw(heading)
+        cat.catHolder.orientation = Self.yaw(heading)
     }
 
     // MARK: - Walk
@@ -86,8 +86,8 @@ final class CatOrbitDriver {
     }
 
     private func startWalking() {
-        guard let walk = cat.walk else { return }
-        playback = cat.animated.playAnimation(walk)
+        guard let walk = cat.catWalk else { return }
+        playback = cat.catAnimated.playAnimation(walk)
         isWalking = true
     }
 
