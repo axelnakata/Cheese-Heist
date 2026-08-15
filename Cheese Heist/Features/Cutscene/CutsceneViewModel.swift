@@ -34,6 +34,18 @@ final class CutsceneViewModel {
     /// Pushed from the scene coordinator. The view reads this, not the scene.
     private(set) var surfaceValidity: SurfaceValidity = .noSurface
 
+    /// True once the post-reveal buffer has elapsed and a tap is allowed to advance the
+    /// phase. Kept false for `ContinueTiming.bufferDelay` after each beat's dialogue
+    /// finishes revealing, so a child tapping through the reveal can't chain straight
+    /// into skipping the next beat too — the hint and the tap both wait for this.
+    private(set) var canAdvance = false
+
+    @ObservationIgnored private var advanceBufferTask: Task<Void, Never>?
+
+    private enum ContinueTiming {
+        static let bufferDelay: Duration = .seconds(0.5)
+    }
+
     let dialogue = DialogueSequencer()
 
     /// The current beat's data, when narrating.
@@ -77,6 +89,32 @@ final class CutsceneViewModel {
 
         // After handoff the scene is gone.
         if next == .handingOff { scene = nil }
+
+        // A beat with no dialogue has no reveal to wait for, so its buffer starts now.
+        // A beat with dialogue waits for `completeReveal()` instead.
+        canAdvance = false
+        advanceBufferTask?.cancel()
+        if !hasDialogue {
+            armAdvanceBuffer()
+        }
+    }
+
+    /// Starts (or restarts) the post-reveal buffer before a tap is allowed to advance.
+    private func armAdvanceBuffer() {
+        advanceBufferTask?.cancel()
+        advanceBufferTask = Task { [weak self] in
+            try? await Task.sleep(for: ContinueTiming.bufferDelay)
+            guard !Task.isCancelled else { return }
+            self?.canAdvance = true
+        }
+    }
+
+    /// Marks the current beat's typewriter as done — whether it finished on its own or a
+    /// tap skipped ahead of it — and starts the buffer before a further tap can advance.
+    func completeReveal() {
+        guard !dialogue.isRevealComplete else { return }
+        dialogue.markRevealComplete()
+        armAdvanceBuffer()
     }
 
     private var context: CutscenePhaseCommands.Context {
@@ -106,9 +144,10 @@ final class CutsceneViewModel {
     func tapToContinue() {
         guard inputGate.tapAdvances else { return }
         if dialogue.current != nil, !dialogue.isRevealComplete {
-            dialogue.markRevealComplete()
+            completeReveal()
             return
         }
+        guard canAdvance else { return }
         handle(.tappedContinue)
     }
 

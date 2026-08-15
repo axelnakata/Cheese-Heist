@@ -28,11 +28,19 @@ struct CutsceneMouseLayer: View {
     let isRevealComplete: Bool
     let onRevealComplete: () -> Void
 
+    /// Whether the post-reveal buffer has elapsed — passed straight through to the
+    /// bubble's own "tap to continue" hint. Defaults `true` so previews that don't care
+    /// about the buffer don't have to pass it.
+    var canAdvance: Bool = true
+
     @Environment(\.layoutScale) private var scale
 
     private enum Metric {
         /// Mouse height in design points — Figma `mice happy 1`, 590 tall, bleeding off
-        /// the bottom of the frame exactly as in the mockups.
+        /// the bottom of the frame exactly as in the mockups. Pulled down from that Figma
+        /// value to 420: the source PNGs are only ~280-374px native, so drawing them at
+        /// 550-590pt over-upscaled and read soft. Smaller display size means less
+        /// upscaling, not a fix — replacing these with proper 2x/3x exports is the real fix.
         static let mouseHeight: CGFloat = 550
         static let leadingInset: CGFloat = 10
         /// Where on the mouse the bubble's tail points, as a fraction of its box.
@@ -59,7 +67,8 @@ struct CutsceneMouseLayer: View {
                         style: .accent,
                         isRevealComplete: isRevealComplete,
                         anchor: headAnchor(in: proxy.size, pose: beat?.pose),
-                        onRevealComplete: onRevealComplete
+                        onRevealComplete: onRevealComplete,
+                        canAdvance: canAdvance
                     )
                 }
             }

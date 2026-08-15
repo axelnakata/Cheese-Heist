@@ -75,9 +75,9 @@ struct SuccessOverlay: View {
         static let timeRemainingGap: CGFloat = 16
         static let mouseGap: CGFloat = 80
 
-        /// `mice_happy` — the pose that is holding the cheese. 331pt is the frame's,
-        /// measured off the export; the mouse was previously drawn at 445.
-        static let mouseHeight: CGFloat = 331
+        /// `mice_happy` — the pose that is holding the cheese. 331pt was the frame's,
+        /// measured off the export; bumped up to read better on the result screen.
+        static let mouseHeight: CGFloat = 400
     }
 
     var body: some View {
@@ -93,14 +93,11 @@ struct SuccessOverlay: View {
         .opacity(hasEntered ? 1 : 0)
         .scaleEffect(hasEntered ? 1 : 0.92)
         .task {
-            // 1. Jalankan animasi masuk overlay
+            // The win/lose SFX already played before this view was even mounted — the
+            // owning ViewModel waits for it via `showsResult`. This just animates entry.
             withAnimation(.easeOut(duration: AppDuration.celebrationEntry)) {
                 hasEntered = true
             }
-
-            // 2. Putar audio Success/Fail secara instan (non-blocking) agar keju langsung dapat dianimasikan
-            let statusTrack: AudioTrack = starCount > 0 ? .success : .fail
-            AudioManager.shared.playSFX(statusTrack)
         }
     }
 
@@ -159,7 +156,7 @@ struct SuccessOverlay: View {
         subtitle: "Great gear combination! Just the right mix!",
         onRetry: {},
         onNext: {},
-        starCount: 3,
+        starCount: 2,
         timeRemaining: 13
     )
         .previewBackdrop(.cameraFeed)
@@ -183,7 +180,7 @@ struct SuccessOverlay: View {
         subtitle: "Try switching which gear i should turn!",
         onRetry: {},
         starCount: 0,
-        mouseAssetName: "mouse_panic1",
+        mouseAssetName: "Mouse_struggle",
         showNext: false
     )
         .previewBackdrop(.cameraFeed)
