@@ -6,8 +6,12 @@ struct GearTrainState: Equatable, Sendable {
     var driverAngle: Double = 0
     /// Current cheese height above rest, in metres.
     var height: Double = 0
-    /// Whether the mouse is actively cranking.
-    var isCranking: Bool = false
+    /// Which way the ratchet is being driven this frame.
+    var drive: CrankDrive = .holding
+
+    /// The mouse's pedalling animation plays only while actually winching up — not
+    /// while holding steady or unwinding, neither of which the mouse is doing.
+    var isCranking: Bool { drive == .rising }
 
     /// Follower angle derived from driver — never integrated independently.
     /// Independent integration accumulates float drift and the teeth visibly unmesh.

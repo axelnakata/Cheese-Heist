@@ -22,15 +22,13 @@ struct SceneLayoutFromAssignmentTests {
     let large = GearPlacement(
         id: UUID(), type: .fortyTooth, local: simd_float3(0.012, 0, 0)
     )
-    let mouseHeight: Float = 0.055
 
     private var gears: [GearPlacement] { [small, large] }
 
     private func layout(driver: GearPlacement, follower: GearPlacement) -> SceneLayout? {
         SceneLayoutFromAssignment.layout(
             gears: gears,
-            assignment: GearRoleAssignment(driverID: driver.id, followerID: follower.id),
-            mouseHeight: mouseHeight
+            assignment: GearRoleAssignment(driverID: driver.id, followerID: follower.id)
         )
     }
 
@@ -47,14 +45,16 @@ struct SceneLayoutFromAssignmentTests {
         let onSmall = layout(driver: small, follower: large)
         let onLarge = layout(driver: large, follower: small)
 
-        let smallExpected = small.local.y
-            + GearGeometry.tipRadius(of: .eightTooth) + mouseHeight / 2
-        let largeExpected = large.local.y
-            + GearGeometry.tipRadius(of: .fortyTooth) + mouseHeight / 2
+        let smallRadius = GearGeometry.tipRadius(of: .eightTooth)
+        let largeRadius = GearGeometry.tipRadius(of: .fortyTooth)
 
-        #expect(onSmall?.mousePerch.y == smallExpected)
-        #expect(onLarge?.mousePerch.y == largeExpected)
-        #expect(largeExpected > smallExpected)
+        #expect(onSmall?.mousePerch.y == small.local.y + smallRadius)
+        #expect(onLarge?.mousePerch.y == large.local.y + largeRadius)
+        #expect((onLarge?.mousePerch.y ?? 0) > (onSmall?.mousePerch.y ?? 0))
+
+        // BEHIND the driver, not centred on it — away from the camera along local -Z.
+        #expect(onSmall?.mousePerch.z == small.local.z - smallRadius)
+        #expect(onLarge?.mousePerch.z == large.local.z - largeRadius)
     }
 
     /// Swapping the assignment must move the mouse and the rope and nothing else.
@@ -77,8 +77,6 @@ struct SceneLayoutFromAssignmentTests {
     @Test("an assignment naming a gear that is not here yields nothing")
     func unknownGearYieldsNil() {
         let stray = GearRoleAssignment(driverID: UUID(), followerID: large.id)
-        #expect(SceneLayoutFromAssignment.layout(
-            gears: gears, assignment: stray, mouseHeight: mouseHeight
-        ) == nil)
+        #expect(SceneLayoutFromAssignment.layout(gears: gears, assignment: stray) == nil)
     }
 }

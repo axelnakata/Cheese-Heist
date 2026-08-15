@@ -28,4 +28,12 @@ enum WinchModel {
     ) -> Double {
         min(currentHeight + ropeSpeed * deltaTime, ceiling)
     }
+
+    /// Unwinding: h(t+dt) = max(h(t) − v_rope · dt, 0). The floor is the table the
+    /// crane stands on — the rope cannot pay out further than it started.
+    static func retractHeight(
+        currentHeight: Double, ropeSpeed: Double, deltaTime: Double
+    ) -> Double {
+        max(currentHeight - ropeSpeed * deltaTime, 0)
+    }
 }

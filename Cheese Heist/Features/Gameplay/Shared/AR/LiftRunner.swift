@@ -67,9 +67,9 @@ final class LiftRunner {
         self.pair = pair
     }
 
-    var isCranking: Bool {
-        get { state.isCranking }
-        set { state.isCranking = newValue }
+    var drive: CrankDrive {
+        get { state.drive }
+        set { state.drive = newValue }
     }
 
     /// 0…1 against the FULL lift height, not against this segment's ceiling — so the

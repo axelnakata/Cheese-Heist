@@ -107,8 +107,8 @@ struct BundledAssetTests {
         #expect(bounds.extents.z < diameter)
     }
 
-    /// The mouse is a texture, not a model, and a missing one makes `MouseSpriteEntity`
-    /// fail its initialiser — which reads on device as the mouse simply not being there.
+    /// The 2D poses are dialogue and result-screen portraits, and a missing one draws a
+    /// blank bubble with no failure path — see `MouseSprite`.
     @Test(arguments: MouseSprite.allCases)
     func mouseSpritesAreInTheAssetCatalogue(_ sprite: MouseSprite) {
         #expect(
@@ -139,17 +139,37 @@ struct BundledAssetTests {
         )
     }
 
-    @Test("the mouse sprite builds at the height the perch was computed for")
-    func mouseSpriteBuilds() {
-        guard let mouse = MouseSpriteEntity() else {
-            Issue.record("the mouse sprite did not build")
+    /// `Mouse.usdz` scales to the height the perch is computed for, and comes out
+    /// grounded — a caller's `.position` lands on its feet, not its skeleton's origin.
+    ///
+    /// Measured on the SKELETON, not `ModelBounds.measure` — the mouse is skinned, and
+    /// that reads the bind pose rather than the rest pose the renderer draws. See
+    /// `MouseModelEntity`'s header for the export that got this wrong.
+    @Test("the mouse model builds grounded at the height the perch was computed for")
+    func mouseModelBuilds() {
+        guard let mouse = MouseModelEntity() else {
+            Issue.record("Mouse.usdz did not build")
             return
         }
 
-        #expect(mouse.pose == .happy)
+        guard let bounds = ModelBounds.measureSkeleton(mouse.entity) else {
+            Issue.record("the mouse model has no skeleton in it")
+            return
+        }
 
-        let bounds = ModelBounds.measure(mouse.entity)
-        #expect(abs((bounds?.extents.y ?? 0) - MouseSpriteEntity.height) < 0.001)
+        #expect(abs(bounds.extents.y - MouseModelEntity.height) < 0.002)
+        #expect(abs(bounds.min.y) < 0.001)
+    }
+
+    /// The fixed export's rig carries real joint motion, not just the blend shapes the
+    /// first export was limited to — this is what makes `setAnimating` do anything.
+    @Test("the mouse model exposes a playable animation")
+    func mouseModelAnimates() {
+        guard let mouse = MouseModelEntity() else {
+            Issue.record("Mouse.usdz did not build")
+            return
+        }
+        #expect(mouse.canAnimate)
     }
 
     // MARK: - Cutscene assets
@@ -186,7 +206,7 @@ struct BundledAssetTests {
             Issue.record("the stage did not load")
             return
         }
-        guard let box = Self.skinnedBounds(of: stage.catHolder) else {
+        guard let box = ModelBounds.measureSkeleton(stage.catHolder) else {
             Issue.record("the cat has no skeleton in it")
             return
         }
@@ -208,33 +228,6 @@ struct BundledAssetTests {
         // origin and the whole cat has to be within arm's reach of it.
         #expect(abs(box.min.y) < 0.01)
         #expect(simd_length(box.center) < 0.5)
-    }
-
-    /// Where a skinned prop actually renders: its skeleton's rest pose accumulated down
-    /// the joint parent chain, in `root`'s space. `ModelBounds` cannot answer this.
-    private static func skinnedBounds(of root: Entity) -> BoundingBox? {
-        var queue = [(entity: root, parent: matrix_identity_float4x4)]
-        while let head = queue.first {
-            queue.removeFirst()
-            let world = head.parent * head.entity.transform.matrix
-
-            if let mesh = head.entity.components[ModelComponent.self]?.mesh,
-               let skeleton = mesh.contents.skeletons.first(where: { _ in true }) {
-                let joints = Array(skeleton.joints)
-                var poses = [simd_float4x4](repeating: matrix_identity_float4x4, count: joints.count)
-                for (index, joint) in joints.enumerated() {
-                    let local = joint.restPoseTransform.matrix
-                    poses[index] = joint.parentIndex.map { poses[$0] * local } ?? local
-                }
-                let points = poses.map { pose -> simd_float3 in
-                    let p = world * pose.columns.3
-                    return simd_float3(p.x, p.y, p.z)
-                }
-                return points.reduce(into: BoundingBox()) { $0.formUnion($1) }
-            }
-            queue.append(contentsOf: head.entity.children.map { ($0, world) })
-        }
-        return nil
     }
 
     /// The walk clip has to be a finite take.

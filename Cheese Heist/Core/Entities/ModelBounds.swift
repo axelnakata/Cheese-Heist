@@ -67,4 +67,57 @@ enum ModelBounds {
 
         return BoundingBox(min: lower, max: upper)
     }
+
+    // MARK: - Skinned meshes
+
+    /// Where a skinned prop actually renders: each joint's REST pose, accumulated down
+    /// the parent chain, in `root`'s own space.
+    ///
+    /// `measure(_:)` cannot answer this — it reads `MeshResource.bounds`, which for a
+    /// skinned mesh is the BIND-POSE vertex box, not the pose the renderer draws. On a
+    /// rig whose bind pose sits nowhere near its rest pose (a T-pose bound far from the
+    /// origin, or a single placeholder joint with no motion at all) that measurement is
+    /// answering a different question, and normalising against it can shove the whole
+    /// prop across the room rather than merely misplace it — see `CutsceneStageEntity`.
+    ///
+    /// A wide band, not an exact silhouette: joints sit inside the mesh, so paws, ears,
+    /// noses and tails all fall outside the box by however far the mesh extends past its
+    /// nearest joint. Good enough to normalise a character's scale and ground its feet;
+    /// not a substitute for `measure(_:)` on a rigid prop.
+    static func measureSkeleton(_ root: Entity) -> BoundingBox? {
+        var queue = [(entity: root, parent: matrix_identity_float4x4)]
+        while let head = queue.first {
+            queue.removeFirst()
+            let world = head.parent * head.entity.transform.matrix
+
+            if let mesh = head.entity.components[ModelComponent.self]?.mesh,
+               let skeleton = mesh.contents.skeletons.first(where: { _ in true }) {
+                return restPoseBounds(of: skeleton, world: world)
+            }
+            queue.append(contentsOf: head.entity.children.map { ($0, world) })
+        }
+        return nil
+    }
+
+    /// Each joint's rest pose is authored relative to its PARENT, so the world position
+    /// is the accumulated product down the chain — never the joint's own transform read
+    /// in isolation, which would ignore everywhere its ancestors already moved it.
+    private static func restPoseBounds(
+        of skeleton: MeshResource.Skeleton, world: simd_float4x4
+    ) -> BoundingBox? {
+        let joints = Array(skeleton.joints)
+        guard !joints.isEmpty else { return nil }
+
+        var poses = [simd_float4x4](repeating: matrix_identity_float4x4, count: joints.count)
+        for (index, joint) in joints.enumerated() {
+            let local = joint.restPoseTransform.matrix
+            poses[index] = joint.parentIndex.map { poses[$0] * local } ?? local
+        }
+
+        let points = poses.map { pose -> simd_float3 in
+            let worldPoint = world * pose.columns.3
+            return simd_float3(worldPoint.x, worldPoint.y, worldPoint.z)
+        }
+        return points.reduce(into: BoundingBox()) { $0.formUnion($1) }
+    }
 }

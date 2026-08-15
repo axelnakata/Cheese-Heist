@@ -15,6 +15,9 @@ extension Level2ViewModel {
     var chipText: String? { Level2PhasePresentation.chip(for: phase) }
     var isResult: Bool { Level2PhasePresentation.isResult(phase) }
     var liftProgress: Double { runner?.progress ?? 0 }
+    var crankHint: CrankHint {
+        .of(drive: crank.drive, isPressed: crank.isPressed, hasElevation: (runner?.state.height ?? 0) > 0)
+    }
     var showsBars: Bool { Level2PhasePresentation.showsBars(phase) }
     var showsTimer: Bool { Level2PhasePresentation.showsTimer(phase) }
     var showsCheeseCountdown: Bool { Level2PhasePresentation.showsCheeseCountdown(phase) }

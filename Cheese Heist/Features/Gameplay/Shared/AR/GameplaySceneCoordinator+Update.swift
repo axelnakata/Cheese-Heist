@@ -21,7 +21,7 @@ extension GameplaySceneCoordinator: CraneSceneProviding {
     /// hides the very thing being taught — that the roles have exchanged.
     func apply(assignment: GearRoleAssignment, animated: Bool) {
         guard let next = SceneLayoutFromAssignment.layout(
-            gears: placements, assignment: assignment, mouseHeight: Self.mouseHeight
+            gears: placements, assignment: assignment
         ) else { return }
 
         setAssignment(assignment)
@@ -30,7 +30,8 @@ extension GameplaySceneCoordinator: CraneSceneProviding {
         // No re-skinning. The twins wear the Technic part's own colours and a role swap
         // does not change which part is which — only the label and where the mouse
         // stands. Both entities here are PLACEMENT holders whose orientation nothing
-        // else writes; the billboarded sprites hang underneath them.
+        // else writes; the mouse's rig and the cheese's billboarded facing hang
+        // underneath them.
         move(mousePlacement, to: next.mousePerch, animated: animated)
         move(payloadHolder, to: next.ropeAnchor, animated: animated)
     }
@@ -67,6 +68,7 @@ extension GameplaySceneCoordinator: CraneSceneProviding {
             simd_quatf(angle: Float(state.followerAngle(ratio: ratio)), axis: simd_float3(0, 0, 1))
 
         setPayloadHeight(Float(state.height))
+        mouseModel?.setAnimating(state.isCranking)
     }
 
     /// Moves the cheese up from its resting position and shortens the rope to match.
@@ -114,9 +116,13 @@ extension GameplaySceneCoordinator: CraneSceneProviding {
 
     // MARK: - Choreography
 
-    func setMousePose(_ pose: MouseSprite) {
-        mouseSprite?.setPose(pose)
-    }
+    /// A no-op on the 3D rig. The pose choreography was the flat sprite's texture swap
+    /// between `happy`/`talkStruggle`/`amazed`; the model has one mesh and no per-pose
+    /// art. Level 2's `stallShaking` struggle pose has no visual replacement yet — the
+    /// asset's own "Panic" blend shape is the obvious candidate, but RealityKit does not
+    /// import this file's blend-shape animation (see `MouseModelEntity`), so driving it
+    /// needs its own investigation rather than a guess here.
+    func setMousePose(_ pose: MouseSprite) {}
 
     func setRopeVisible(_ visible: Bool) {
         ropeLine?.setVisible(visible)
@@ -181,9 +187,12 @@ extension GameplaySceneCoordinator: CraneSceneProviding {
 
     /// The top of the mouse's head in screen space — where a speech bubble's tail wants
     /// to land, rather than its feet.
+    ///
+    /// `mousePerch` is the mouse's FEET now, not a sprite's centre, so the head is a
+    /// full height up rather than half of one.
     private func projectedMouseHead() -> CGPoint? {
-        guard let layout = currentLayout, mouseSprite != nil else { return nil }
-        let head = layout.mousePerch + simd_float3(0, MouseSpriteEntity.height / 2, 0)
+        guard let layout = currentLayout, mouseModel != nil else { return nil }
+        let head = layout.mousePerch + simd_float3(0, MouseModelEntity.height, 0)
         return projector?.project(local: head, root: contentRoot)
     }
 

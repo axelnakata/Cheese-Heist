@@ -45,9 +45,6 @@ import os
 @MainActor
 final class GameplaySceneCoordinator {
 
-    /// How tall the mouse stands. Shared with the layout so the perch matches.
-    static let mouseHeight = MouseSpriteEntity.height
-
     /// Where the cheese rests before the table has been measured, in metres below the
     /// follower's axle.
     static let fallbackRestingDrop: Float = 0.09
@@ -75,7 +72,7 @@ final class GameplaySceneCoordinator {
     private(set) var contentRoot: Entity?
 
     private var twins: [UUID: GearTwin] = [:]
-    private var mouse: MouseSpriteEntity?
+    private var mouse: MouseModelEntity?
 
     /// The gear-clash shake, while a stalled combo strains against a load it can't lift.
     /// Owned here so a second `setGearStrain` call replaces rather than orphans one.
@@ -192,7 +189,7 @@ final class GameplaySceneCoordinator {
     var twinsByID: [UUID: GearTwin] { twins }
     var activeGearShake: GearShakeDriver? { gearShake }
     func setActiveGearShake(_ next: GearShakeDriver?) { gearShake = next }
-    var mouseSprite: MouseSpriteEntity? { mouse }
+    var mouseModel: MouseModelEntity? { mouse }
     var mousePlacement: Entity? { mouseHolder }
     var ropeLine: RopeEntity? { rope }
     var cheeseEntity: Entity? { cheese?.holder }
@@ -240,24 +237,19 @@ private extension GameplaySceneCoordinator {
         view?.environment.lighting.intensityExponent = SceneLightingRig.environmentBoost
     }
 
-    /// ═══ THE PERCH GOES ON THE HOLDER, THE BILLBOARD ON THE SPRITE. ═══
-    ///
-    /// The same split as the gear twin, for the same reason. A role swap ANIMATES the
-    /// mouse to the other gear over 300ms, and `BillboardSystem` rewrites orientation on
-    /// every one of the sixty frames that animation is playing. Two writers on one
-    /// transform is a race, and the way it lost was spectacular: the mouse left the crane
-    /// altogether and stood on the desk, several times too big for the scene it belonged
-    /// to. With the holder carrying position and the sprite carrying facing, neither
-    /// writer can see the other's transform.
+    /// No billboard here. That split existed because the flat sprite had to face the
+    /// camera every one of the sixty frames a role-swap animation was playing, which is
+    /// a real 3D rig's whole reason for being: it reads correctly from any angle the
+    /// child walks to, so nothing rewrites its orientation and the holder carrying
+    /// position is the only writer on this transform.
     func buildMouse(root: Entity) {
-        guard let sprite = MouseSpriteEntity() else { return }
+        guard let model = MouseModelEntity() else { return }
 
         let holder = Entity()
-        holder.addChild(sprite.entity)
+        holder.addChild(model.entity)
         root.addChild(holder)
 
-        billboards.register(sprite.entity)
-        mouse = sprite
+        mouse = model
         mouseHolder = holder
     }
 

@@ -88,6 +88,7 @@ Add new plist keys as `INFOPLIST_KEY_*` build settings where one exists.
 | `ML/GearDetectorModel.mlpackage` | **Keep this exact name.** Xcode generates a Swift class named after the model file; naming it `GearDetector` collides with the hand-written `GearDetector` type — *"Multiple commands produce GearDetector.stringsdata"*. |
 | `3DModels/Gears/gear_8.usdz`, `gear_24.usdz`, `gear_40.usdz` | Filenames must match `GearType.modelName`. |
 | `3DModels/Props/Cheese.usdc` | |
+| `3DModels/Props/Mouse.usdz` | Loaded by `MouseModelEntity`, name `"Mouse"`. Skinned (25-joint rig); normalised and grounded via `ModelBounds.measureSkeleton`, never `GearMeshNormaliser`. Its `Idle_Body` clip's blend-shape half still fails to import (`InvalidAnimationDefinition`) but the joint half plays — see the header comment. |
 | `Assets.xcassets` | `cheese_star`, `crane_guidance`, and four mouse poses. |
 
 The YOLO11n model's class labels are `gear_8t` / `gear_24t` / `gear_40t` and must match
