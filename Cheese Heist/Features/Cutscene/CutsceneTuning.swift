@@ -14,41 +14,46 @@ import Foundation
 enum CutsceneTuning {
     // MARK: - Cat
 
-    /// Cat's body length, in metres. Specified by the team, not measured (OQ-C2).
-    ///
-    /// Worth an eye on device: at 20 cm the cat is longer than the 18 cm radius of the
-    /// circle it walks, so it will read as a large animal pacing a tight ring. That may
-    /// be exactly the intimidation the beat wants, or it may look like a scale error.
-    /// Changing it here changes nothing else — the orbit is driven in code.
-    static let catBodyLength: Float = 0.20
+    // There is no `catBodyLength` any more, and its absence is a decision (OQ-C2).
+    //
+    // The cat's size is not ours to set: it is the RCP-authored cat:cheese ratio inside
+    // `meong.usdz`, and `CutsceneStageEntity` scales the whole stage as one unit off the
+    // cheese. Sizing the cat independently is also what the old code could not do
+    // correctly — a skinned mesh cannot be measured from `ModelBounds`, see that file.
+    // At `cheeseSize` = 8 cm the cat comes out about 14 cm long and 11 cm tall. To make
+    // the cat bigger, make the cheese bigger; the ratio is the designer's.
 
     /// Yaw applied to the cat so its nose points along the direction of travel.
     ///
-    /// CALIBRATE. The RCP-authored axis correction in `meong.usdz` fixes the cat's own
-    /// export rotations, but "forward" along the orbit is a separate question from
-    /// "upright" — it still has to be looked at. Quarter-turns here are cheap: if the
-    /// cat orbits sideways, this is the only number that needs to move.
+    /// CALIBRATE, and it is the only thing left on this asset that has to be seen to be
+    /// known. `CatOrbitDriver` assumes the cat's nose is +Z, because that is the axis the
+    /// cat's length lies along once the stage's up-axis correction is dropped — but which
+    /// END of that axis is the head cannot be read off a bounding box. If the cat walks
+    /// its orbit backwards, this is the one number to move, and the move is `.pi`.
     static let catForwardYaw: Float = 0
 
     /// Orbit radius around the cheese, in metres (PRD-Cutscene §6.3).
     static let orbitRadius: Double = 0.30
 
-    /// Cat's ground speed around the orbit, in metres per second (PRD-Cutscene §6.3).
-    static let orbitSpeed: Double = 0.04
+    /// Cat's ground speed around the orbit, in metres per second.
+    ///
+    /// PRD-Cutscene §6.3 says 0.04, which is a real cat's amble and is the honest number
+    /// — and at a 30 cm radius it is a 47-second lap. The beat it has to sell lasts about
+    /// twenty seconds, so at 0.04 the child sees a cat that has drifted, not a cat that is
+    /// circling the cheese, and the threat premise the beat is built on does not land.
+    /// 0.12 walks the ring in ~16 s. Overrides §6.3 deliberately; this is the knob to
+    /// turn if it reads as a scurry rather than a prowl.
+    static let orbitSpeed: Double = 0.12
 
     /// How fast the cat swings round to a new heading, in radians per second. Snapping
     /// the orientation every frame made the walk look like a turntable.
     static let catTurnRate: Float = 4.0
 
-    /// The walk cycle's slice of the cat's baked take, in seconds.
-    ///
-    /// The cat (`tooncat`, inside `meong.usdz`) carries exactly one take — `Action`,
-    /// frames 1–21 at 24 fps in the source `.usda` (≈0.833 s) — so the "slice" is the
-    /// whole take rather than a cut out of a longer performance. CALIBRATE: confirm
-    /// against the duration `CatEntity` logs at runtime (`Logger.cutscene`, "cat
-    /// takes: …") on first device run and correct if RealityKit reports it differently.
-    static let catWalkClipStart: TimeInterval = 0
-    static let catWalkClipEnd: TimeInterval = 0.8333
+    // The walk cycle is no longer trimmed: measured on the simulator, `meong.usdz`
+    // exposes three takes all named "default subtree animation" — two 0.833 s bakes of
+    // the cat's `Action` and one of duration `inf`. There is no longer performance to cut
+    // a slice out of, so `CutsceneStageEntity` loops the longest finite take and the trim
+    // constants that used to live here are gone.
 
     // MARK: - Cheese
 

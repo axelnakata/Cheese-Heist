@@ -154,14 +154,110 @@ struct BundledAssetTests {
 
     // MARK: - Cutscene assets
 
-    @Test("meong.usdz loads and the cat builds out of it")
-    func catBuildsFromMeong() {
-        guard let cat = CatEntity.make() else {
-            Issue.record("meong.usdz did not yield a \"tooncat\" child from the bundle")
+    /// The cheese half of the composite lands at table scale, on the plane.
+    ///
+    /// It is a rigid mesh, so `ModelBounds` is honest about it — which is the whole
+    /// reason the stage's single scale is measured off the CHEESE and not off the cat.
+    @Test("the cutscene cheese loads at cheeseSize and rests on the plane")
+    func cutsceneCheeseIsTableScale() {
+        guard let stage = CutsceneStageEntity.make(),
+              let bounds = ModelBounds.measure(stage.cheese) else {
+            Issue.record("meong.usdz did not yield the stage from the bundle")
             return
         }
 
-        #expect(ModelBounds.measure(cat.holder) != nil)
+        let longest = max(bounds.extents.x, max(bounds.extents.y, bounds.extents.z))
+        #expect(abs(longest - CutsceneTuning.cheeseSize) < 0.001)
+        #expect(abs(bounds.min.y) < 0.001)
+    }
+
+    /// The cat comes out cat-shaped, cat-sized and NEAR THE ANCHOR.
+    ///
+    /// Every number here is one the cutscene shipped wrong, and none of them is reachable
+    /// from a pure test — they only exist once the real rig is loaded from the real
+    /// bundle. The cat is skinned, so `ModelBounds` reads its bind-pose box (extents
+    /// 1.795 × 5.765 × 3.706, parked at (0, 113.7, 190.0)) rather than the rest pose the
+    /// renderer draws. Normalising against that box divided by the wrong size AND shoved
+    /// the cat about seven metres from the anchor, which on device read as "the cat is
+    /// tiny like a mosquito". So this measures the SKELETON, which is what renders.
+    @Test("the cat is cat-shaped, cat-sized, grounded, and at the anchor")
+    func catIsCatShapedAndAtTheAnchor() {
+        guard let stage = CutsceneStageEntity.make() else {
+            Issue.record("the stage did not load")
+            return
+        }
+        guard let box = Self.skinnedBounds(of: stage.catHolder) else {
+            Issue.record("the cat has no skeleton in it")
+            return
+        }
+
+        // Sized by the RCP-authored cat:cheese ratio, not by a target of its own. A wide
+        // band: joints sit inside the silhouette, so paws, ears and tail all fall outside
+        // this box. It is here to separate "a cat" from "a mosquito" and "a sofa".
+        let longest = max(box.extents.x, max(box.extents.y, box.extents.z))
+        #expect(longest > CutsceneTuning.cheeseSize)
+        #expect(longest < CutsceneTuning.cheeseSize * 3)
+
+        // Upright: a cat is longer than it is tall and taller than it is wide. Dropping
+        // the stage's up-axis correction swaps the first two and stands it on its tail.
+        #expect(box.extents.z > box.extents.y)
+        #expect(box.extents.y > box.extents.x)
+
+        // Feet on the plane, and — the mosquito bug — actually AT the anchor rather than
+        // across the room. The orbit has not run yet, so the holder is still at the
+        // origin and the whole cat has to be within arm's reach of it.
+        #expect(abs(box.min.y) < 0.01)
+        #expect(simd_length(box.center) < 0.5)
+    }
+
+    /// Where a skinned prop actually renders: its skeleton's rest pose accumulated down
+    /// the joint parent chain, in `root`'s space. `ModelBounds` cannot answer this.
+    private static func skinnedBounds(of root: Entity) -> BoundingBox? {
+        var queue = [(entity: root, parent: matrix_identity_float4x4)]
+        while let head = queue.first {
+            queue.removeFirst()
+            let world = head.parent * head.entity.transform.matrix
+
+            if let mesh = head.entity.components[ModelComponent.self]?.mesh,
+               let skeleton = mesh.contents.skeletons.first(where: { _ in true }) {
+                let joints = Array(skeleton.joints)
+                var poses = [simd_float4x4](repeating: matrix_identity_float4x4, count: joints.count)
+                for (index, joint) in joints.enumerated() {
+                    let local = joint.restPoseTransform.matrix
+                    poses[index] = joint.parentIndex.map { poses[$0] * local } ?? local
+                }
+                let points = poses.map { pose -> simd_float3 in
+                    let p = world * pose.columns.3
+                    return simd_float3(p.x, p.y, p.z)
+                }
+                return points.reduce(into: BoundingBox()) { $0.formUnion($1) }
+            }
+            queue.append(contentsOf: head.entity.children.map { ($0, world) })
+        }
+        return nil
+    }
+
+    /// The walk clip has to be a finite take.
+    ///
+    /// Read from `tooncat`, `meong.usdz` exposes three animations all named "default
+    /// subtree animation": two 0.833 s bakes and one of duration `inf` — Reality Composer
+    /// Pro's AnimationLibrary entry with `looping = 1`. Nothing about the name separates
+    /// them, so duration is the only discriminator, and "the longest take" picks the one
+    /// that never ends. Which entity the search lands on decides whether the hazard is
+    /// even in scope, so this asserts the outcome rather than the mechanism.
+    @Test("the cat's walk clip is a finite take, not the infinite library entry")
+    func catWalkClipIsFinite() {
+        guard let stage = CutsceneStageEntity.make() else {
+            Issue.record("the stage did not load")
+            return
+        }
+
+        guard let take = CutsceneStageEntity.walkTake(from: stage.catAnimated) else {
+            Issue.record("the cat exposed no finite take")
+            return
+        }
+        #expect(take.definition.duration.isFinite)
+        #expect(stage.catWalk != nil)
     }
 
     @Test("blueprint_scroll resolves in the asset catalogue")
