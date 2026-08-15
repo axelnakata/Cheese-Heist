@@ -15,6 +15,9 @@ import SwiftUI
 
 enum BlueprintScript {
 
+    /// The mouse's periodic mid-build check-in.
+    static let checkInLine = "Still with me? Keep building!"
+
     static let steps: [BlueprintStep] = [
         BlueprintStep(
             id: 0,

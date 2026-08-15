@@ -24,7 +24,7 @@ enum CutsceneScript {
             dialogue: DialogueBeat(
                 "Oh, look! Is that a cheese right there?!"
             ),
-            pose: .shockHappy,
+            pose: .amazed,
             showsBlueprint: false
         ),
         // Beat 2 (cutscene 4): notices the cat, struggle.
