@@ -1,41 +1,46 @@
+//
+//  SurfaceInvalidMarkEntity.swift
+//  Cheese Heist
+//
+//  Created by Naila Lauza on 15/08/26.
+//
+
+
 import RealityKit
 import UIKit
 
 @MainActor
 final class SurfaceInvalidMarkEntity: Entity, HasModel {
 
-    /// Diameter menyesuaikan radius area yang dibutuhkan (sebanding dengan valid ring).
-    private static let radius: Float = SurfaceValidationRules.requiredRadius
+    private static let diameter: Float = SurfaceValidationRules.requiredRadius * 2
 
-    override init() {
-        super.init()
-        setupModel()
+    @MainActor
+    static func make() -> SurfaceInvalidMarkEntity {
+        let entity = SurfaceInvalidMarkEntity()
+        entity.setupModel()
+        return entity
     }
-
-    @UnownedRequired init() {
-        fatalError("init() has not been implemented")
+    
+    required override init() {
+        super.init()
     }
 
     private func setupModel() {
-        // Disk tipis agar menempel tepat di atas permukaan horizontal
-        let mesh = MeshResource.generateDisk(
-            radius: Self.radius,
-            count: 36
+        let mesh = MeshResource.generatePlane(
+            width: Self.diameter,
+            depth: Self.diameter
         )
 
         var material = UnlitMaterial()
         if let texture = try? TextureResource.load(named: "surface_invalid") {
             material.color = .init(tint: .white, texture: .init(texture))
         } else {
-            material.color = .init(tint: .red.withAlphaComponent(0.6))
+            material.color = .init(tint: UIColor.red.withAlphaComponent(0.6))
         }
 
-        // Render dua sisi & transparan
         material.blending = .transparent(opacity: .init(floatLiteral: 0.9))
 
         self.model = ModelComponent(mesh: mesh, materials: [material])
-        
-        // Sedikit diangkat dari lantai agar tidak z-fighting dengan tekstur meja
         self.position = [0, 0.002, 0]
     }
 }

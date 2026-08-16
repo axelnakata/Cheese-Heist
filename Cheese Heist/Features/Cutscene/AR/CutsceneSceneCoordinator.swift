@@ -42,6 +42,7 @@ final class CutsceneSceneCoordinator: CutsceneSceneProviding {
     private var ringAnchorEntity: AnchorEntity?
 
     private var ring: Entity?
+    private var invalidMark: Entity?
     private var catDriver: CatOrbitDriver?
     private var isScenePlaced = false
     private var lastPublishedValidity: SurfaceValidity = .noSurface
@@ -64,17 +65,29 @@ final class CutsceneSceneCoordinator: CutsceneSceneProviding {
     // MARK: - Ring
 
     private func buildRing(in arView: ARView) {
-        let entity = SurfaceRingEntity.make()
-        entity.isEnabled = false
+        let validEntity = SurfaceRingEntity.make()
+        validEntity.isEnabled = false
+
+        let invalidEntity = SurfaceInvalidMarkEntity.make()
+        invalidEntity.isEnabled = false
+
         let anchor = AnchorEntity(world: .zero)
-        anchor.addChild(entity)
+        anchor.addChild(validEntity)
+        anchor.addChild(invalidEntity)
+
         arView.scene.addAnchor(anchor)
-        ring = entity
+        
+        ring = validEntity
+        invalidMark = invalidEntity
         ringAnchorEntity = anchor
     }
-
+    
     func setRingVisible(_ visible: Bool) {
-        ring?.isEnabled = visible && !isScenePlaced
+        let show = visible && !isScenePlaced
+        if !show {
+            ring?.isEnabled = false
+            invalidMark?.isEnabled = false
+        }
     }
 
     // MARK: - Placement
@@ -169,15 +182,28 @@ final class CutsceneSceneCoordinator: CutsceneSceneProviding {
 
         if let hit = planeDetection.hitTransform {
             ring.map { SurfaceRingEntity.follow($0, hit: hit) }
+            invalidMark.map { SurfaceRingEntity.follow($0, hit: hit) }
         }
-        ring?.isEnabled = planeDetection.validity == .valid
 
-        if planeDetection.validity != lastPublishedValidity {
-            lastPublishedValidity = planeDetection.validity
-            onValidityChanged?(planeDetection.validity)
+        let currentValidity = planeDetection.validity
+
+        if currentValidity == .valid {
+            ring?.isEnabled = true
+            invalidMark?.isEnabled = false
+        } else if currentValidity != .noSurface {
+            ring?.isEnabled = false
+            invalidMark?.isEnabled = true
+        } else {
+            ring?.isEnabled = false
+            invalidMark?.isEnabled = false
+        }
+
+        if currentValidity != lastPublishedValidity {
+            lastPublishedValidity = currentValidity
+            onValidityChanged?(currentValidity)
         }
     }
-
+    
     // MARK: - Teardown
 
     func teardown() {
@@ -188,12 +214,13 @@ final class CutsceneSceneCoordinator: CutsceneSceneProviding {
         sceneAnchorEntity.map { arView?.scene.removeAnchor($0) }
         ringAnchorEntity.map { arView?.scene.removeAnchor($0) }
 
-        sceneARAnchor = nil
-        sceneAnchorEntity = nil
-        ringAnchorEntity = nil
-        ring = nil
-        catDriver = nil
-        isScenePlaced = false
-        Logger.cutscene.info("cutscene scene torn down")
+            sceneARAnchor = nil
+            sceneAnchorEntity = nil
+            ringAnchorEntity = nil
+            ring = nil
+            invalidMark = nil 
+            catDriver = nil
+            isScenePlaced = false
+            Logger.cutscene.info("cutscene scene torn down")
     }
 }
