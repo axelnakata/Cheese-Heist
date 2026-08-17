@@ -9,6 +9,7 @@
 //
 
 import Observation
+import SwiftUI
 
 @MainActor
 @Observable
@@ -62,7 +63,9 @@ final class BlueprintViewModel {
 
     /// Resets the idle timer loop on any user interaction.
     func userDidInteract() {
-        showsCheckIn = false
+        withAnimation(.easeInOut(duration: 0.4)) {
+            showsCheckIn = false
+        }
         startCheckInLoop()
     }
 
@@ -74,11 +77,15 @@ final class BlueprintViewModel {
                 try? await Task.sleep(for: CheckInTiming.interval)
                 guard !Task.isCancelled, let self else { return }
 
-                showsCheckIn = true
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.82)) {
+                    self.showsCheckIn = true
+                }
                 try? await Task.sleep(for: CheckInTiming.visibleDuration)
                 guard !Task.isCancelled else { return }
 
-                showsCheckIn = false
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    showsCheckIn = false
+                }
             }
         }
     }
