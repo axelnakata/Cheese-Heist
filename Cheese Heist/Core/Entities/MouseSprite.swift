@@ -19,7 +19,12 @@ enum MouseSprite: String, CaseIterable, Sendable {
     case threestars = "Mouse_3star"
     case twostars = "Mouse_2star"
     case onestar = "Mouse_1star"
-    case zerostar = "Mouse_0star"
+
+    /// The 0-star result screen — mouse fleeing the cat, empty-pawed. Figma reuses the
+    /// same wide scene for BOTH fail reasons (weak and slow); only the title/subtitle
+    /// differ. It is landscape, not portrait like the other poses — `SuccessOverlay`
+    /// sizes it by width instead of height.
+    case fail = "Mouse_0star"
 
 //    case afk = "Mouse_peeking"
 

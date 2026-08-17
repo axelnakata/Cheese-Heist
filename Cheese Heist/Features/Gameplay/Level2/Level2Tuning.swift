@@ -19,7 +19,7 @@ enum Level2Tuning {
     static let timerDuration: Int = 15
 
     /// How long the gear-clash shake plays before a stalled combo fails, in seconds.
-    static let stallShakeDuration: Double = 5.0
+    static let stallShakeDuration: Double = 4.0
 
     /// Peak wobble angle of the gear-clash shake, in radians. Small on purpose — "not
     /// too dramatic," a strain, not a spin. ~3°.

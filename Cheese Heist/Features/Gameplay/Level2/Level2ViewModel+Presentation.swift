@@ -22,6 +22,7 @@ extension Level2ViewModel {
     var showsTimer: Bool { Level2PhasePresentation.showsTimer(phase) }
     var showsCheeseCountdown: Bool { Level2PhasePresentation.showsCheeseCountdown(phase) }
     var showsRoleLabels: Bool { Level2PhasePresentation.showsRoleLabels(phase) }
+    var showsJoystick: Bool { Level2PhasePresentation.showsJoystick(phase) }
 
     /// The strength bar level for the current gear combination, or 0 if no outcome yet.
     var strengthLevel: Int { outcome?.strengthLevel ?? 0 }
@@ -48,22 +49,21 @@ extension Level2ViewModel {
         )
     }
 
-    /// The mouse sprite for the result screen.
+    /// The mouse sprite for the result screen. Both fail reasons (weak and slow) share
+    /// the same "fleeing the cat" scene — only the title/subtitle differ.
     var resultMouseSprite: String {
         if isFail {
-                return MouseSprite.talkStruggle.assetName
-            }
-            switch resultStarCount {
-            case 3:
-                return MouseSprite.threestars.assetName
-            case 2:
-                return MouseSprite.twostars.assetName
-            case 1:
-                return MouseSprite.onestar.assetName
-            default:
-                return MouseSprite.zerostar.assetName
-            }
+            return MouseSprite.fail.assetName
         }
+        switch resultStarCount {
+        case 3:
+            return MouseSprite.threestars.assetName
+        case 2:
+            return MouseSprite.twostars.assetName
+        default:
+            return MouseSprite.onestar.assetName
+        }
+    }
 
     /// Final star count for the result screen.
     var resultStarCount: Int {

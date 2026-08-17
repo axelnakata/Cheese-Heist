@@ -80,6 +80,7 @@ struct Level2View: View {
             showsBars: viewModel.showsBars,
             strengthLevel: viewModel.strengthLevel,
             speedLevel: viewModel.speedLevel,
+            showsJoystick: viewModel.showsJoystick,
             joystickEnabled: viewModel.inputGate.joystickEnabled,
             hint: viewModel.crankHint,
             onDrag: { point, centre in viewModel.crank.drag(to: point, centre: centre) },
