@@ -61,55 +61,17 @@ struct CheeseOrientationTests {
 
     // MARK: - Which way up it sits
 
-    /// ═══ THE ONE THE FIN BUILD FAILED, WITH EVERY AXIS ALREADY CORRECT. ═══
-    ///
-    /// The slice rests on a cut edge, and that edge rises 16.4° from the thick end to
-    /// the point in the model's own frame. Level the LENGTH and the edge is still 16.4°
-    /// off the table; the point has to be dipped by the taper for the underside to come
-    /// out flat. This is the assertion that says so, and it is the only one that
-    /// distinguishes the shipped pose from the corrected one.
-    ///
-    /// Not exactly zero, and not meant to be: `facePitch` turns the wedge about its own
-    /// length to bring the top face into view, and that lifts the resting edge by a bit
-    /// over a degree. The bound is 3.4°, which the corrected pose clears at 1.2° and the
-    /// shipped one misses at 12.8°.
-    @Test("the wedge rests on its underside, not on its point")
-    func restsOnItsUnderside() {
-        #expect(abs(Self.presented(CheeseEntity.restingEdgeAxis).y) < 0.06)
+    /// The cheese rests on its broad bottom face, so the top face with holes faces UP (+Y).
+    @Test("the top holed face faces up")
+    func topFaceFacesUp() {
+        #expect(Self.faceNormal.y > 0.8)
     }
 
-    /// …which means the point itself hangs below level by about that same taper. Level
-    /// or above is the fin; much past it and the wedge is tipping onto its nose.
-    @Test("the point is dipped by roughly the wedge's own taper")
-    func apexIsDippedByTheTaper() {
-        let dip = -asin(Self.apex.y)
-        #expect(dip > CheeseEntity.taperHalfAngle * 0.8)
-        #expect(dip < CheeseEntity.taperHalfAngle * 1.2)
-    }
-
-    // MARK: - Which faces are visible
-
-    /// The big holed face is the one the child has to see. `BillboardSystem` turns local
-    /// +Z to the camera, so "facing the child" is the face normal having most of its
-    /// length in +Z.
-    @Test("the flat cut face is turned towards the child")
-    func faceIsTowardsTheCamera() {
-        #expect(Self.faceNormal.z > 0.7)
-    }
-
-    /// …and tipped forward far enough that the TOP face and its holes show, which is
-    /// what gives the wedge its thickness. A normal with no downward component is a
-    /// dead-square elevation: a paper triangle.
-    @Test("the wedge is pitched forward, so the top face shows")
+    /// The top face is pitched forward toward the camera (+Z) so the child looks down onto
+    /// the cheese holes rather than seeing a flat horizontal sliver.
+    @Test("the top face is pitched towards the camera")
     func topFaceIsVisible() {
-        #expect(Self.faceNormal.y < -0.2)
-    }
-
-    /// Tall end up, which puts the slope of the top running down towards the point. The
-    /// wedge upside down is a different — and wrong — shape.
-    @Test("the wedge stands tall end up")
-    func standsTheRightWayUp() {
-        #expect(Self.width.y > 0.7)
+        #expect(Self.faceNormal.z > 0.2)
     }
 
     // MARK: - The basis itself

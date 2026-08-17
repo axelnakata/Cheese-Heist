@@ -51,7 +51,6 @@ enum Level2PhaseCommands {
             context.director?.celebrate(starCount: context.starCount)
             AudioManager.shared.fadeInBGM()
         case .failedWeak, .failedSlow:
-            context.director?.commiserate()
             AudioManager.shared.fadeInBGM()
         case .aligningCrane:
             AudioManager.shared.fadeInBGM()

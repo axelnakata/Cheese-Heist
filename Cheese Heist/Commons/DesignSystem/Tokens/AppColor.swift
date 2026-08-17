@@ -101,6 +101,4 @@ enum AppColor {
 
     /// The success burst's sparks — cheese-gold, the same colour the child just won.
     static let celebrationSpark = Palette.cheeseYellow
-    /// The fail burst's puff — the opposite gesture from `celebrationSpark`.
-    static let failSmoke = Palette.smokeGray
 }
