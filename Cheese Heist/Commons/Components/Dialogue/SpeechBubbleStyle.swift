@@ -11,8 +11,8 @@ enum SpeechBubbleStyle {
 
     var fillColor: Color {
         switch self {
-        case .accent:    return AppColor.accent
-        case .parchment: return AppColor.surfaceBackground
+        case .accent:    return AppColor.bubbleBackground
+        case .parchment: return AppColor.bubbleBackground
         }
     }
 

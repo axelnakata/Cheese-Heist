@@ -19,6 +19,7 @@
 //  body spans x 442…1239 and y 728…823 in the 1366 × 1024 design frame.
 //
 
+
 import SwiftUI
 
 struct CutsceneMouseLayer: View {
@@ -28,66 +29,56 @@ struct CutsceneMouseLayer: View {
     let isRevealComplete: Bool
     let onRevealComplete: () -> Void
 
-    /// Whether the post-reveal buffer has elapsed — passed straight through to the
-    /// bubble's own "tap to continue" hint. Defaults `true` so previews that don't care
-    /// about the buffer don't have to pass it.
     var canAdvance: Bool = true
 
     @Environment(\.layoutScale) private var scale
 
     private enum Metric {
-        /// Mouse height in design points — Figma `mice happy 1`, 590 tall, bleeding off
-        /// the bottom of the frame exactly as in the mockups.
         static let mouseHeight: CGFloat = 400
         static let leadingInset: CGFloat = 10
-        /// Where on the mouse the bubble's tail points, as a fraction of its box.
-        static let headX: CGFloat = 1.2
-        static let headY: CGFloat = 0.68
+        
+        // Kordinat offset tetap untuk Speech Bubble agar posisinya seragam
+        static let bubbleX: CGFloat = 400
+        static let bubbleY: CGFloat = -100
     }
 
     var body: some View {
         GeometryReader { proxy in
             ZStack(alignment: .bottomLeading) {
+                // 1. Karakter Tikus
                 if let pose = beat?.pose {
                     Image(pose.assetName)
                         .resizable()
                         .scaledToFit()
                         .frame(height: Metric.mouseHeight * scale)
                         .padding(.leading, Metric.leadingInset * scale)
-                        .offset(x:100, y: -50)
+                        .offset(x: 100 * scale, y: -50 * scale)
                         .allowsHitTesting(false)
                 }
 
+                // 2. Speech Bubble (Posisi Tetap untuk Semua Beat)
                 if let dialogue = dialogueBeat {
-                    GameplayDialogueLayer(
-                        text: DialogueBeatText.attributed(dialogue),
-                        style: .accent,
-                        isRevealComplete: isRevealComplete,
-                        anchor: headAnchor(in: proxy.size, pose: beat?.pose),
-                        onRevealComplete: onRevealComplete,
-                        canAdvance: canAdvance
-                    )
+                    VStack(alignment: .leading, spacing: 10 * scale) {
+                        // 1. Speech Bubble Utama
+                        SpeechBubbleView(
+                            text: DialogueBeatText.attributed(dialogue),
+                            style: .parchment,
+                            isRevealComplete: .init(
+                                get: { isRevealComplete },
+                                set: { if $0 { onRevealComplete() } }
+                            )
+                        )
+                        
+                        // 2. Tampilkan Hint "tap to continue" Jika Teks Selesai Disajikan & canAdvance True
+                            TapToContinueHint(title: "tap to continue")
+                                .padding(.leading, 50 * scale)
+                                .opacity((isRevealComplete && canAdvance) ? 1 : 0)
+                    }
+                    .offset(x: Metric.bubbleX * scale, y: Metric.bubbleY * scale)
                 }
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottomLeading)
         }
-    }
-
-    /// The mouse's head, in this layer's coordinate space.
-    private func headAnchor(in size: CGSize, pose: MouseSprite?) -> CGPoint? {
-        guard size.height > 0 else { return nil }
-        
-        let height = Metric.mouseHeight * scale
-        let left = Metric.leadingInset * scale
-        let top = size.height - height
-        
-        let referenceWidth = height * 1.0
-        let anchorX = left + referenceWidth * Metric.headX
-        
-        let currentPoseHeight = pose != nil ? height : height
-        let anchorY = top + currentPoseHeight * Metric.headY
-        
-        return CGPoint(x: anchorX, y: anchorY)
     }
 }
 

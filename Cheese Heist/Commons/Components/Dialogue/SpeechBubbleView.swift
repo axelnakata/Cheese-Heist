@@ -15,39 +15,30 @@
 //  its own. `SpeechBubbleLayoutTests` renders four lengths and compares them.
 //
 
+
 import SwiftUI
 
 struct SpeechBubbleView: View {
 
-    /// How far the tail hangs below the body. Published so a caller placing the bubble
-    /// can ask `SpeechBubbleShape` where its point ends up.
     static var tailHeight: CGFloat { Metric.tailSize.height }
-
-    /// The body's minimum height, and the widest the text is allowed to run before it
-    /// wraps. Published for the layout tests, which would otherwise restate them.
     static var minimumHeight: CGFloat { Metric.minHeight }
     static var maximumTextWidth: CGFloat { Metric.maxWidth }
 
     fileprivate enum Metric {
-        static let minHeight: CGFloat = 84
-        static let horizontalPadding: CGFloat = 30
-        static let verticalPadding: CGFloat = 26
-        /// Width is how far along the bottom edge the tail's root reaches; height is how
-        /// far it protrudes below the body, and so how much room the layout reserves.
-        static let tailSize = CGSize(width: 46, height: 12)
+        static let minHeight: CGFloat = 64
+        static let horizontalPadding: CGFloat = 20
+        static let verticalPadding: CGFloat = 20
+        static let tailSize = CGSize(width: 28, height: 32)
         static let maxWidth: CGFloat = 560
-        static let shadowRadius: CGFloat = 10
-        static let shadowOffset: CGFloat = 4
+        static let cornerRadius: CGFloat = 32
+        static let shadowDepth: CGFloat = 10
     }
 
     let text: AttributedString
     var charactersPerSecond: Double = 40
     var style: SpeechBubbleStyle = .parchment
 
-    /// `true` finishes the reveal at once; the bubble sets it when the line ends.
-    /// Defaults to a constant `true` for static callers that want no typewriter.
     @Binding var isRevealComplete: Bool
-
     @Environment(\.layoutScale) private var scale
 
     init(
@@ -66,31 +57,23 @@ struct SpeechBubbleView: View {
         label
             .padding(.horizontal, Metric.horizontalPadding * scale)
             .padding(.vertical, Metric.verticalPadding * scale)
-            .frame(minHeight: Metric.minHeight * scale, alignment: .leading)
-            .padding(.bottom, Metric.tailSize.height * scale)
-            // Room on the leading edge for the tail's horn, which reaches out past the
-            // body. The shape insets its body to match, so the text stays where it is
-            // relative to the bubble rather than shifting right.
-            .padding(.leading, SpeechBubbleShape.bulge(forTailHeight: Metric.tailSize.height) * scale)
+            .frame(minHeight: Metric.minHeight * scale, alignment: .center)
+            .padding(.leading, Metric.tailSize.width * scale)
             .background(background)
     }
 
-    /// The text, sized to itself and capped — see the note at the top of the file.
     private var label: some View {
-        let typewriter = TypewriterText(
+        TypewriterText(
             text: text,
             charactersPerSecond: charactersPerSecond,
             isComplete: $isRevealComplete
         )
-
-        return typewriter
-            .appText(AppFont.dialogue)
-            .foregroundStyle(style.textColor)
-            .frame(width: textWidth, alignment: .leading)
-            .fixedSize(horizontal: false, vertical: true)
+        .appText(AppFont.dialogue)
+        .foregroundStyle(style.textColor)
+        .frame(width: textWidth, alignment: .leading)
+        .fixedSize(horizontal: false, vertical: true)
     }
 
-    /// Measured, not proposed — see `DialogueTextWidth`.
     private var textWidth: CGFloat {
         DialogueTextWidth.measure(
             text, style: AppFont.dialogue, cap: Metric.maxWidth
@@ -98,39 +81,32 @@ struct SpeechBubbleView: View {
     }
 
     private var background: some View {
-        bubbleShape
-            .fill(style.fillColor)
-            .shadow(
-                color: AppColor.bubbleShadow,
-                radius: Metric.shadowRadius * scale,
-                y: Metric.shadowOffset * scale
-            )
+        GeometryReader { geo in
+            let tailWidth = Metric.tailSize.width * scale
+            let bodyWidth = max(0, geo.size.width - tailWidth)
+
+            ZStack {
+                RoundedRectangle(cornerRadius: Metric.cornerRadius * scale, style: .continuous)
+                    .fill(AppColor.bubbleDarkParchment)
+                    .frame(width: bodyWidth, height: geo.size.height)
+                    .offset(
+                        x: tailWidth - (20 * scale),
+                        y: Metric.shadowDepth * scale
+                    )
+
+                bubbleShape
+                    .fill(style.fillColor)
+            }
+        }
     }
 
     private var bubbleShape: SpeechBubbleShape {
         SpeechBubbleShape(
-            cornerRadius: AppRadius.bubble * scale,
+            cornerRadius: Metric.cornerRadius * scale,
             tailSize: CGSize(
                 width: Metric.tailSize.width * scale,
                 height: Metric.tailSize.height * scale
             )
         )
     }
-}
-
-#Preview("Reveal — camera feed") {
-    @Previewable @State var isComplete = false
-
-    SpeechBubbleView(text: PreviewDialogue.hungryMouse, isRevealComplete: $isComplete)
-        .onTapGesture { isComplete = true }
-        .previewBackdrop(.cameraFeed)
-}
-
-#Preview("Hugs short and long alike") {
-    VStack(alignment: .leading, spacing: AppSpacing.l) {
-        SpeechBubbleView(text: AttributedString("Wow!"))
-        SpeechBubbleView(text: PreviewDialogue.craneCompliment)
-        SpeechBubbleView(text: PreviewDialogue.buildACrane)
-    }
-    .previewBackdrop(.cameraFeed)
 }

@@ -73,7 +73,7 @@ struct SpeechBubbleLayoutTests {
         let rendered = Self.size(of: Self.short)
         let bulge = SpeechBubbleShape.bulge(forTailHeight: SpeechBubbleView.tailHeight)
 
-        #expect(rendered.height >= SpeechBubbleView.minimumHeight + SpeechBubbleView.tailHeight)
+        #expect(rendered.height >= SpeechBubbleView.minimumHeight)
         #expect(rendered.width >= bulge)
     }
 }
