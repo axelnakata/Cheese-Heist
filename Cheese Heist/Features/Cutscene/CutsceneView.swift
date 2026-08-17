@@ -29,6 +29,25 @@ struct CutsceneView: View {
         .animation(.easeInOut(duration: AppDuration.transition), value: viewModel.phase)
         .onAppear { services.startCutscene(with: viewModel) }
     }
+    
+    private var yellowGradientOverlay: some View {
+            VStack {
+                Spacer()
+                LinearGradient(
+                    colors: [
+                        Color.clear,
+                        Palette.cheeseYellow.opacity(0.15),
+                        Palette.cheeseYellow.opacity(0.50)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 300 * scale)
+                .offset(y: 30)
+                .ignoresSafeArea(edges: .bottom)
+            }
+            .allowsHitTesting(false)
+        }
 
     @ViewBuilder
     private var overlays: some View {
@@ -49,6 +68,8 @@ struct CutsceneView: View {
             // catcher, then the mouse on top — in `cutscene 6.png` the mouse and its
             // bubble are the only things not dimmed, and the scrim swallowing taps is
             // what makes the blueprint the sole way out of the last beat.
+            yellowGradientOverlay
+            
             if viewModel.showsBlueprint {
                 CutsceneBlueprintLayer(onTap: viewModel.tapBlueprint)
             }
@@ -57,8 +78,7 @@ struct CutsceneView: View {
                 beat: viewModel.currentBeat,
                 dialogueBeat: viewModel.dialogue.current,
                 isRevealComplete: viewModel.dialogue.isRevealComplete,
-                onRevealComplete: viewModel.completeReveal,
-                canAdvance: viewModel.canAdvance
+                onRevealComplete: viewModel.completeReveal
             )
 
         case .handingOff:
@@ -90,3 +110,4 @@ struct CutsceneView: View {
 #Preview {
     CutsceneView(services: AppServices.init())
 }
+

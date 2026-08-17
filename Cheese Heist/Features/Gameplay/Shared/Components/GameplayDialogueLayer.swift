@@ -81,7 +81,7 @@ struct GameplayDialogueLayer: View {
             .overlay(alignment: .bottomTrailing) {
                 if revealFlag && showsContinueHint && canAdvance {
                     TapToContinueHint(title: "tap to continue..")
-                        .offset(y: (AppFont.body.lineHeight + AppSpacing.xs) * scale)
+                        .offset(x : -425, y: (AppFont.body.lineHeight + AppSpacing.xs + 5) * scale)
                         .transition(.opacity)
                 }
             }
