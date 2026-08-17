@@ -188,7 +188,7 @@ final class CutsceneSceneCoordinator: CutsceneSceneProviding {
         // `placeScene()` but would leave the invalid mark frozen at its last valid spot.
         if let hit = planeDetection.latestHitTransform {
             ring.map { SurfaceRingEntity.follow($0, hit: hit) }
-            invalidMark.map { SurfaceRingEntity.follow($0, hit: hit) }
+            invalidMark.map { SurfaceInvalidMarkEntity.follow($0, hit: hit) }
         }
 
         let currentValidity = planeDetection.validity

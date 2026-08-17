@@ -26,6 +26,9 @@ enum SurfaceValidity: Equatable, Sendable {
     case tooSmall
     case tooClose
     case tooFar
+    /// The raycast landed on a vertical surface — a wall, not a table. Distinct from
+    /// `.tooSmall`: no amount of moving closer or centring the shot fixes this one.
+    case wrongOrientation
 }
 
 enum SurfaceValidationRules {

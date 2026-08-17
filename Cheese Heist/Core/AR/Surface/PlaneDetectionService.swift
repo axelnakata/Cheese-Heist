@@ -67,6 +67,15 @@ final class PlaneDetectionService {
             return
         }
 
+        // A wall, not a table — no clearance/distance question to ask, it is simply the
+        // wrong kind of surface. Still carries a `hit`, so the on-screen mark can stand
+        // upright against it instead of freezing wherever the last horizontal hit was.
+        guard !probe.isVertical else {
+            Logger.cutscene.debug("surface rejected: wrongOrientation (vertical)")
+            ingest(.wrongOrientation, hit: probe.worldTransform)
+            return
+        }
+
         // A hit with no plane anchor behind it is an estimated plane: real geometry, but
         // nothing we can measure an extent against yet. That is "not yet", not "too
         // small" — reporting it as `.tooSmall` sent the child hunting for another table.

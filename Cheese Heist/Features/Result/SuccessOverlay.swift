@@ -80,9 +80,9 @@ struct SuccessOverlay: View {
         static let mouseHeight: CGFloat = 400
 
         /// `Mouse_0star` — the mouse fleeing the cat on the fail screens. Landscape, not
-        /// portrait like the other poses, so it is sized by width: 720pt is what the
-        /// scene measures at on the Figma fail frames (693–727pt across both variants).
-        static let failMouseWidth: CGFloat = 720
+        /// portrait like the other poses, so it is sized by width: 995pt matches the
+        /// exact Figma export frame (`Fail Screen 2 - 0 star`).
+        static let failMouseWidth: CGFloat = 995
     }
 
     var body: some View {

@@ -81,4 +81,39 @@ enum SurfaceInvalidMarkEntity {
             parent.addChild(bar)
         }
     }
+
+    // MARK: - Follow
+
+    /// Moves the mark onto the raycast hit and stands it upright against whatever it
+    /// hit — flat on a table, upright and facing outward on a wall.
+    ///
+    /// Deliberately its own `follow`, not a reuse of `SurfaceRingEntity.follow`: the ring
+    /// only ever appears on a horizontal surface, so it can get away with discarding the
+    /// hit's rotation outright. This mark also has to stand on walls, where the surface's
+    /// own normal is the only orientation information worth keeping — everything else
+    /// about `follow` (position from the hit, a distrust of the raycast's own tangent
+    /// rotation) still applies, which is why this rebuilds orientation from `worldUp`
+    /// instead of taking the hit transform's rotation wholesale.
+    static func follow(_ entity: Entity, hit: simd_float4x4) {
+        entity.position = simd_float3(hit.columns.3.x, hit.columns.3.y, hit.columns.3.z)
+        let normal = simd_float3(hit.columns.1.x, hit.columns.1.y, hit.columns.1.z)
+        entity.orientation = orientation(forNormal: normal)
+    }
+
+    /// Identity for a horizontal surface (the mark's own +Y-normal mesh needs no
+    /// rotation — same result `SurfaceRingEntity.follow` already gives). Otherwise builds
+    /// a stand-upright-against-the-surface rotation from the normal alone: `worldUp` is
+    /// used as the sole reference for "which way is up on the wall" rather than the
+    /// hit's own tangent rotation, which is exactly the "swings with the camera" noise
+    /// `SurfaceRingEntity.follow` already distrusts for a table — on a wall that noise
+    /// would show up as the ✗ visibly rolling as the camera moves instead of yawing.
+    private static func orientation(forNormal normal: simd_float3) -> simd_quatf {
+        let worldUp = simd_float3(0, 1, 0)
+        guard abs(simd_dot(normal, worldUp)) < 0.9 else {
+            return simd_quatf(angle: 0, axis: worldUp)
+        }
+        let right = simd_normalize(simd_cross(worldUp, normal))
+        let up = simd_cross(normal, right)
+        return simd_quatf(simd_float3x3(columns: (right, normal, up)))
+    }
 }
