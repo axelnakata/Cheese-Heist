@@ -42,12 +42,17 @@ struct BlueprintView: View {
             }
 
             if viewModel.showsCheckIn {
-                BlueprintCheckInBubble(text: BlueprintScript.checkInLine)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                    .transition(.move(edge: .leading).combined(with: .opacity))
+                BlueprintCheckInBubble(text: viewModel.currentStep.checkInLine)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                    .transition(
+                        .asymmetric(
+                            insertion: .move(edge: .leading).combined(with: .opacity),
+                            removal: .move(edge: .leading).combined(with: .opacity)
+                        )
+                    )
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: viewModel.showsCheckIn)
+        .animation(.spring(response: 0.55, dampingFraction: 0.82), value: viewModel.showsCheckIn)
         .statusBarHidden()
         .onAppear {
             viewModel.onAppear()

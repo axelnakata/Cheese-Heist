@@ -15,104 +15,88 @@
 
 import SwiftUI
 
-/// A rounded speech bubble with a curved tail hanging from the bottom-left.
-///
-/// The tail is drawn *inside* `rect`: the rounded body is inset from the bottom by
-/// `tailSize.height`, so the shape needs no extra layout allowance.
+/// A rounded speech bubble with a seamless curved horizontal tail on the left side.
 struct SpeechBubbleShape: Shape {
 
     var cornerRadius: CGFloat
     var tailSize: CGSize
 
-    /// How far LEFT of the body the tail reaches, as a multiple of its drop. The tail
-    /// is a horn hanging off the corner, not a notch in it — in the frames it clears the
-    /// body's left edge by about half again its own height.
-    static let bulgeRatio: CGFloat = 1.6
-
-    /// How far the tip reaches outside the body, as a multiple of the tail's drop.
-    static let tipRatio: CGFloat = 1.3
-
-    /// The room a bubble has to leave on its leading edge for the tail to live in.
-    static func bulge(forTailHeight height: CGFloat) -> CGFloat {
-        height * bulgeRatio
-    }
-
-    /// Where the tail's point sits, measured from the bubble view's own leading edge.
-    /// Callers aim this at whoever is talking.
-    static func tipOffset(forTailHeight height: CGFloat) -> CGFloat {
-        height * (bulgeRatio - tipRatio)
-    }
+    static func tipOffset(forTailHeight height: CGFloat) -> CGFloat { 0 }
+    static func bulge(forTailHeight height: CGFloat) -> CGFloat { height }
 
     func path(in rect: CGRect) -> Path {
-        // The body is inset by the bulge, so the tail draws INSIDE the view's own
-        // bounds. A tail hanging outside them renders until the first ancestor that
-        // clips, and then silently loses its point.
-        let inset = Self.bulge(forTailHeight: tailSize.height)
+        let tailWidth = tailSize.width
         let body = CGRect(
-            x: rect.minX + inset,
+            x: rect.minX + tailWidth,
             y: rect.minY,
-            width: max(0, rect.width - inset),
-            height: max(0, rect.height - tailSize.height)
+            width: max(0, rect.width - tailWidth),
+            height: rect.height
         )
+        let radius = min(cornerRadius, body.height / 2)
 
-        var path = Path(roundedRect: body, cornerRadius: cornerRadius, style: .continuous)
-        path.addPath(tail(under: body))
-        return path
-    }
-
-    /// A curved sweep drawn ACROSS the bottom-left corner, not a spike hung under the
-    /// bottom edge.
-    ///
-    /// Measured off the frames: the tail leaves the body high — about a corner radius up
-    /// the left edge — runs down past the corner to a point some 11pt below the body and
-    /// a few points left of it, and returns along the bottom edge about a radius and a
-    /// half to the right. It is small. Drawn as a wedge dangling from the straight part
-    /// of the bottom edge it was three times too big and read as a separate triangle
-    /// parked under the bubble; spanning the corner is what makes it grow out of it.
-    private func tail(under body: CGRect) -> Path {
-        let drop = tailSize.height
-        let onLeftEdge = CGPoint(x: body.minX, y: max(body.minY, body.maxY - cornerRadius))
-        let onBottomEdge = CGPoint(x: min(body.minX + tailSize.width, body.maxX), y: body.maxY)
-        // Measured off the frames: the point lands well OUTSIDE the body's left edge as
-        // well as below it, which is what makes it read as a tail pointing at the
-        // speaker rather than as a corner that has sagged.
-        let tip = CGPoint(x: body.minX - drop * Self.tipRatio, y: body.maxY + drop)
-
-        // WOUND THE SAME WAY AS THE ROUNDED RECT. Two subpaths in one path are filled by
-        // the nonzero rule, so a tail traversed the other way round cancels against the
-        // body everywhere they overlap — which punched a triangular hole through the
-        // corner and let the drop shadow show through it.
         var path = Path()
-        path.move(to: onBottomEdge)
-        // Trailing edge: hooks down from the bottom to the point, bowed IN so the tail
-        // narrows rather than reading as a triangle.
-        path.addQuadCurve(
-            to: tip,
-            control: CGPoint(x: body.minX + cornerRadius * 0.45, y: body.maxY + drop * 0.45)
-        )
-        // Leading edge: carries the tip back up into the left edge, bowed well OUT so
-        // the tail is a fat horn where it leaves the bubble rather than a sliver.
-        path.addQuadCurve(
-            to: onLeftEdge,
-            control: CGPoint(
-                x: body.minX - drop * Self.bulgeRatio,
-                y: body.maxY - cornerRadius * 0.35
-            )
-        )
+        path.move(to: CGPoint(x: body.minX + radius, y: body.minY))
+        addRightAndBottomEdges(to: &path, body: body, radius: radius)
+        addLeftTailAndTopEdge(to: &path, body: body, radius: radius, tailWidth: tailWidth)
         path.closeSubpath()
         return path
     }
-}
 
-#Preview {
-    VStack(spacing: 24) {
-        SpeechBubbleShape(cornerRadius: AppRadius.bubble, tailSize: CGSize(width: 34, height: 26))
-            .fill(AppColor.surfaceBackground)
-            .frame(width: 320, height: 110)
-
-        SpeechBubbleShape(cornerRadius: AppRadius.bubble, tailSize: CGSize(width: 34, height: 26))
-            .fill(AppColor.surfaceBackground)
-            .frame(width: 480, height: 84)
+    private func addRightAndBottomEdges(to path: inout Path, body: CGRect, radius: CGFloat) {
+        path.addLine(to: CGPoint(x: body.maxX - radius, y: body.minY))
+        path.addArc(
+            center: CGPoint(x: body.maxX - radius, y: body.minY + radius),
+            radius: radius,
+            startAngle: .degrees(-90),
+            endAngle: .degrees(0),
+            clockwise: false
+        )
+        path.addLine(to: CGPoint(x: body.maxX, y: body.maxY - radius))
+        path.addArc(
+            center: CGPoint(x: body.maxX - radius, y: body.maxY - radius),
+            radius: radius,
+            startAngle: .degrees(0),
+            endAngle: .degrees(90),
+            clockwise: false
+        )
+        path.addLine(to: CGPoint(x: body.minX + radius, y: body.maxY))
+        path.addArc(
+            center: CGPoint(x: body.minX + radius, y: body.maxY - radius),
+            radius: radius,
+            startAngle: .degrees(90),
+            endAngle: .degrees(180),
+            clockwise: false
+        )
     }
-    .previewBackdrop(.parchment)
+
+    private func addLeftTailAndTopEdge(
+        to path: inout Path,
+        body: CGRect,
+        radius: CGFloat,
+        tailWidth: CGFloat
+    ) {
+        let centerY = body.midY
+        let tailHeight = tailSize.height
+        let topAnchorY = centerY - tailHeight * 0.35
+        let bottomAnchorY = centerY + tailHeight * 0.25
+        let tip = CGPoint(x: body.minX - tailWidth, y: centerY - tailHeight * 0.5)
+
+        path.addLine(to: CGPoint(x: body.minX, y: bottomAnchorY))
+        path.addQuadCurve(
+            to: tip,
+            control: CGPoint(x: body.minX - tailWidth * 0.5, y: centerY + tailHeight * 0.1)
+        )
+        path.addQuadCurve(
+            to: CGPoint(x: body.minX, y: topAnchorY),
+            control: CGPoint(x: body.minX - tailWidth * 0.3, y: centerY - tailHeight * 0.1)
+        )
+        path.addLine(to: CGPoint(x: body.minX, y: body.minY + radius))
+        path.addArc(
+            center: CGPoint(x: body.minX + radius, y: body.minY + radius),
+            radius: radius,
+            startAngle: .degrees(180),
+            endAngle: .degrees(270),
+            clockwise: false
+        )
+    }
 }

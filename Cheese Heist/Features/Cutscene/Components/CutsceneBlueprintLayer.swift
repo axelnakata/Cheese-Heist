@@ -19,6 +19,8 @@ struct CutsceneBlueprintLayer: View {
     var body: some View {
         ZStack {
             ScrimOverlay()
+                .contentShape(Rectangle())
+                .onTapGesture(perform: onTap)
 
             BlueprintScrollView()
                 .onTapGesture(perform: onTap)

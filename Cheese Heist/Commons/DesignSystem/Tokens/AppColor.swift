@@ -36,6 +36,12 @@ enum AppColor {
     /// Under the speech bubble. It floats over a live camera feed of a real room, and
     /// without a shadow it reads as a hole cut in the picture rather than a card on it.
     static let bubbleShadow = Palette.ink.opacity(0.28)
+    /// Speech bubble parchment fill.
+    static let bubbleBackground = Palette.parchment
+    /// Speech bubble dark shadow/base edge.
+    static let bubbleDarkParchment = Palette.darkParchment
+    /// Cutscene bottom yellow gradient glow.
+    static let cutsceneGlow = Palette.cheeseYellow
     /// Stroke around the instruction chip, at `AppStroke.chip`.
     static let strokeChip = Palette.parchment
     /// Instruction chip navy gradient, top stop.

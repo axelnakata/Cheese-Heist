@@ -29,6 +29,24 @@ struct CutsceneView: View {
         .animation(.easeInOut(duration: AppDuration.transition), value: viewModel.phase)
         .onAppear { services.startCutscene(with: viewModel) }
     }
+    private var yellowGradientOverlay: some View {
+        VStack {
+            Spacer()
+            LinearGradient(
+                colors: [
+                    Color.clear,
+                    AppColor.cutsceneGlow.opacity(0.15),
+                    AppColor.cutsceneGlow.opacity(0.50)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 300 * scale)
+            .offset(y: 30)
+            .ignoresSafeArea(edges: .bottom)
+        }
+        .allowsHitTesting(false)
+    }
 
     @ViewBuilder
     private var overlays: some View {
@@ -45,14 +63,14 @@ struct CutsceneView: View {
             hint
 
         case .narrating:
-            // Order matters: the scrim and blueprint go DOWN first, then the tap
-            // catcher, then the mouse on top — in `cutscene 6.png` the mouse and its
-            // bubble are the only things not dimmed, and the scrim swallowing taps is
-            // what makes the blueprint the sole way out of the last beat.
+            yellowGradientOverlay
+
             if viewModel.showsBlueprint {
                 CutsceneBlueprintLayer(onTap: viewModel.tapBlueprint)
             }
-            if viewModel.inputGate.tapAdvances { tapCatcher }
+            if viewModel.inputGate.tapAdvances || viewModel.inputGate.blueprintTappable {
+                tapCatcher
+            }
             CutsceneMouseLayer(
                 beat: viewModel.currentBeat,
                 dialogueBeat: viewModel.dialogue.current,
@@ -88,5 +106,5 @@ struct CutsceneView: View {
     }
 }
 #Preview {
-    CutsceneView(services: AppServices.init())
+    CutsceneView(services: AppServices())
 }

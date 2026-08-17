@@ -14,27 +14,50 @@
 //  Reserving the final size means only the letters animate.
 //
 
+
 import SwiftUI
 
 struct TypewriterText: View {
 
-    /// Attributed so bold spans come from the script file, never from view code.
     let text: AttributedString
     var charactersPerSecond: Double = 40
 
-    /// Set to `true` from outside to finish the reveal immediately. The view sets it
-    /// `true` itself when the reveal ends naturally.
     @Binding var isComplete: Bool
+    
+    /// Flag tambahan untuk menandai apakah cooldown 1 detik setelah teks selesai sudah terpenuhi
+    @Binding var canContinue: Bool
 
     @State private var revealedCount = 0
+
+    init(
+        text: AttributedString,
+        charactersPerSecond: Double = 40,
+        isComplete: Binding<Bool>,
+        canContinue: Binding<Bool> = .constant(true)
+    ) {
+        self.text = text
+        self.charactersPerSecond = charactersPerSecond
+        self._isComplete = isComplete
+        self._canContinue = canContinue
+    }
 
     var body: some View {
         Text(text)
             .hidden()
             .overlay(alignment: .topLeading) { Text(revealedText) }
-            .task(id: text) { await reveal() }
+            .task(id: text) {
+                await reveal()
+            }
+            .onChange(of: text) { _, _ in
+                if !isComplete {
+                    revealedCount = 0
+                    canContinue = false
+                }
+            }
             .onChange(of: isComplete) { _, complete in
-                if complete { revealedCount = text.characters.count }
+                if complete {
+                    revealedCount = text.characters.count
+                }
             }
     }
 
@@ -48,9 +71,11 @@ struct TypewriterText: View {
     private func reveal() async {
         let total = text.characters.count
 
-        // A caller that binds `.constant(true)` wants the line shown at once.
-        guard !isComplete else {
+        await MainActor.run { canContinue = false }
+
+        if isComplete {
             revealedCount = total
+            await triggerCooldown()
             return
         }
 
@@ -58,22 +83,35 @@ struct TypewriterText: View {
         let tick = Duration.seconds(1 / max(charactersPerSecond, 1))
 
         for _ in 0..<total {
-            try? await Task.sleep(for: tick)
-            guard !Task.isCancelled, !isComplete else { return }
+            do {
+                try await Task.sleep(for: tick)
+            } catch {
+                if isComplete {
+                    revealedCount = total
+                    await triggerCooldown()
+                }
+                return
+            }
+
+            if isComplete {
+                revealedCount = total
+                await triggerCooldown()
+                return
+            }
+
             revealedCount += 1
         }
 
-        isComplete = true
+        await MainActor.run {
+            isComplete = true
+        }
+
+        await triggerCooldown()
     }
-}
 
-#Preview {
-    @Previewable @State var isComplete = false
-
-    TypewriterText(text: PreviewDialogue.craneCompliment, isComplete: $isComplete)
-        .appText(AppFont.dialogue)
-        .foregroundStyle(AppColor.textPrimary)
-        .frame(width: 520)
-        .previewBackdrop(.parchment)
-        .onTapGesture { isComplete = true }
+    private func triggerCooldown() async {
+        await MainActor.run {
+            canContinue = true
+        }
+    }
 }

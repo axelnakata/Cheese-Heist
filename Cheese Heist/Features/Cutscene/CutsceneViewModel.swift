@@ -43,7 +43,7 @@ final class CutsceneViewModel {
     @ObservationIgnored private var advanceBufferTask: Task<Void, Never>?
 
     private enum ContinueTiming {
-        static let bufferDelay: Duration = .seconds(0.5)
+        static let bufferDelay: Duration = .milliseconds(100)
     }
 
     let dialogue = DialogueSequencer()
@@ -142,6 +142,10 @@ final class CutsceneViewModel {
     /// The phase machine owns progression, so the sequencer is never advanced here — each
     /// phase presents its own single beat.
     func tapToContinue() {
+        if inputGate.blueprintTappable {
+            tapBlueprint()
+            return
+        }
         guard inputGate.tapAdvances else { return }
         if dialogue.current != nil, !dialogue.isRevealComplete {
             completeReveal()
@@ -153,6 +157,10 @@ final class CutsceneViewModel {
 
     func tapBlueprint() {
         guard inputGate.blueprintTappable else { return }
+        if dialogue.current != nil, !dialogue.isRevealComplete {
+            completeReveal()
+            return
+        }
         handle(.tappedBlueprint)
     }
 
