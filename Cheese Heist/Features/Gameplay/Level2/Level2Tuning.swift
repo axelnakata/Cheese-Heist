@@ -22,10 +22,9 @@ enum Level2Tuning {
     static let stallShakeDuration: Double = 4.0
 
     /// Peak wobble angle of the gear-clash shake, in radians — a strain, not a spin.
-    /// ~8°. A few degrees on a 10–40mm part barely registers at AR viewing distance, so
-    /// this reads more as "agitated" than "not too dramatic" — see `GearShakeDriver`,
-    /// where the position jitter below carries most of the visible read anyway.
-    static let stallShakeAmplitudeRadians: Double = 0.14
+    /// ~4.6° (0.08 rad): tuned moderately above initial 0.05 rad to ensure visible struggle
+    /// without violent over-rotation.
+    static let stallShakeAmplitudeRadians: Double = 0.08
 
     /// How fast the wobble oscillates, in Hz.
     static let stallShakeFrequencyHz: Double = 6.0
@@ -33,11 +32,11 @@ enum Level2Tuning {
     /// A second, faster wobble layered on top of the first — see `GearShakeDriver`. Its
     /// frequency is not an integer multiple of `stallShakeFrequencyHz` so the sum never
     /// repeats cleanly, which is what reads as a grind rather than a metronome.
-    static let stallShakeJitterAmplitudeRadians: Double = 0.08
+    static let stallShakeJitterAmplitudeRadians: Double = 0.035
     static let stallShakeJitterFrequencyHz: Double = 17.0
 
-    /// How far the gears shove back and forth along the beam, in metres — this is the
-    /// dominant, unmissable cue; rotation alone was too subtle to read as a struggle.
-    /// ~3mm: visible against even the smallest (8T, 10mm) gear without looking broken.
-    static let stallShakePositionJitterMeters: Double = 0.003
+    /// How far the gears shove back and forth along the beam, in metres.
+    /// 1mm (0.001m): gives subtle physical struggling feedback along the beam
+    /// without appearing excessive or jarring.
+    static let stallShakePositionJitterMeters: Double = 0.001
 }
