@@ -15,6 +15,7 @@ struct Level2PlayingLayer: View {
     let showsBars: Bool
     let strengthLevel: Int
     let speedLevel: Int
+    let showsJoystick: Bool
     let joystickEnabled: Bool
     var hint: CrankHint = .idle
     let onDrag: (CGPoint, CGPoint) -> Void
@@ -45,13 +46,13 @@ struct Level2PlayingLayer: View {
                 .frame(maxWidth: .infinity)
             }
 
-            if joystickEnabled {
+            if showsJoystick {
                 VStack {
                     Spacer()
                     HStack {
                         Spacer()
                         CircularJoystickView(
-                            isEnabled: true, hint: hint,
+                            isEnabled: joystickEnabled, hint: hint,
                             onDrag: onDrag, onRelease: onRelease
                         )
                     }
@@ -72,6 +73,7 @@ struct Level2PlayingLayer: View {
         showsBars: true,
         strengthLevel: 3,
         speedLevel: 2,
+        showsJoystick: true,
         joystickEnabled: true,
         onDrag: { _, _ in },
         onRelease: {}

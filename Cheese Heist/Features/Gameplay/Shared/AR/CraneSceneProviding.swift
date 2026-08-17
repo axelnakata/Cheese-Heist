@@ -57,6 +57,12 @@ protocol CraneSceneProviding: AnyObject {
     /// the phase leaves `.cranking`, so without this the gears simply freeze.
     func setGearStrain(_ isStraining: Bool, deltaTime: Double)
 
+    /// Fires the one-shot success particle burst over the gear pair. Called once, on
+    /// the transition into the success phase — never every frame, so a single call is
+    /// a single burst. No fail counterpart — a stall or a timeout is carried by the
+    /// fail SFX and the result overlay alone.
+    func playCelebration(starCount: Int)
+
     /// Removes everything this scene owns, including the session-side anchor.
     /// The ARSession itself is never touched.
     func teardown()

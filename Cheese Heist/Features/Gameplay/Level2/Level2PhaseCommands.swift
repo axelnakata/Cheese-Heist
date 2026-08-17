@@ -14,6 +14,8 @@ struct Level2PhaseContext {
     let selection: GearSelectionViewModel
     let crank: CrankInputViewModel
     let detection: GearDetectionService
+    /// The live cheese count, read into the success celebration's particle burst.
+    let starCount: Int
     let onTeardown: () -> Void
 }
 
@@ -29,6 +31,32 @@ enum Level2PhaseCommands {
 
         applyLift(phase, in: context)
         applyLifecycle(phase, in: context)
+        applyAudioAndEffects(phase, in: context)
+    }
+
+    /// BGM ducks out of the way the instant cranking starts and comes back once the
+    /// level has an outcome — success or either fail — alongside that outcome's
+    /// particle burst. See `AudioManager.fadeOutBGM`/`fadeInBGM`.
+    ///
+    /// `.aligningCrane` is also a fade-in trigger, not just the two results: `Restart`
+    /// is visible (and BGM already ducked) all the way through `.cranking` and
+    /// `.stallShaking`, and it jumps straight to `.aligningCrane` — skipping the result
+    /// phases entirely — so without this a mid-crank restart leaves the BGM silent for
+    /// the rest of the attempt.
+    private static func applyAudioAndEffects(_ phase: Level2Phase, in context: Level2PhaseContext) {
+        switch phase {
+        case .cranking:
+            AudioManager.shared.fadeOutBGM()
+        case .succeeded:
+            context.director?.celebrate(starCount: context.starCount)
+            AudioManager.shared.fadeInBGM()
+        case .failedWeak, .failedSlow:
+            AudioManager.shared.fadeInBGM()
+        case .aligningCrane:
+            AudioManager.shared.fadeInBGM()
+        default:
+            break
+        }
     }
 
     private static func applyLift(_ phase: Level2Phase, in context: Level2PhaseContext) {

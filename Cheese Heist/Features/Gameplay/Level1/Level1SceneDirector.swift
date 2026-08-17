@@ -42,6 +42,11 @@ struct Level1SceneDirector {
         .happy
     }
 
+    /// The success micro-interaction: a small particle burst over the gears.
+    func celebrate(starCount: Int) {
+        scene.playCelebration(starCount: starCount)
+    }
+
     /// Level 1's teaching run starts on the LEFT gear as driver.
     ///
     /// Left and right, not small and large, because this assignment is the first thing

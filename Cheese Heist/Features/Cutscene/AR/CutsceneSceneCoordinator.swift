@@ -182,9 +182,13 @@ final class CutsceneSceneCoordinator: CutsceneSceneProviding {
 
         planeDetection.update(arView: arView, deltaTime: deltaTime)
 
-        if let hit = planeDetection.hitTransform {
+        // `latestHitTransform`, not `hitTransform`: the ring/mark has to stick to
+        // wherever the camera is pointing right now, even while that surface reads as
+        // invalid. `hitTransform` only carries `.valid` hits, which is right for
+        // `placeScene()` but would leave the invalid mark frozen at its last valid spot.
+        if let hit = planeDetection.latestHitTransform {
             ring.map { SurfaceRingEntity.follow($0, hit: hit) }
-            invalidMark.map { SurfaceRingEntity.follow($0, hit: hit) }
+            invalidMark.map { SurfaceInvalidMarkEntity.follow($0, hit: hit) }
         }
 
         let currentValidity = planeDetection.validity

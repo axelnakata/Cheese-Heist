@@ -19,12 +19,24 @@ enum Level2Tuning {
     static let timerDuration: Int = 15
 
     /// How long the gear-clash shake plays before a stalled combo fails, in seconds.
-    static let stallShakeDuration: Double = 5.0
+    static let stallShakeDuration: Double = 4.0
 
-    /// Peak wobble angle of the gear-clash shake, in radians. Small on purpose — "not
-    /// too dramatic," a strain, not a spin. ~3°.
-    static let stallShakeAmplitudeRadians: Double = 0.05
+    /// Peak wobble angle of the gear-clash shake, in radians — a strain, not a spin.
+    /// ~4.6° (0.08 rad): tuned moderately above initial 0.05 rad to ensure visible struggle
+    /// without violent over-rotation.
+    static let stallShakeAmplitudeRadians: Double = 0.08
 
     /// How fast the wobble oscillates, in Hz.
     static let stallShakeFrequencyHz: Double = 6.0
+
+    /// A second, faster wobble layered on top of the first — see `GearShakeDriver`. Its
+    /// frequency is not an integer multiple of `stallShakeFrequencyHz` so the sum never
+    /// repeats cleanly, which is what reads as a grind rather than a metronome.
+    static let stallShakeJitterAmplitudeRadians: Double = 0.035
+    static let stallShakeJitterFrequencyHz: Double = 17.0
+
+    /// How far the gears shove back and forth along the beam, in metres.
+    /// 1mm (0.001m): gives subtle physical struggling feedback along the beam
+    /// without appearing excessive or jarring.
+    static let stallShakePositionJitterMeters: Double = 0.001
 }

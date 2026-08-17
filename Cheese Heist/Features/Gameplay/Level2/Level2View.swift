@@ -39,7 +39,10 @@ struct Level2View: View {
         }
         .statusBarHidden()
         .animation(.easeInOut(duration: AppDuration.transition), value: viewModel.phase)
-        .onAppear { services.startLevel2(with: viewModel) }
+        .onAppear {
+            services.startLevel2(with: viewModel)
+            viewModel.playMainAudio()
+        }
         .onChange(of: services.detection.trackingVersion) { _, _ in
             viewModel.observeDetection()
         }
@@ -80,6 +83,7 @@ struct Level2View: View {
             showsBars: viewModel.showsBars,
             strengthLevel: viewModel.strengthLevel,
             speedLevel: viewModel.speedLevel,
+            showsJoystick: viewModel.showsJoystick,
             joystickEnabled: viewModel.inputGate.joystickEnabled,
             hint: viewModel.crankHint,
             onDrag: { point, centre in viewModel.crank.drag(to: point, centre: centre) },

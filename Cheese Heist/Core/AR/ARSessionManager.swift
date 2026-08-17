@@ -71,8 +71,11 @@ final class ARSessionManager: NSObject {
         if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
             configuration.sceneReconstruction = .mesh
         }
-        // Horizontal planes are how `SupportSurfaceEstimator` finds the table.
-        configuration.planeDetection = [.horizontal]
+        // Horizontal planes are how `SupportSurfaceEstimator` finds the table. Vertical
+        // is for the cutscene's surface-scan ✗: without it, pointing at a wall still had
+        // to fall back to a `.horizontal`-aligned estimate of geometry that isn't
+        // horizontal at all, which is why the mark used to lie flat even against a wall.
+        configuration.planeDetection = [.horizontal, .vertical]
 
         arView.session.run(configuration, options: [])
         isRunning = true

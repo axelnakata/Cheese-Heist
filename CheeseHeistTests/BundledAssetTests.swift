@@ -269,14 +269,6 @@ struct BundledAssetTests {
         )
     }
 
-    @Test("surface_invalid resolves in the asset catalogue")
-    func surfaceInvalidResolves() {
-        #expect(
-            UIImage(named: "surface_invalid") != nil,
-            "surface_invalid is missing from Assets.xcassets"
-        )
-    }
-
     @Test("blueprint_glow resolves in the asset catalogue")
     func blueprintGlowResolves() {
         #expect(

@@ -25,6 +25,8 @@ struct Level1PhaseContext {
     let dialogue: DialogueSequencer
     let crank: CrankInputViewModel
     let detection: GearDetectionService
+    /// The live star count, read into the success celebration's particle burst.
+    let starCount: Int
     let onTeardown: () -> Void
 }
 
@@ -42,6 +44,21 @@ enum Level1PhaseCommands {
 
         applyLift(phase, in: context)
         applyLifecycle(phase, in: context)
+        applyAudioAndEffects(phase, in: context)
+    }
+
+    /// BGM ducks out of the way the instant the free run starts and comes back with the
+    /// success celebration's particle burst. See `AudioManager.fadeOutBGM`/`fadeInBGM`.
+    private static func applyAudioAndEffects(_ phase: Level1Phase, in context: Level1PhaseContext) {
+        switch phase {
+        case .freeCrank:
+            AudioManager.shared.fadeOutBGM()
+        case .succeeded:
+            context.director?.celebrate(starCount: context.starCount)
+            AudioManager.shared.fadeInBGM()
+        default:
+            break
+        }
     }
 
     /// Where the cheese is allowed to go, and when it drops back.

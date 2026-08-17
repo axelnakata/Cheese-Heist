@@ -81,7 +81,7 @@ final class Level2ViewModel {
     private var context: Level2PhaseContext {
         Level2PhaseContext(
             director: director, runner: runner, selection: selection,
-            crank: crank, detection: detection,
+            crank: crank, detection: detection, starCount: starCount,
             onTeardown: { [weak self] in self?.tearDownScene() }
         )
     }
@@ -151,11 +151,6 @@ final class Level2ViewModel {
     private func evaluateOutcome() {
         guard let pair = currentPair else { return }
         outcome = Level2GearOutcomeEvaluator.evaluate(pair: pair)
-
-        // If the combination can't lift, immediately stall
-        if outcome?.canLift == false {
-            handle(.stallDetected)
-        }
     }
 
     // MARK: - Timer
@@ -176,9 +171,10 @@ final class Level2ViewModel {
         starCount = 3
     }
 
-    /// Called every render frame during cranking.
+    /// Called every render frame during cranking AND the stall shake — a stalled pair
+    /// otherwise freezes the countdown for the whole 4s it spends shaking.
     private func tickTimer(deltaTime: Double) {
-        guard isTimerRunning, phase == .cranking else { return }
+        guard isTimerRunning, phase == .cranking || phase == .stallShaking else { return }
         timerAccumulator += deltaTime
 
         if timerAccumulator >= 1.0 {
@@ -214,6 +210,17 @@ final class Level2ViewModel {
         }
     }
 
+    /// Called every render frame. A pair that can't lift the load is known the instant
+    /// cranking starts — checked here rather than inline in `evaluateOutcome` because
+    /// that runs from inside `applyPayload`, before `phase` has actually become
+    /// `.cranking`, and the phase machine has no `(.rolesChosen, .stallDetected)` case to
+    /// receive it: the event silently dropped and the child could crank forever against
+    /// a load the mouse can never lift.
+    private func tickStall() {
+        guard phase == .cranking, outcome?.canLift == false else { return }
+        handle(.stallDetected)
+    }
+
     // MARK: - Input
 
     func tapGear(_ id: UUID) {
@@ -240,5 +247,6 @@ final class Level2ViewModel {
 
         tickTimer(deltaTime: deltaTime)
         tickShake(deltaTime: deltaTime)
+        tickStall()
     }
 }

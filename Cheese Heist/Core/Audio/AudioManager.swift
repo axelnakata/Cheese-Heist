@@ -223,4 +223,22 @@ final class AudioManager: NSObject, AVAudioPlayerDelegate {
         onAudioFinished = nil
         callback?()
     }
+
+    // MARK: - BGM fade
+    //
+    // The BGM keeps playing through detection and role selection and only needs to get
+    // OUT OF THE WAY while the child is cranking and while the win/lose SFX plays — so
+    // this ramps the existing player's volume rather than stopping and restarting it,
+    // which is what makes the return smooth instead of a hard cut back in.
+
+    /// Ramps the BGM down to silent. The player keeps running at zero volume rather than
+    /// pausing, so `fadeInBGM` resumes in place instead of restarting the track.
+    func fadeOutBGM(duration: TimeInterval = AppDuration.audioFade) {
+        bgmPlayer?.setVolume(0, fadeDuration: duration)
+    }
+
+    /// Ramps the BGM back up to its configured volume.
+    func fadeInBGM(duration: TimeInterval = AppDuration.audioFade) {
+        bgmPlayer?.setVolume(bgmVolume, fadeDuration: duration)
+    }
 }

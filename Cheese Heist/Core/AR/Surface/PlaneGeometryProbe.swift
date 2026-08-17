@@ -29,8 +29,13 @@ import simd
 struct PlaneProbeResult {
     let worldTransform: simd_float4x4
     let distance: Float
-    /// `nil` when the ray hit an estimated plane with no anchor behind it yet.
+    /// `nil` when the ray hit an estimated plane with no anchor behind it yet, or when
+    /// the hit is `isVertical` — clearance answers "can the cat orbit here", which only
+    /// means anything on a horizontal surface.
     let clearance: Float?
+    /// Whether this hit landed on a vertical surface (a wall) rather than a horizontal
+    /// one (a table).
+    let isVertical: Bool
 }
 
 enum PlaneGeometryProbe {
@@ -43,8 +48,21 @@ enum PlaneGeometryProbe {
         let centre = CGPoint(x: arView.bounds.midX, y: arView.bounds.midY)
         guard centre.x > 0, centre.y > 0 else { return nil }
 
-        guard let result = firstHit(arView: arView, at: centre) else { return nil }
+        // Horizontal is tried first, exactly as before, so a table is found exactly as
+        // it always was. Vertical only gets a turn once no horizontal plane is under the
+        // crosshair, so a wall behind a table can never steal the hit.
+        if let result = firstHit(arView: arView, at: centre, alignment: .horizontal) {
+            return makeResult(result, arView: arView, isVertical: false)
+        }
+        if let result = firstHit(arView: arView, at: centre, alignment: .vertical) {
+            return makeResult(result, arView: arView, isVertical: true)
+        }
+        return nil
+    }
 
+    private static func makeResult(
+        _ result: ARRaycastResult, arView: ARView, isVertical: Bool
+    ) -> PlaneProbeResult {
         let hit = result.worldTransform.columns.3
         let point = simd_float3(hit.x, hit.y, hit.z)
         let distance = simd_length(point - arView.cameraTransform.translation)
@@ -52,14 +70,17 @@ enum PlaneGeometryProbe {
         return PlaneProbeResult(
             worldTransform: result.worldTransform,
             distance: distance,
-            clearance: clearance(at: point, result: result, session: arView.session)
+            clearance: isVertical ? nil : clearance(at: point, result: result, session: arView.session),
+            isVertical: isVertical
         )
     }
 
-    private static func firstHit(arView: ARView, at centre: CGPoint) -> ARRaycastResult? {
+    private static func firstHit(
+        arView: ARView, at centre: CGPoint, alignment: ARRaycastQuery.TargetAlignment
+    ) -> ARRaycastResult? {
         for target in targets {
             guard let query = arView.makeRaycastQuery(
-                from: centre, allowing: target, alignment: .horizontal
+                from: centre, allowing: target, alignment: alignment
             ) else { continue }
             if let hit = arView.session.raycast(query).first { return hit }
         }

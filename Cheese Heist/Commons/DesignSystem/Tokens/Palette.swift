@@ -32,4 +32,10 @@ enum Palette {
     /// makes it read as a solid object lying on the table. Same OQ-1 provenance.
     static let ringGreen = Color(hex: "#55B93A")
     static let ringGreenDeep = Color(hex: "#399420")
+
+    /// The invalid-surface ✗'s two reds, read off Figma `cutscene guidelines - Fall
+    /// Back` (522:208), node 977:131 — same bevelled face-over-edge construction as the
+    /// ring's greens, just crossed bars instead of an annulus.
+    static let invalidMarkRed = Color(hex: "#DB0000")
+    static let invalidMarkRedDeep = Color(hex: "#981212")
 }

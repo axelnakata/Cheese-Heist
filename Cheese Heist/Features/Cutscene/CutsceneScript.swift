@@ -62,4 +62,7 @@ enum CutsceneScript {
 
     /// Shown when the surface is NOT valid — single-line fallback (OQ-C4).
     static let scanInvalid = "Look for a flat surface!"
+
+    /// Header label on `RecommendedPositionStrip`.
+    static let recommendedPositionTitle = "Recommended Position"
 }

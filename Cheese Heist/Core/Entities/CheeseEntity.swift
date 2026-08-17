@@ -85,22 +85,12 @@ enum CheeseEntity {
     // `apexDroop` is that turn, and its angle is not a taste question.
 
     /// How far round the point recedes from the picture plane. Enough to show the thick
-    /// end's face, not so much that the big holed face turns away.
+    /// end's face, not so much that the holed top face turns away.
     private static let apexYaw: Float = 0.35
 
-    /// The wedge's underside, rising from the thick end's bottom corner to the point:
-    /// atan(14.15 / 48) on the measured mesh. Dipping the point by exactly this much is
-    /// what lays that edge flat.
-    static let taperHalfAngle: Float = 0.287
-
-    /// …so the point sits below level by precisely the taper. Level would balance the
-    /// wedge on its point; less would tip it back onto its heel.
-    private static let apexDroop: Float = taperHalfAngle
-
-    /// Pitch about the length: the top leans away, so the child looks down onto the top
-    /// face and its holes. This is what carries the wedge's THICKNESS — zero would be a
-    /// flat elevation, which reads as a paper triangle rather than a slice.
-    private static let facePitch: Float = 0.40
+    /// Pitch towards the camera: the top leans forward so the child looks down onto the
+    /// top face and its holes.
+    private static let facePitch: Float = 0.35
 
     static func make() -> CheeseProp? {
         guard let model = try? Entity.load(named: "Cheese") else {
@@ -130,36 +120,32 @@ enum CheeseEntity {
         return CheeseProp(holder: holder, facing: facing)
     }
 
-    /// The pose, as a rotation taking the model's axes to the ones above.
+    /// The pose, as a rotation taking the model's axes to the view frame.
     ///
-    /// Built as a basis rather than composed: the columns ARE the images of local X, Y
-    /// and Z, so what the code says and what the child sees are the same statement.
+    /// Built as an orthonormal basis: columns are the images of local X (width),
+    /// local Y (thickness / top face) and local Z (length / apex).
     static var presentation: simd_quatf {
         let apex = apexDirection
 
-        // The wedge's tall direction, as close to straight up as being perpendicular to
-        // the length allows. Gram-Schmidt rather than a fourth angle to tune — and note
-        // that because the length is DIPPED, this comes out tilted by the same taper,
-        // which is the whole point: it is the wedge that levels, not the axis.
-        let up = simd_float3(0, 1, 0)
-        let width = simd_normalize(up - apex * simd_dot(apex, up))
+        // Up direction, tilted forward toward the camera by facePitch
+        // so the child looks down onto the top face and its holes.
+        let upTarget = simd_normalize(simd_float3(0, cos(facePitch), sin(facePitch)))
+        let topFace = simd_normalize(upTarget - apex * simd_dot(apex, upTarget))
 
-        // Right-handed by construction: width × normal == apex, which is what makes the
-        // basis a rotation and not a reflection.
-        let normal = simd_cross(apex, width)
+        // Right-handed by construction: sideFace × topFace == apex.
+        let sideFace = simd_cross(topFace, apex)
 
         // Columns are the images of model X, Y and Z in that order.
-        let pitch = simd_quatf(angle: facePitch, axis: apex)
-        return simd_quatf(simd_float3x3(pitch.act(width), pitch.act(normal), apex))
+        return simd_quatf(simd_float3x3(columns: (sideFace, topFace, apex)))
     }
 
     /// Where the point ends up, in the child's view.
     static var apexDirection: simd_float3 {
-        simd_float3(
-            cos(apexDroop) * cos(apexYaw),
-            -sin(apexDroop),
-            -cos(apexDroop) * sin(apexYaw)
-        )
+        simd_normalize(simd_float3(
+            cos(apexYaw),
+            0,
+            -sin(apexYaw)
+        ))
     }
 
     /// Which way the wedge tapers, in the model's own axes: it is widest at −Z and comes
@@ -171,16 +157,9 @@ enum CheeseEntity {
     /// of the 48. This is the face the child has to be looking at.
     static let faceAxis = simd_float3(0, 1, 0)
 
-    /// The wedge's tall direction, in the model's own axes: 35mm at the thick end,
+    /// The wedge's width direction, in the model's own axes: 35mm at the thick end,
     /// tapering to 7mm at the point.
     static let widthAxis = simd_float3(1, 0, 0)
-
-    /// The underside's cut edge, in the model's own axes — from the thick end's bottom
-    /// corner up to the point. THIS is the edge the cheese rests on, and the pose is
-    /// correct exactly when it comes out horizontal.
-    static var restingEdgeAxis: simd_float3 {
-        simd_float3(sin(taperHalfAngle), 0, cos(taperHalfAngle))
-    }
 
     /// How far above its own origin the cheese's underside sits, in metres.
     ///

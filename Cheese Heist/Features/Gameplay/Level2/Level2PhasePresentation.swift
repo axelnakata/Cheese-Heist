@@ -49,6 +49,17 @@ enum Level2PhasePresentation {
         phase == .rolesChosen
     }
 
+    /// Whether the joystick should be ON SCREEN at all — separate from whether it
+    /// RESPONDS to touch (`Level2InputGate.joystickEnabled`). During `.stallShaking` the
+    /// joystick stays put and dimmed, so a stalled combo reads as "the crank is stuck"
+    /// rather than the control vanishing out from under the child's thumb.
+    static func showsJoystick(_ phase: Level2Phase) -> Bool {
+        switch phase {
+        case .rolesChosen, .cranking, .stallShaking: return true
+        default: return false
+        }
+    }
+
     /// Whether a result overlay (success or fail) should be shown.
     static func isResult(_ phase: Level2Phase) -> Bool {
         switch phase {

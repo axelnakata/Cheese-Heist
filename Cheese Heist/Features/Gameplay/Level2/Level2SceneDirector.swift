@@ -31,6 +31,13 @@ struct Level2SceneDirector {
         }
     }
 
+    /// The success micro-interaction: a small particle burst over the gears. No fail
+    /// counterpart — a stall or a timeout is carried by the fail SFX and the result
+    /// overlay alone.
+    func celebrate(starCount: Int) {
+        scene.playCelebration(starCount: starCount)
+    }
+
     // MARK: - Assignment helpers (same as Level 1)
 
     /// Level 2 also starts on the left gear as driver — a convention, not a teaching

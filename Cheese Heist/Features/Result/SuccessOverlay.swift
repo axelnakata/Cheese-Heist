@@ -78,6 +78,11 @@ struct SuccessOverlay: View {
         /// `mice_happy` — the pose that is holding the cheese. 331pt was the frame's,
         /// measured off the export; bumped up to read better on the result screen.
         static let mouseHeight: CGFloat = 400
+
+        /// `Mouse_0star` — the mouse fleeing the cat on the fail screens. Landscape, not
+        /// portrait like the other poses, so it is sized by width: 995pt matches the
+        /// exact Figma export frame (`Fail Screen 2 - 0 star`).
+        static let failMouseWidth: CGFloat = 995
     }
 
     var body: some View {
@@ -127,15 +132,31 @@ struct SuccessOverlay: View {
                 Spacer().frame(height: Metric.mouseGap * scale)
             }
 
-            Image(mouseAssetName)
-                .resizable()
-                .scaledToFit()
-                .frame(height: Metric.mouseHeight * scale)
+            mouseImage
 
             Spacer(minLength: 0)
         }
         .padding(.top, Metric.titleTop * scale)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    /// The fail scene is a wide two-character tableau, not a portrait single mouse — it
+    /// is sized by WIDTH, everything else by height, or the fail mouse would blow up to
+    /// roughly three times the frame's width at `mouseHeight`.
+    private var mouseImage: some View {
+        Group {
+            if showNext {
+                Image(mouseAssetName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: Metric.mouseHeight * scale)
+            } else {
+                Image(mouseAssetName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: Metric.failMouseWidth * scale)
+            }
+        }
     }
 }
 
@@ -180,7 +201,19 @@ struct SuccessOverlay: View {
         subtitle: "Try switching which gear i should turn!",
         onRetry: {},
         starCount: 0,
-        mouseAssetName: "Mouse_struggle",
+        mouseAssetName: MouseSprite.fail.assetName,
+        showNext: false
+    )
+        .previewBackdrop(.cameraFeed)
+}
+
+#Preview("L2 — Fail Slow") {
+    SuccessOverlay(
+        title: "So close! Let's be quicker!",
+        subtitle: "Try switching which gear i should turn!",
+        onRetry: {},
+        starCount: 0,
+        mouseAssetName: MouseSprite.fail.assetName,
         showNext: false
     )
         .previewBackdrop(.cameraFeed)
