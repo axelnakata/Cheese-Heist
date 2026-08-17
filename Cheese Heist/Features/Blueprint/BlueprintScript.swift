@@ -28,7 +28,8 @@ enum BlueprintScript {
                 "Get a **LEGO plate**, make sure it’s wide enough and **stable**",
                 "Make a **crane tower** using any **LEGO bricks** and your creativity!",
                 "Your **crane tower** should be at least **12 blocks high**"
-            ]
+            ],
+            checkInLine: "Are you still there? Let's finish this crane!"
         ),
         BlueprintStep(
             id: 1,
@@ -43,7 +44,8 @@ enum BlueprintScript {
                 """,
                 "Make sure the gears are **linked** with each other (when you move one, the other also moves)",
                 "Secure each axle’s end with **a bushing**, so the gears won’t fall off"
-            ]
+            ],
+            checkInLine: "You got this!!"
         ),
         BlueprintStep(
             id: 2,
@@ -52,7 +54,8 @@ enum BlueprintScript {
             gifName: "blueprint_step_3",
             instructions: [
                 "Attach the **crane arm on top of the crane tower** and you’re all set up!"
-            ]
+            ],
+            checkInLine: "Almost there! We can do this!"
         )
     ]
 }

@@ -42,8 +42,8 @@ struct BlueprintView: View {
             }
 
             if viewModel.showsCheckIn {
-                BlueprintCheckInBubble(text: BlueprintScript.checkInLine)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                BlueprintCheckInBubble(text: viewModel.currentStep.checkInLine)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
                     .transition(.move(edge: .leading).combined(with: .opacity))
             }
         }

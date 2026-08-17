@@ -16,4 +16,5 @@ struct BlueprintStep: Identifiable {
     let stepLabel: String
     let gifName: String
     let instructions: [LocalizedStringKey]
+    let checkInLine: String
 }

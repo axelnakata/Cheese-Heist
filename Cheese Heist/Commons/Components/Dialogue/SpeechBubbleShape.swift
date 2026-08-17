@@ -43,10 +43,8 @@ struct SpeechBubbleShape: Shape {
 
         var path = Path()
 
-        // 1. Mulai dari sudut kiri atas badan (sebelum lengkungan kiri)
         path.move(to: CGPoint(x: body.minX + radius, y: body.minY))
 
-        // 2. Sudut kanan atas, kanan bawah, dan kiri bawah
         path.addLine(to: CGPoint(x: body.maxX - radius, y: body.minY))
         path.addArc(
             center: CGPoint(x: body.maxX - radius, y: body.minY + radius),

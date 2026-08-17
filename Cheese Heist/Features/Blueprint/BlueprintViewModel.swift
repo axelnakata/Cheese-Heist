@@ -24,8 +24,8 @@ final class BlueprintViewModel {
     private var checkInTask: Task<Void, Never>?
 
     private enum CheckInTiming {
-        static let interval: Duration = .seconds(10) /// GANTI DURASI INTERVAL MOUSE CHECK IN
-        static let visibleDuration: Duration = .seconds(3.5)
+        static let interval: Duration = .seconds(30) /// GANTI DURASI INTERVAL MOUSE CHECK IN
+        static let visibleDuration: Duration = .seconds(10)
     }
 
     var currentStep: BlueprintStep { steps[stepIndex] }
@@ -34,14 +34,19 @@ final class BlueprintViewModel {
 
     func goBack() {
         guard !isFirstStep else { return }
-        stepIndex -= 1
+                stepIndex -= 1
+                userDidInteract()
     }
 
     /// `true` once the last step's Next is tapped — the caller hands off to Level 1.
     func goNext() -> Bool {
-        guard !isLastStep else { return true }
-        stepIndex += 1
-        return false
+        guard !isLastStep else {
+                    userDidInteract()
+                    return true
+                }
+                stepIndex += 1
+                userDidInteract() // Reset timer saat user menekan next
+                return false
     }
 
     func onAppear() {
@@ -54,6 +59,12 @@ final class BlueprintViewModel {
     func onDisappear() {
         checkInTask?.cancel()
     }
+    
+    /// Mereset loop idle timer setiap kali ada interaksi dari user
+        func userDidInteract() {
+            showsCheckIn = false
+            startCheckInLoop()
+        }
 
     /// Peeks the mouse in on a fixed cadence, for as long as the screen is up.
     private func startCheckInLoop() {
