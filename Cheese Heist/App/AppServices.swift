@@ -187,6 +187,10 @@ final class AppServices {
                 frame: frame, gears: gears, assignment: assignment,
                 liftHeight: Float(Level2Tuning.value.liftHeight), in: arView
             )
+            // The one line that makes Level 2's scene different from Level 1's. The cat
+            // is opted into here rather than branched on inside the coordinator — see
+            // `GameplaySceneCoordinator+CatPatrol`.
+            scene.startCatPatrol()
             coordinator = scene
             level2.attach(scene: scene)
             return
@@ -205,6 +209,9 @@ final class AppServices {
         level2TickerID = ticker.register { [weak self] deltaTime in
             guard let self else { return }
             coordinator?.smoothAlignment(deltaTime: deltaTime)
+            // After alignment, so the cat's circle is laid out in an already-corrected
+            // frame; before physics, because it shares nothing with it.
+            coordinator?.advanceCatPatrol(deltaTime: deltaTime)
             level2?.advance(deltaTime: Double(deltaTime))
             coordinator?.refreshProjection(session: arSessionManager.session)
         }

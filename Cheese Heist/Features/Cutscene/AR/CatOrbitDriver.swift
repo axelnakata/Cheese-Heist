@@ -19,6 +19,15 @@
 //  The heading is eased rather than assigned. Writing the tangent straight in snapped
 //  the cat through 180° the instant a pause ended and read as a turntable.
 //
+//  ═══ THE ORBIT IS PARAMETERISED, AND `centre` IS WRITEABLE PER FRAME. ═══
+//
+//  Level 2 reuses this driver to prowl the cat round the crane rather than the cheese,
+//  at its own radius and speed (`Level2Tuning`), and needs the circle to sit on the
+//  TABLE — a height that is re-measured by `SupportSurfaceEstimator` while the child
+//  plays, not known when the driver is built. So the centre is a settable offset the
+//  owner refreshes each tick instead of a constructor argument. The cutscene leaves it
+//  at zero, which is the cheese at its anchor's origin.
+//
 
 import RealityKit
 import simd
@@ -26,22 +35,32 @@ import simd
 @MainActor
 final class CatOrbitDriver {
 
+    /// Where the circle is centred, in the parent's coordinates. Free to move between
+    /// frames — see the header.
+    var centre: simd_float3 = .zero
+
     private let cat: CutsceneStage
+    private let radius: Float
     private var orbit: OrbitPatrolModel
     private var playback: AnimationPlaybackController?
     private var isWalking = false
     private var heading: Float
 
-    init(cat: CutsceneStage, seed: UInt64 = 0) {
+    init(
+        cat: CutsceneStage,
+        radius: Double = CutsceneTuning.orbitRadius,
+        speed: Double = CutsceneTuning.orbitSpeed,
+        arc: ClosedRange<Double>? = nil,
+        seed: UInt64 = 0
+    ) {
         self.cat = cat
-        self.orbit = OrbitPatrolModel(
-            radius: CutsceneTuning.orbitRadius,
-            speed: CutsceneTuning.orbitSpeed,
-            seed: seed
-        )
+        self.radius = Float(radius)
+        self.orbit = OrbitPatrolModel(radius: radius, speed: speed, arc: arc, seed: seed)
         self.heading = 0
-        place(angle: 0)
-        heading = Self.travelHeading(at: 0)
+
+        let start = Float(arc?.lowerBound ?? 0)
+        place(angle: start)
+        heading = Self.travelHeading(at: start, direction: 1)
         cat.catHolder.orientation = Self.yaw(heading)
         startWalking()
     }
@@ -52,8 +71,9 @@ final class CatOrbitDriver {
 
         place(angle: angle)
         ease(
-            toward: state.isPaused ? Self.lookInwardHeading(at: angle)
-                                   : Self.travelHeading(at: angle),
+            toward: state.isPaused
+                ? Self.lookInwardHeading(at: angle)
+                : Self.travelHeading(at: angle, direction: Float(state.direction)),
             deltaTime: deltaTime
         )
         setWalking(!state.isPaused)
@@ -62,8 +82,8 @@ final class CatOrbitDriver {
     // MARK: - Transform
 
     private func place(angle: Float) {
-        let radius = Float(CutsceneTuning.orbitRadius)
-        cat.catHolder.position = simd_float3(radius * cos(angle), 0, radius * sin(angle))
+        cat.catHolder.position =
+            centre + simd_float3(radius * cos(angle), 0, radius * sin(angle))
     }
 
     private func ease(toward target: Float, deltaTime: Float) {
@@ -93,10 +113,11 @@ final class CatOrbitDriver {
 
     // MARK: - Angles
 
-    /// Heading along the direction of travel. The orbit runs anticlockwise in XZ, so the
-    /// tangent at θ is (−sin θ, 0, cos θ).
-    private static func travelHeading(at angle: Float) -> Float {
-        atan2(-sin(angle), cos(angle)) + CutsceneTuning.catForwardYaw
+    /// Heading along the direction of travel. Anticlockwise in XZ, so the tangent at θ is
+    /// (−sin θ, 0, cos θ) — and exactly the reverse of that on an arc's return leg, which
+    /// is the whole reason `direction` is carried out of the model.
+    private static func travelHeading(at angle: Float, direction: Float) -> Float {
+        atan2(-sin(angle) * direction, cos(angle) * direction) + CutsceneTuning.catForwardYaw
     }
 
     /// Heading that turns the cat to face the cheese at the centre.

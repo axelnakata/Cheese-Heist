@@ -11,19 +11,45 @@
 //  speed honest. Pause cadence per §6.3: 0.5–1.5 s every 2–4 s. The cat is never idle
 //  for more than 1.5 s — a frozen cat reads as a bug and destroys the threat premise.
 //
+//  ═══ AN OPTIONAL `arc` TURNS THE LAP INTO A PATROL. ═══
+//
+//  The cutscene's cat has the cheese to itself and walks the whole circle. Level 2's has a
+//  crane in the middle of its circle, and on the far half of the lap the cat is BEHIND that
+//  crane — drawn over the beam, the gears and the mouse, twenty centimetres further from
+//  the camera and so appearing to float above them (see `toFix/IMG_0113.PNG`). Nothing is
+//  actually intersecting; it just reads as a pile of props.
+//
+//  So an arc-bounded model walks to a bound, PAUSES, reverses, and walks back — a sentry's
+//  patrol rather than a lap. The pause at the turn is the point: the driver eases the cat's
+//  heading rather than snapping it, and the tangent flips by a full 180° at a reversal, so
+//  turning while still walking would slide the cat backwards for the better part of a
+//  second. Stopping first means it walks up to the end of its beat, looks at the crane,
+//  turns on the spot and sets off the other way.
+//
+//  `arc == nil` is the full circle, unchanged, and is what the cutscene passes.
+//
 
 import Foundation
 
 struct OrbitPatrolState: Equatable, Sendable {
     let angle: Double
     let isPaused: Bool
+
+    /// Which way round the cat is currently walking: +1 anticlockwise, −1 clockwise.
+    /// Always +1 without an `arc`. The driver needs it because the tangent it points the
+    /// cat along is the reverse one on the way back.
+    let direction: Double
 }
 
 struct OrbitPatrolModel {
     private let radius: Double
     private let angularSpeed: Double
 
+    /// The angles the cat is allowed to occupy, or nil for the whole circle.
+    private let arc: ClosedRange<Double>?
+
     private var angle: Double = 0
+    private var direction: Double = 1
     private var isPaused = false
 
     /// Time until next pause/resume toggle.
@@ -35,17 +61,17 @@ struct OrbitPatrolModel {
 
     private var rng: RandomNumberGenerator & Sendable
 
-    init(radius: Double, speed: Double, seed: UInt64 = 0) {
+    init(radius: Double, speed: Double, arc: ClosedRange<Double>? = nil, seed: UInt64 = 0) {
         self.radius = radius
         self.angularSpeed = speed / radius
+        self.arc = arc
+        self.angle = arc?.lowerBound ?? 0
         self.rng = SeededRNG(seed: seed)
         self.countdown = Self.nextWalkDuration(using: &rng)
     }
 
     mutating func advance(by dt: Double) -> OrbitPatrolState {
-        guard dt > 0 else {
-            return OrbitPatrolState(angle: angle, isPaused: isPaused)
-        }
+        guard dt > 0 else { return state }
 
         var remaining = dt
 
@@ -60,10 +86,10 @@ struct OrbitPatrolModel {
                 }
             } else {
                 let step = min(remaining, countdown)
-                angle += angularSpeed * step
+                angle += angularSpeed * step * direction
                 countdown -= step
                 remaining -= step
-                if countdown <= 0 {
+                if countdown <= 0 || turnedAtBound() {
                     isPaused = true
                     pauseDuration = Self.nextPauseDuration(using: &rng)
                     pauseElapsed = 0
@@ -71,11 +97,28 @@ struct OrbitPatrolModel {
             }
         }
 
-        // Wrap angle to [0, 2π).
-        angle = angle.truncatingRemainder(dividingBy: .pi * 2)
-        if angle < 0 { angle += .pi * 2 }
+        // Wrap angle to [0, 2π) — but only on the full circle. An arc is kept inside its
+        // own bounds by `turnedAtBound`, and wrapping one that reaches below zero would
+        // teleport the cat to the other end of its beat.
+        if arc == nil {
+            angle = angle.truncatingRemainder(dividingBy: .pi * 2)
+            if angle < 0 { angle += .pi * 2 }
+        }
 
-        return OrbitPatrolState(angle: angle, isPaused: isPaused)
+        return state
+    }
+
+    private var state: OrbitPatrolState {
+        OrbitPatrolState(angle: angle, isPaused: isPaused, direction: direction)
+    }
+
+    /// Clamps to the bound the cat has just walked into and turns it round. False — and no
+    /// pause — on the full circle, which has no bounds to reach.
+    private mutating func turnedAtBound() -> Bool {
+        guard let arc, !arc.contains(angle) else { return false }
+        angle = min(max(angle, arc.lowerBound), arc.upperBound)
+        direction = -direction
+        return true
     }
 
     // MARK: - Randomised cadence
