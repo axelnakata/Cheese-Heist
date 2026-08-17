@@ -27,4 +27,10 @@ enum Level2Tuning {
 
     /// How fast the wobble oscillates, in Hz.
     static let stallShakeFrequencyHz: Double = 6.0
+
+    /// A second, faster wobble layered on top of the first — see `GearShakeDriver`. Its
+    /// frequency is not an integer multiple of `stallShakeFrequencyHz` so the sum never
+    /// repeats cleanly, which is what reads as a grind rather than a metronome.
+    static let stallShakeJitterAmplitudeRadians: Double = 0.02
+    static let stallShakeJitterFrequencyHz: Double = 17.0
 }

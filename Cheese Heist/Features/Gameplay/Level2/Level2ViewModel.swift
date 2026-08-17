@@ -81,7 +81,7 @@ final class Level2ViewModel {
     private var context: Level2PhaseContext {
         Level2PhaseContext(
             director: director, runner: runner, selection: selection,
-            crank: crank, detection: detection,
+            crank: crank, detection: detection, starCount: starCount,
             onTeardown: { [weak self] in self?.tearDownScene() }
         )
     }
@@ -171,9 +171,10 @@ final class Level2ViewModel {
         starCount = 3
     }
 
-    /// Called every render frame during cranking.
+    /// Called every render frame during cranking AND the stall shake — a stalled pair
+    /// otherwise freezes the countdown for the whole 4s it spends shaking.
     private func tickTimer(deltaTime: Double) {
-        guard isTimerRunning, phase == .cranking else { return }
+        guard isTimerRunning, phase == .cranking || phase == .stallShaking else { return }
         timerAccumulator += deltaTime
 
         if timerAccumulator >= 1.0 {

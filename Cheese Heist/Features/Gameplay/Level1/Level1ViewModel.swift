@@ -72,7 +72,7 @@ final class Level1ViewModel {
     private var context: Level1PhaseContext {
         Level1PhaseContext(
             director: director, runner: runner, selection: selection,
-            dialogue: dialogue, crank: crank, detection: detection,
+            dialogue: dialogue, crank: crank, detection: detection, starCount: earnedStars,
             onTeardown: { [weak self] in self?.tearDownScene() }
         )
     }

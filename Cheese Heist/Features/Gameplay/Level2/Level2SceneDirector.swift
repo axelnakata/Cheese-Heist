@@ -31,6 +31,16 @@ struct Level2SceneDirector {
         }
     }
 
+    /// The success micro-interaction: a small particle burst over the gears.
+    func celebrate(starCount: Int) {
+        scene.playResultEffect(.success(starCount: starCount))
+    }
+
+    /// The fail micro-interaction — one look for both too-weak and out-of-time.
+    func commiserate() {
+        scene.playResultEffect(.fail)
+    }
+
     // MARK: - Assignment helpers (same as Level 1)
 
     /// Level 2 also starts on the left gear as driver — a convention, not a teaching

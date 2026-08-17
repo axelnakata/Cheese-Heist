@@ -37,10 +37,18 @@ final class GearShakeDriver {
     }
 
     /// One frame of the shake. Not too dramatic — a small wobble, not a spin.
+    ///
+    /// Two sines rather than one: a slow wobble alone reads as a smooth back-and-forth
+    /// rock, which is what a healthy mesh under a light load also looks like. Layering a
+    /// faster, non-harmonic jitter on top breaks that regularity into something that
+    /// reads as teeth grinding against a load they can't turn.
     func advance(deltaTime: Float) {
         elapsed += deltaTime
-        let angle = Float(Level2Tuning.stallShakeAmplitudeRadians)
+        let wobble = Float(Level2Tuning.stallShakeAmplitudeRadians)
             * sin(elapsed * Float(Level2Tuning.stallShakeFrequencyHz) * 2 * .pi)
+        let jitter = Float(Level2Tuning.stallShakeJitterAmplitudeRadians)
+            * sin(elapsed * Float(Level2Tuning.stallShakeJitterFrequencyHz) * 2 * .pi)
+        let angle = wobble + jitter
 
         // Opposing wobble — the two gears straining against each other, not spinning
         // together, which is what reads as a clash rather than a shared tremor.

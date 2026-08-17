@@ -39,7 +39,10 @@ struct Level2View: View {
         }
         .statusBarHidden()
         .animation(.easeInOut(duration: AppDuration.transition), value: viewModel.phase)
-        .onAppear { services.startLevel2(with: viewModel) }
+        .onAppear {
+            services.startLevel2(with: viewModel)
+            viewModel.playMainAudio()
+        }
         .onChange(of: services.detection.trackingVersion) { _, _ in
             viewModel.observeDetection()
         }

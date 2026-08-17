@@ -12,4 +12,6 @@ enum AppDuration {
     static let typewriterCPS: Double = 40
     /// Success screen entry.
     static let celebrationEntry: Double = 0.6
+    /// BGM fade in/out around a crank engagement or a result.
+    static let audioFade: Double = 0.6
 }

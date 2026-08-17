@@ -96,4 +96,11 @@ enum AppColor {
     static let surfaceInvalidMark = Palette.invalidMarkRed
     /// The ✗'s darker bevelled underside — same trick as `surfaceRingEdge`.
     static let surfaceInvalidMarkEdge = Palette.invalidMarkRedDeep
+
+    // MARK: - Result micro-interactions
+
+    /// The success burst's sparks — cheese-gold, the same colour the child just won.
+    static let celebrationSpark = Palette.cheeseYellow
+    /// The fail burst's puff — the opposite gesture from `celebrationSpark`.
+    static let failSmoke = Palette.smokeGray
 }

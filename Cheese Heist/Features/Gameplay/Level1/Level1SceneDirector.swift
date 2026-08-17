@@ -42,6 +42,12 @@ struct Level1SceneDirector {
         .happy
     }
 
+    /// The success micro-interaction: a small particle burst over the gears. Level 1 is
+    /// unfailable, so there is no `commiserate` counterpart here.
+    func celebrate(starCount: Int) {
+        scene.playResultEffect(.success(starCount: starCount))
+    }
+
     /// Level 1's teaching run starts on the LEFT gear as driver.
     ///
     /// Left and right, not small and large, because this assignment is the first thing

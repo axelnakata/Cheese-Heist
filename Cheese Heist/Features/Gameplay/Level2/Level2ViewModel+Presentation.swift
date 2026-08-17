@@ -69,4 +69,8 @@ extension Level2ViewModel {
     var resultStarCount: Int {
         isFail ? 0 : starCount
     }
+
+    func playMainAudio() {
+        AudioManager.shared.playBGM(.page1)
+    }
 }

@@ -38,4 +38,8 @@ enum Palette {
     /// ring's greens, just crossed bars instead of an annulus.
     static let invalidMarkRed = Color(hex: "#DB0000")
     static let invalidMarkRedDeep = Color(hex: "#981212")
+
+    /// The fail micro-interaction's puff — not in the Figma Design System frame, chosen
+    /// to read as smoke rather than as any existing state colour. Same OQ-1 provenance.
+    static let smokeGray = Color(hex: "#BEBEBE")
 }
