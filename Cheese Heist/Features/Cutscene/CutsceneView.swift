@@ -57,7 +57,8 @@ struct CutsceneView: View {
                 beat: viewModel.currentBeat,
                 dialogueBeat: viewModel.dialogue.current,
                 isRevealComplete: viewModel.dialogue.isRevealComplete,
-                onRevealComplete: viewModel.dialogue.markRevealComplete
+                onRevealComplete: viewModel.completeReveal,
+                canAdvance: viewModel.canAdvance
             )
 
         case .handingOff:
@@ -76,7 +77,7 @@ struct CutsceneView: View {
     /// Only shown when there is no bubble — the bubble prints its own hint.
     @ViewBuilder
     private var hint: some View {
-        if !viewModel.hasDialogue {
+        if !viewModel.hasDialogue && viewModel.canAdvance {
             VStack {
                 Spacer()
                 TapToContinueHint(title: "tap to continue..")
@@ -85,4 +86,7 @@ struct CutsceneView: View {
             .allowsHitTesting(false)
         }
     }
+}
+#Preview {
+    CutsceneView(services: AppServices.init())
 }

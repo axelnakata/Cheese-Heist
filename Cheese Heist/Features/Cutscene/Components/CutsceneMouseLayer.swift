@@ -28,15 +28,20 @@ struct CutsceneMouseLayer: View {
     let isRevealComplete: Bool
     let onRevealComplete: () -> Void
 
+    /// Whether the post-reveal buffer has elapsed — passed straight through to the
+    /// bubble's own "tap to continue" hint. Defaults `true` so previews that don't care
+    /// about the buffer don't have to pass it.
+    var canAdvance: Bool = true
+
     @Environment(\.layoutScale) private var scale
 
     private enum Metric {
         /// Mouse height in design points — Figma `mice happy 1`, 590 tall, bleeding off
         /// the bottom of the frame exactly as in the mockups.
-        static let mouseHeight: CGFloat = 550
+        static let mouseHeight: CGFloat = 400
         static let leadingInset: CGFloat = 10
         /// Where on the mouse the bubble's tail points, as a fraction of its box.
-        static let headX: CGFloat = 0.90
+        static let headX: CGFloat = 1.2
         static let headY: CGFloat = 0.68
     }
 
@@ -49,7 +54,7 @@ struct CutsceneMouseLayer: View {
                         .scaledToFit()
                         .frame(height: Metric.mouseHeight * scale)
                         .padding(.leading, Metric.leadingInset * scale)
-                        .offset(y:150)
+                        .offset(x:100, y: -50)
                         .allowsHitTesting(false)
                 }
 
@@ -59,7 +64,8 @@ struct CutsceneMouseLayer: View {
                         style: .accent,
                         isRevealComplete: isRevealComplete,
                         anchor: headAnchor(in: proxy.size, pose: beat?.pose),
-                        onRevealComplete: onRevealComplete
+                        onRevealComplete: onRevealComplete,
+                        canAdvance: canAdvance
                     )
                 }
             }
@@ -79,7 +85,7 @@ struct CutsceneMouseLayer: View {
         let anchorX = left + referenceWidth * Metric.headX
         
         let currentPoseHeight = pose != nil ? height : height
-        let anchorY = top + currentPoseHeight * Metric.headY + 100
+        let anchorY = top + currentPoseHeight * Metric.headY
         
         return CGPoint(x: anchorX, y: anchorY)
     }

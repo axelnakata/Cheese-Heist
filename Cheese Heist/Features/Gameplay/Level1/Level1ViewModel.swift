@@ -25,6 +25,9 @@ final class Level1ViewModel {
     private(set) var phase: Level1Phase = .aligningCrane
     private(set) var inputGate = Level1InputGate.of(.aligningCrane)
 
+    private let resultReveal = ResultRevealController()
+    var showsResult: Bool { resultReveal.showsResult }
+
     let detection: GearDetectionService
     let dialogue = DialogueSequencer()
     let selection = GearSelectionViewModel()
@@ -58,6 +61,12 @@ final class Level1ViewModel {
         phase = next
         inputGate = Level1InputGate.of(next)
         Level1PhaseCommands.apply(next, in: context)
+
+        if next == .succeeded {
+            resultReveal.reveal(after: .success)
+        } else {
+            resultReveal.hide()
+        }
     }
 
     private var context: Level1PhaseContext {
