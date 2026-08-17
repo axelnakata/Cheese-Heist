@@ -105,19 +105,13 @@ struct TypewriterText: View {
         await MainActor.run {
             isComplete = true
         }
-        
+
         await triggerCooldown()
     }
 
-    /// Menambah jeda (cooldown) 1 detik sebelum memberikan izin untuk 'continue'
     private func triggerCooldown() async {
-        do {
-            try await Task.sleep(for: .seconds(1))
-            await MainActor.run {
-                canContinue = true
-            }
-        } catch {
-            
+        await MainActor.run {
+            canContinue = true
         }
     }
 }

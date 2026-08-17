@@ -63,21 +63,20 @@ struct CutsceneView: View {
             hint
 
         case .narrating:
-            // Order matters: the scrim and blueprint go DOWN first, then the tap
-            // catcher, then the mouse on top — in `cutscene 6.png` the mouse and its
-            // bubble are the only things not dimmed, and the scrim swallowing taps is
-            // what makes the blueprint the sole way out of the last beat.
             yellowGradientOverlay
-            
+
             if viewModel.showsBlueprint {
                 CutsceneBlueprintLayer(onTap: viewModel.tapBlueprint)
             }
-            if viewModel.inputGate.tapAdvances { tapCatcher }
+            if viewModel.inputGate.tapAdvances || viewModel.inputGate.blueprintTappable {
+                tapCatcher
+            }
             CutsceneMouseLayer(
                 beat: viewModel.currentBeat,
                 dialogueBeat: viewModel.dialogue.current,
                 isRevealComplete: viewModel.dialogue.isRevealComplete,
-                onRevealComplete: viewModel.completeReveal
+                onRevealComplete: viewModel.completeReveal,
+                canAdvance: viewModel.canAdvance
             )
 
         case .handingOff:
