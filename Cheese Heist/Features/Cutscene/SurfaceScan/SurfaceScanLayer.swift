@@ -10,12 +10,12 @@
 //  `cutscene guidelines - Fall Back.png` (invalid).
 //
 
+
 import SwiftUI
 
 struct SurfaceScanLayer: View {
 
     let validity: SurfaceValidity
-    /// From `CutsceneInputGate`, so the view never re-derives "can this be tapped".
     let isTappable: Bool
     let onTap: () -> Void
 
@@ -23,7 +23,6 @@ struct SurfaceScanLayer: View {
 
     var body: some View {
         ZStack {
-            // The full-screen tap target for placing the scene.
             if isTappable {
                 Color.clear
                     .contentShape(Rectangle())
@@ -31,10 +30,6 @@ struct SurfaceScanLayer: View {
             }
 
             RecommendedPositionStrip()
-
-            if validity != .valid {
-                SurfaceInvalidMark()
-            }
 
             VStack {
                 Spacer()
