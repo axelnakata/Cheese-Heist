@@ -40,7 +40,13 @@ enum SurfaceValidationRules {
 
     /// Furthest the camera may be, in metres. Beyond this the child is too far back for
     /// the scene to read, and tracking on a featureless table degrades.
-    static let maximumDistance: Float = 1.20
+    ///
+    /// Was 1.20 — too tight for scanning a floor from a normal seated posture, where the
+    /// screen-centre raycast travels a shallow diagonal rather than straight down, so a
+    /// child sitting comfortably measured well past it and had to crouch down to the
+    /// floor to pull the hit back under the limit. CALIBRATE: raised on feedback, not
+    /// yet re-measured on device against a seated child.
+    static let maximumDistance: Float = 2.00
 
     /// How much flat surface surrounds the hit, in metres — the distance from the hit
     /// point to the nearest edge of the plane's bounding rectangle.

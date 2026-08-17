@@ -31,6 +31,15 @@ final class PlaneDetectionService {
     /// `.valid`, so a caller cannot place the scene on a surface we just rejected.
     private(set) var hitTransform: simd_float4x4?
 
+    /// The same raycast, published on every sample regardless of validity — including
+    /// `.tooSmall`/`.tooClose`/`.tooFar`. `hitTransform` above stays gated to `.valid`
+    /// because callers use it to decide whether it is safe to place the scene; but that
+    /// gate also meant the on-screen ring/mark stopped moving the instant a surface
+    /// turned invalid, freezing at its last valid spot — or at the world origin if there
+    /// had never been one — instead of following wherever the camera is now pointing.
+    /// This is what the invalid mark should `follow()`.
+    private(set) var latestHitTransform: simd_float4x4?
+
     @ObservationIgnored private var pending: SurfaceValidity = .noSurface
     @ObservationIgnored private var pendingCount = 0
     @ObservationIgnored private var latestHit: simd_float4x4?
@@ -76,6 +85,7 @@ final class PlaneDetectionService {
     func reset() {
         validity = .noSurface
         hitTransform = nil
+        latestHitTransform = nil
         pending = .noSurface
         pendingCount = 0
         latestHit = nil
@@ -92,6 +102,7 @@ final class PlaneDetectionService {
             pendingCount = 1
         }
         latestHit = hit
+        latestHitTransform = hit
 
         if pendingCount >= stabilitySamples, validity != pending {
             validity = pending

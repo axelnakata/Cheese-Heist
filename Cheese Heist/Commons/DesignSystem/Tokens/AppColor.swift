@@ -91,4 +91,9 @@ enum AppColor {
     static let surfaceRing = Palette.ringGreen
     /// The ring's darker outer edge, which is what gives it thickness.
     static let surfaceRingEdge = Palette.ringGreenDeep
+
+    /// The invalid-surface ✗'s bright face, as it lies on the detected plane.
+    static let surfaceInvalidMark = Palette.invalidMarkRed
+    /// The ✗'s darker bevelled underside — same trick as `surfaceRingEdge`.
+    static let surfaceInvalidMarkEdge = Palette.invalidMarkRedDeep
 }
