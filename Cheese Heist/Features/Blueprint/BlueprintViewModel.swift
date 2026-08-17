@@ -63,9 +63,7 @@ final class BlueprintViewModel {
 
     /// Resets the idle timer loop on any user interaction.
     func userDidInteract() {
-        withAnimation(.easeInOut(duration: 0.4)) {
-            showsCheckIn = false
-        }
+        showsCheckIn = false
         startCheckInLoop()
     }
 
@@ -77,15 +75,11 @@ final class BlueprintViewModel {
                 try? await Task.sleep(for: CheckInTiming.interval)
                 guard !Task.isCancelled, let self else { return }
 
-                withAnimation(.spring(response: 0.6, dampingFraction: 0.82)) {
-                    self.showsCheckIn = true
-                }
+                self.showsCheckIn = true
                 try? await Task.sleep(for: CheckInTiming.visibleDuration)
                 guard !Task.isCancelled else { return }
 
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    showsCheckIn = false
-                }
+                showsCheckIn = false
             }
         }
     }
