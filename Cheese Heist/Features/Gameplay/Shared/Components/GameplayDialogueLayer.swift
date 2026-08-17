@@ -44,6 +44,12 @@ struct GameplayDialogueLayer: View {
     /// promise the bubble does not keep.
     var showsContinueHint: Bool = true
 
+    /// False while a caller-owned post-reveal buffer is still running — the hint holds
+    /// off until the buffer clears, so a tap can't chain straight from finishing this
+    /// line into skipping the next one. Cutscene passes its buffer state; everyone else
+    /// defaults to `true` and is unaffected.
+    var canAdvance: Bool = true
+
     @Environment(\.layoutScale) private var scale
     @State private var revealFlag = false
     @State private var bubbleSize: CGSize = .zero
@@ -73,7 +79,7 @@ struct GameplayDialogueLayer: View {
     private var bubble: some View {
         SpeechBubbleView(text: text, style: style, isRevealComplete: $revealFlag)
             .overlay(alignment: .bottomTrailing) {
-                if revealFlag && showsContinueHint {
+                if revealFlag && showsContinueHint && canAdvance {
                     TapToContinueHint(title: "tap to continue..")
                         .offset(y: (AppFont.body.lineHeight + AppSpacing.xs) * scale)
                         .transition(.opacity)

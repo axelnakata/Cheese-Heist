@@ -25,6 +25,9 @@ final class Level2ViewModel {
     private(set) var phase: Level2Phase = .aligningCrane
     private(set) var inputGate = Level2InputGate.of(.aligningCrane)
 
+    private let resultReveal = ResultRevealController()
+    var showsResult: Bool { resultReveal.showsResult }
+
     let detection: GearDetectionService
     let selection = GearSelectionViewModel()
     let crank = CrankInputViewModel()
@@ -67,6 +70,12 @@ final class Level2ViewModel {
         phase = next
         inputGate = Level2InputGate.of(next)
         Level2PhaseCommands.apply(next, in: context)
+
+        switch next {
+        case .succeeded: resultReveal.reveal(after: .success)
+        case .failedWeak, .failedSlow: resultReveal.reveal(after: .fail)
+        default: resultReveal.hide()
+        }
     }
 
     private var context: Level2PhaseContext {

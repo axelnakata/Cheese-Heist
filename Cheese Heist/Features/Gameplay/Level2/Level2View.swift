@@ -32,7 +32,7 @@ struct Level2View: View {
 
             overlays
 
-            if viewModel.isResult {
+            if viewModel.showsResult {
                 resultOverlay
                     .transition(.opacity)
             }

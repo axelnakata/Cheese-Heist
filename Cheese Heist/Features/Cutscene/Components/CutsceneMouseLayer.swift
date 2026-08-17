@@ -28,6 +28,11 @@ struct CutsceneMouseLayer: View {
     let isRevealComplete: Bool
     let onRevealComplete: () -> Void
 
+    /// Whether the post-reveal buffer has elapsed — passed straight through to the
+    /// bubble's own "tap to continue" hint. Defaults `true` so previews that don't care
+    /// about the buffer don't have to pass it.
+    var canAdvance: Bool = true
+
     @Environment(\.layoutScale) private var scale
 
     private enum Metric {
@@ -59,7 +64,8 @@ struct CutsceneMouseLayer: View {
                         style: .accent,
                         isRevealComplete: isRevealComplete,
                         anchor: headAnchor(in: proxy.size, pose: beat?.pose),
-                        onRevealComplete: onRevealComplete
+                        onRevealComplete: onRevealComplete,
+                        canAdvance: canAdvance
                     )
                 }
             }

@@ -35,7 +35,7 @@ struct Level1View: View {
 
             overlays
 
-            if viewModel.isSucceeded {
+            if viewModel.showsResult {
                 SuccessOverlay(
                     title: Level1Script.successTitle,
                     subtitle: Level1Script.successSubtitle,
