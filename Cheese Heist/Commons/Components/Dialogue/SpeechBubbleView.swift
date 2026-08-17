@@ -29,7 +29,7 @@ struct SpeechBubbleView: View {
         static let horizontalPadding: CGFloat = 20
         static let verticalPadding: CGFloat = 20
         static let tailSize = CGSize(width: 28, height: 32)
-        static let maxWidth: CGFloat = 560
+        static let maxWidth: CGFloat = 1000
         static let cornerRadius: CGFloat = 32
         static let shadowDepth: CGFloat = 10
     }
@@ -71,6 +71,8 @@ struct SpeechBubbleView: View {
         .appText(AppFont.dialogue)
         .foregroundStyle(style.textColor)
         .frame(width: textWidth, alignment: .leading)
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
         .fixedSize(horizontal: false, vertical: true)
     }
 
