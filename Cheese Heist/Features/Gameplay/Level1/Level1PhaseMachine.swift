@@ -38,15 +38,6 @@ enum Level1PhaseMachine {
              (.detectingGears, .detectionLocked):
             return .selectingRoles
 
-        case (.aligningCrane, .detectionTimedOut),
-             (.detectingGears, .detectionTimedOut):
-            return .manualFallback
-
-        // The detector keeps tracking behind the sheet, so a late lock is still taken —
-        // there is no manual choice, only "try looking again".
-        case (.manualFallback, .detectionLocked):
-            return .selectingRoles
-
         default:
             return nil
         }

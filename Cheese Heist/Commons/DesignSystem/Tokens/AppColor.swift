@@ -22,6 +22,18 @@ enum AppColor {
     /// the button spec in §7.6 is explicitly white; this token holds that distinction
     /// instead of letting a view reach into `Palette`.
     static let textOnAccent = Palette.pureWhite
+    /// Secondary action fill — secondary blue in the design system.
+    static let accentSecondary = Palette.skyBlue
+    /// Pressed state for secondary-accented controls.
+    static let accentSecondaryPressed = Palette.skyBlue.opacity(0.85)
+    /// Secondary yellow fill (crustAmber) for retry controls.
+    static let accentSecondaryYellow = Palette.crustAmber
+    /// Pressed state for secondary yellow controls.
+    static let accentSecondaryYellowPressed = Palette.crustAmber.opacity(0.85)
+    /// Main blue fill (blueprintNavy) for home controls.
+    static let accentMainBlue = Palette.blueprintNavy
+    /// Pressed state for main blue controls.
+    static let accentMainBluePressed = Palette.blueprintNavy.opacity(0.85)
 
     // MARK: - Surfaces
 

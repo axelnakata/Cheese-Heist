@@ -16,7 +16,7 @@ struct Level1InputGateTests {
     /// model cannot work with.
     @Test("alignment and detection accept no input at all")
     func earlyPhasesAreInert() {
-        for phase in [Level1Phase.aligningCrane, .detectingGears, .manualFallback] {
+        for phase in [Level1Phase.aligningCrane, .detectingGears] {
             #expect(Level1InputGate.of(phase) == .none, "\(phase)")
         }
     }

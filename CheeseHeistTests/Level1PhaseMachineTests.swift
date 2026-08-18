@@ -24,10 +24,7 @@ struct Level1PhaseMachineTests {
         // The detector can reach viability and a lock on the same tick, and nothing
         // orders the two signals — so the illustration must accept a lock directly.
         (.aligningCrane, .detectionLocked(pair: pair, assignment: assignment), .selectingRoles),
-        (.aligningCrane, .detectionTimedOut, .manualFallback),
         (.detectingGears, .detectionLocked(pair: pair, assignment: assignment), .selectingRoles),
-        (.detectingGears, .detectionTimedOut, .manualFallback),
-        (.manualFallback, .detectionLocked(pair: pair, assignment: assignment), .selectingRoles),
         (.selectingRoles, .tappedGear(id: assignment.driverID), .rolesChosen),
         (.rolesChosen, .tappedGear(id: assignment.driverID), .rolesChosen),
         (.rolesChosen, .joystickEngaged, .freeCrank),
@@ -38,7 +35,6 @@ struct Level1PhaseMachineTests {
     static let allEvents: [Level1Event] = [
         .detectionViable,
         .detectionLocked(pair: pair, assignment: assignment),
-        .detectionTimedOut,
         .liftReachedCeiling,
         .tappedGear(id: assignment.driverID),
         .joystickEngaged,

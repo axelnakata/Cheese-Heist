@@ -5,7 +5,9 @@
 //  The Level 1 flow, PRD-Level1 §3 and §8.
 //
 //  `confirmingDetection` from the parent PRD §10.3 is gone (D-4: twins appear
-//  immediately on lock). `manualFallback` replaces it as a TIMEOUT-ONLY branch.
+//  immediately on lock). There is no manual-fallback phase either: detection never
+//  times out during setup (`DetectionTimeoutPolicy.disabled`), and the two live
+//  overlays — `WrongGearCountLayer`, `CraneLostLayer` — are the whole of the feedback.
 //
 //  The guided teaching run (intro/teachingDriver/teachingJoystick/guidedCrank/
 //  teachingFollower/handOver) is gone too — the flow now mirrors Level 2's shorter
@@ -18,7 +20,6 @@
 enum Level1Phase: String, CaseIterable, Equatable, Sendable {
     case aligningCrane
     case detectingGears
-    case manualFallback
     case selectingRoles
     case rolesChosen
     case freeCrank

@@ -105,11 +105,11 @@ struct Level2View: View {
             title: copy.title,
             subtitle: copy.subtitle,
             onRetry: { withAnimation { viewModel.handle(.tappedRetry) } },
-            onNext: viewModel.isFail ? nil : { viewModel.handle(.tappedNext) },
+            onHome: { services.router.navigate(to: .levelSelect) },
             starCount: viewModel.resultStarCount,
             timeRemaining: viewModel.isFail ? nil : viewModel.timerRemaining,
             mouseAssetName: viewModel.resultMouseSprite,
-            showNext: !viewModel.isFail
+            showNext: false
         )
     }
 }
