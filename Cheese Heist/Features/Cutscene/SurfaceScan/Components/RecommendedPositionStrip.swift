@@ -46,6 +46,10 @@ struct RecommendedPositionStrip: View {
                     .clipShape(
                         RoundedRectangle(cornerRadius: Metric.boxCornerRadius * scale, style: .continuous)
                     )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Metric.boxCornerRadius * scale, style: .continuous)
+                            .strokeBorder(AppColor.strokeChip, lineWidth: AppStroke.chip * scale)
+                    )
             }
             .frame(width: Metric.width * scale)
             .padding(.top, Metric.topPadding * scale)

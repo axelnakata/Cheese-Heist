@@ -9,6 +9,7 @@
 //
 
 import Observation
+import SwiftUI
 
 @MainActor
 @Observable
@@ -74,7 +75,7 @@ final class BlueprintViewModel {
                 try? await Task.sleep(for: CheckInTiming.interval)
                 guard !Task.isCancelled, let self else { return }
 
-                showsCheckIn = true
+                self.showsCheckIn = true
                 try? await Task.sleep(for: CheckInTiming.visibleDuration)
                 guard !Task.isCancelled else { return }
 

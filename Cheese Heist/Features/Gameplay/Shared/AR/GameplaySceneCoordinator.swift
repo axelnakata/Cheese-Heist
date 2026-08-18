@@ -85,6 +85,11 @@ final class GameplaySceneCoordinator {
     private var rope: RopeEntity?
     private var cheese: CheeseProp?
 
+    /// The cat prowling round the crane. Level 2 only, and `nil` in Level 1 — which never
+    /// calls `startCatPatrol()`. Not `private`, because the whole of the cat lives in
+    /// `+CatPatrol.swift`. See that file.
+    var catPatrol: CatOrbitDriver?
+
     // MARK: Collaborators
 
     let alignment = CraneAlignmentFilter()
@@ -174,6 +179,7 @@ final class GameplaySceneCoordinator {
         mouseHolder = nil
         rope = nil
         cheese = nil
+        catPatrol = nil
         ropeCheeseHolder = nil
         placements = []
         screenTargets = []
