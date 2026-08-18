@@ -13,6 +13,12 @@ import SwiftUI
 struct LevelPathStopView: View {
 
     let kind: LevelSelectStop.Kind
+    let platformShadowOpacity: Double
+
+    init(kind: LevelSelectStop.Kind, platformShadowOpacity: Double = 0.10) {
+        self.kind = kind
+        self.platformShadowOpacity = platformShadowOpacity
+    }
 
     @Environment(\.layoutScale) private var scale
 
@@ -41,23 +47,29 @@ struct LevelPathStopView: View {
                         y: Metric.numberShadowRadius * scale
                     )
                     .offset(y: -Metric.wedgeYOffset * 0.25 * scale)
+                    .allowsHitTesting(false)
                 CheeseWedgeCluster()
                     .offset(y: Metric.wedgeYOffset * scale)
+                    .allowsHitTesting(false)
 
             case .current:
                 Image("level_select_glow")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: Metric.glowWidth * scale)
-                    .opacity(0.7)
+                    .opacity(0.08)
+                    .offset(y: -220 * scale)
+                    .allowsHitTesting(false)
                 platform("level_select_unlocked_platform")
                 Image("level_select_mouse")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: Metric.mouseWidth * scale)
                     .offset(y: Metric.mouseYOffset * scale)
+                    .allowsHitTesting(false)
                 CheeseWedgeCluster()
                     .offset(y: Metric.wedgeYOffset * scale)
+                    .allowsHitTesting(false)
 
             case .locked:
                 platform("level_select_locked_platform")
@@ -70,6 +82,7 @@ struct LevelPathStopView: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: Metric.platformWidth * scale)
+            .shadow(color: .black.opacity(platformShadowOpacity), radius: 14 * scale, x: 0, y: 6 * scale)
     }
 }
 
