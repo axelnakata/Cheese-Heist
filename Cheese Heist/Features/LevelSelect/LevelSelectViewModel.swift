@@ -34,6 +34,13 @@ final class LevelSelectViewModel {
         selectStop(id: stop.id)
     }
 
+    /// Same track as splash/cutscene. Without this the level-select screen just
+    /// inherits whatever the previous screen left playing — Blueprint's `.page2`, if
+    /// that's where the child came from — since nothing else on this screen touches BGM.
+    func playMainAudio() {
+        AudioManager.shared.playBGM(.page1)
+    }
+
     @discardableResult
     func selectStop(id: Int) -> Bool {
         guard let targetIndex = stops.firstIndex(where: { $0.id == id }) else {

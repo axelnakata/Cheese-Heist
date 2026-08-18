@@ -9,7 +9,6 @@
 enum Level2Phase: String, CaseIterable, Equatable, Sendable {
     case aligningCrane
     case detectingGears
-    case manualFallback
     case selectingRoles
     case rolesChosen
     case cranking

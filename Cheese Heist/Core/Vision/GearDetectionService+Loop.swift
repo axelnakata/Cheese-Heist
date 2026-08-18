@@ -50,7 +50,11 @@ extension GearDetectionService {
             return
         }
 
-        clearWrongGearCount()
+        // A good frame stops the debounce clock but does NOT dismiss an overlay that is
+        // already showing — that only happens via "I fixed it!" (`recheckGearCountIssue`),
+        // so the child sees a stable screen instead of one that flickers off the instant
+        // the camera catches a correct-looking frame.
+        clearWrongCountCandidate()
 
         guard let captured = source?.captureData(from: frame) else { return }
         solve(detections: detections, captured: captured)

@@ -59,7 +59,7 @@ struct WrongGearCountIllustration: View {
                 .offset(circleOffset)
 
             Text(number)
-                .font(.system(size: 24 * scale, weight: .heavy, design: .rounded))
+                .appText(AppFont.dialogue)
                 .foregroundColor(AppColor.accent)
                 .offset(numberOffset)
         }

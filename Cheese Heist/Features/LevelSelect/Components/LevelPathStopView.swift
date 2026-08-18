@@ -12,7 +12,8 @@ import SwiftUI
 
 struct LevelPathStopView: View {
 
-    static let defaultShadowOpacity: Double = 0.5
+    // Figma's platform art has no drop shadow — the 3D render's own shading carries it.
+    static let defaultShadowOpacity: Double = 0
 
     let kind: LevelSelectStop.Kind
     let platformShadowOpacity: Double
@@ -50,6 +51,7 @@ struct LevelPathStopView: View {
                     )
                     .offset(y: -Metric.wedgeYOffset * 0.25 * scale)
                     .allowsHitTesting(false)
+                    .transition(.opacity)
                 CheeseWedgeCluster()
                     .offset(y: Metric.wedgeYOffset * scale)
                     .allowsHitTesting(false)
@@ -59,9 +61,9 @@ struct LevelPathStopView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: Metric.glowWidth * scale)
-                    .opacity(0.08)
                     .offset(y: -220 * scale)
                     .allowsHitTesting(false)
+                    .transition(.opacity)
                 platform("level_select_unlocked_platform")
                 Image("level_select_mouse")
                     .resizable()
@@ -69,6 +71,7 @@ struct LevelPathStopView: View {
                     .frame(width: Metric.mouseWidth * scale)
                     .offset(y: Metric.mouseYOffset * scale)
                     .allowsHitTesting(false)
+                    .transition(.opacity.combined(with: .scale(scale: 0.8)))
                 CheeseWedgeCluster()
                     .offset(y: Metric.wedgeYOffset * scale)
                     .allowsHitTesting(false)

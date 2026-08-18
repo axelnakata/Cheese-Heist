@@ -41,7 +41,7 @@ struct WrongGearCountLayer: View {
                 // MARK: - Button "I fixed it!"
                 Button(action: onFixed) {
                     Text("I fixed it!")
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .appText(AppFont.title)
                         .foregroundColor(.white)
                         .padding(.horizontal, Metric.buttonPaddingHorizontal * scale)
                         .padding(.vertical, Metric.buttonPaddingVertical * scale)

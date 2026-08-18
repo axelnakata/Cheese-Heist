@@ -7,7 +7,6 @@ enum Level2Event: Equatable {
     // Detection
     case detectionViable
     case detectionLocked(GearPair, GearRoleAssignment)
-    case detectionTimedOut
 
     // Interaction
     case tappedGear(id: UUID)

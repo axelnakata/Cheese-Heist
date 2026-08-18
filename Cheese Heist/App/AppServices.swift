@@ -89,6 +89,22 @@ final class AppServices {
         }
     }
 
+    /// Leaving `.scanning` early (the child taps Home before the surface locks and the
+    /// scene is placed). Tears down the ring/anchor so it doesn't linger into whatever
+    /// screen comes next — a live `CutsceneSceneCoordinator` stays registered on the
+    /// shared ticker and keeps its ring anchored in the shared `arView` forever
+    /// otherwise, which is what was surfacing as a stray ring/✗ still floating in
+    /// Level 1's AR view. Clearing the reference here (rather than leaving it for
+    /// `startCutscene`'s `guard cutsceneCoordinator == nil` to skip past) is also what
+    /// lets a later cutscene attempt build a fresh coordinator and actually attach to
+    /// it — without this the guard silently no-ops and the new `CutsceneViewModel` is
+    /// never attached, so its input gate sits on `.none` and the ring can't be tapped
+    /// even once it goes valid.
+    func cancelCutscene() {
+        cutsceneCoordinator?.teardown()
+        cutsceneCoordinator = nil
+    }
+
     /// Tears down any existing AR 3D scene, resets vision detection, and clears active level references
     /// so the next level calibration starts fresh from scratch.
     func resetARGameplay() {
@@ -132,8 +148,10 @@ final class AppServices {
         detection.onTrackingUpdate = { [weak self] frame, gears in
             self?.trackingUpdateLevel2(frame: frame, gears: gears)
         }
-        // Restored explicitly in case the previous attempt was Level 1, which disables it.
-        detection.timeout = .standard
+        // Disabled, same as Level 1: the live setup/crane-lost overlays (`WrongGearCountLayer`,
+        // `CraneLostLayer`) are the whole of the feedback now, so the old timeout-driven
+        // `manualFallback` sheet would only ever show up layered on top of them.
+        detection.timeout = .disabled
         detection.start(source: arSessionManager)
         startLevel2Ticker()
     }

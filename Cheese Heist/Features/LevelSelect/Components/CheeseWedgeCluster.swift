@@ -14,7 +14,7 @@ struct CheeseWedgeCluster: View {
     @Environment(\.layoutScale) private var scale
 
     private enum Metric {
-        static let wedgeSide: CGFloat = 64
+        static let wedgeSide: CGFloat = 95
         static let overlap: CGFloat = 24
         static let rotations: [Angle] = [.degrees(-14), .degrees(4), .degrees(16)]
         static let verticalOffsets: [CGFloat] = [5, -8, 8]

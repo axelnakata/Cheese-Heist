@@ -109,31 +109,31 @@ struct Level1View: View {
 
         if services.detection.hasLostGears && !viewModel.showsResult {
             CraneLostLayer()
+        } else {
+            GearSelectionTapLayer(
+                targets: viewModel.screenTargets,
+                isEnabled: effectiveGate.gearsTappable,
+                onTap: { viewModel.tapGear($0) }
+            )
+
+            Level1HUDLayer(
+                chip: viewModel.chipText,
+                targets: viewModel.screenTargets,
+                gate: effectiveGate,
+                showsRoleLabels: viewModel.showsRoleLabels,
+                hint: viewModel.crankHint,
+                hasElevation: viewModel.hasElevation,
+                onDrag: { point, centre in viewModel.crank.drag(to: point, centre: centre) },
+                onRelease: { viewModel.crank.release() }
+            )
+
+            Level1TutorialLayer(
+                showsJoystickHint: viewModel.showsJoystickHint,
+                beat: viewModel.dialogue.current,
+                isRevealComplete: viewModel.dialogue.isRevealComplete,
+                mouseAnchor: viewModel.mouseAnchor,
+                onRevealComplete: { viewModel.dialogue.markRevealComplete() }
+            )
         }
-
-        GearSelectionTapLayer(
-            targets: viewModel.screenTargets,
-            isEnabled: effectiveGate.gearsTappable,
-            onTap: { viewModel.tapGear($0) }
-        )
-
-        Level1HUDLayer(
-            chip: viewModel.chipText,
-            targets: viewModel.screenTargets,
-            gate: effectiveGate,
-            showsRoleLabels: viewModel.showsRoleLabels,
-            hint: viewModel.crankHint,
-            hasElevation: viewModel.hasElevation,
-            onDrag: { point, centre in viewModel.crank.drag(to: point, centre: centre) },
-            onRelease: { viewModel.crank.release() }
-        )
-
-        Level1TutorialLayer(
-            showsJoystickHint: viewModel.showsJoystickHint,
-            beat: viewModel.dialogue.current,
-            isRevealComplete: viewModel.dialogue.isRevealComplete,
-            mouseAnchor: viewModel.mouseAnchor,
-            onRevealComplete: { viewModel.dialogue.markRevealComplete() }
-        )
     }
 }

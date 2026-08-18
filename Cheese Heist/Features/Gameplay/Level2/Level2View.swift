@@ -19,6 +19,7 @@ struct Level2View: View {
     let services: AppServices
 
     @State private var viewModel: Level2ViewModel
+    @State private var dismissedGearCountIssue = false
 
     init(services: AppServices) {
         self.services = services
@@ -52,49 +53,71 @@ struct Level2View: View {
         .onChange(of: services.detection.isViable) { _, _ in
             viewModel.observeDetection()
         }
+        .onChange(of: services.detection.liveGearCountIssue) { old, new in
+            if old == nil && new != nil {
+                dismissedGearCountIssue = false
+            }
+        }
+        .onChange(of: services.detection.hasLostGears) { _, _ in
+            viewModel.observeDetection()
+        }
+    }
+
+    /// Pre-lock only, mirroring `Level1View.showsWrongGearCount`.
+    private var showsWrongGearCount: Bool {
+        (viewModel.phase == .aligningCrane || viewModel.phase == .detectingGears)
+            && services.detection.liveGearCountIssue != nil
+            && !dismissedGearCountIssue
     }
 
     @ViewBuilder
     private var overlays: some View {
-        if Level2PhasePresentation.showsAlignmentIllustration(viewModel.phase) {
+        if Level2PhasePresentation.showsAlignmentIllustration(viewModel.phase) && !showsWrongGearCount {
             CraneAlignmentLayer(title: Level2Script.alignment)
         }
 
-        GearSelectionTapLayer(
-            targets: viewModel.screenTargets,
-            isEnabled: viewModel.inputGate.gearsTappable,
-            onTap: { viewModel.tapGear($0) }
-        )
+        if showsWrongGearCount, let issue = services.detection.liveGearCountIssue {
+            WrongGearCountLayer(
+                issue: issue,
+                onFixed: {
+                    dismissedGearCountIssue = true
+                    services.detection.recheckGearCountIssue()
+                }
+            )
+        }
 
-        Level2HUDLayer(
-            chip: viewModel.chipText,
-            targets: viewModel.screenTargets,
-            showsRoleLabels: viewModel.showsRoleLabels,
-            showsTimer: viewModel.showsTimer,
-            timerSeconds: viewModel.timerRemaining,
-            isTimerRunning: viewModel.isTimerRunning,
-            showsCheeseCountdown: viewModel.showsCheeseCountdown,
-            solidCheeseCount: viewModel.starCount,
-            showsRestart: viewModel.inputGate.restartVisible,
-            onRestart: { withAnimation { viewModel.tapRestart() } }
-        )
+        if services.detection.hasLostGears && !viewModel.showsResult {
+            CraneLostLayer()
+        } else {
+            GearSelectionTapLayer(
+                targets: viewModel.screenTargets,
+                isEnabled: viewModel.inputGate.gearsTappable,
+                onTap: { viewModel.tapGear($0) }
+            )
 
-        Level2PlayingLayer(
-            showsBars: viewModel.showsBars,
-            strengthLevel: viewModel.strengthLevel,
-            speedLevel: viewModel.speedLevel,
-            showsJoystick: viewModel.showsJoystick,
-            joystickEnabled: viewModel.inputGate.joystickEnabled,
-            hint: viewModel.crankHint,
-            hasElevation: viewModel.hasElevation,
-            onDrag: { point, centre in viewModel.crank.drag(to: point, centre: centre) },
-            onRelease: { viewModel.crank.release() }
-        )
+            Level2HUDLayer(
+                chip: viewModel.chipText,
+                targets: viewModel.screenTargets,
+                showsRoleLabels: viewModel.showsRoleLabels,
+                showsTimer: viewModel.showsTimer,
+                timerSeconds: viewModel.timerRemaining,
+                isTimerRunning: viewModel.isTimerRunning,
+                showsCheeseCountdown: viewModel.showsCheeseCountdown,
+                solidCheeseCount: viewModel.starCount,
+                showsRestart: viewModel.inputGate.restartVisible,
+                onRestart: { withAnimation { viewModel.tapRestart() } }
+            )
 
-        if viewModel.phase == .manualFallback, let failure = services.detection.phase.failure {
-            DetectionManualFallbackSheet(
-                failure: failure,
-                onRetry: { services.detection.start(source: services.arSessionManager) }
+            Level2PlayingLayer(
+                showsBars: viewModel.showsBars,
+                strengthLevel: viewModel.strengthLevel,
+                speedLevel: viewModel.speedLevel,
+                showsJoystick: viewModel.showsJoystick,
+                joystickEnabled: viewModel.inputGate.joystickEnabled,
+                hint: viewModel.crankHint,
+                hasElevation: viewModel.hasElevation,
+                onDrag: { point, centre in viewModel.crank.drag(to: point, centre: centre) },
+                onRelease: { viewModel.crank.release() }
             )
         }
     }
