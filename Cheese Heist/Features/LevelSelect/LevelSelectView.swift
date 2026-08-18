@@ -28,7 +28,9 @@ struct LevelSelectView: View {
                     stops: viewModel.stops,
                     platformShadowOpacity: platformShadowOpacity,
                     onSelectStop: { stop in
-                        _ = viewModel.selectStop(stop)
+                        withAnimation(.easeInOut(duration: AppDuration.transition)) {
+                            _ = viewModel.selectStop(stop)
+                        }
                     }
                 )
                 Spacer()
@@ -40,6 +42,7 @@ struct LevelSelectView: View {
             )
         }
         .statusBarHidden()
+        .onAppear { viewModel.playMainAudio() }
     }
 }
 

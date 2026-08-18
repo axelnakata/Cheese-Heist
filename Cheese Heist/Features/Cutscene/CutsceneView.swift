@@ -24,11 +24,34 @@ struct CutsceneView: View {
                 .ignoresSafeArea()
 
             overlays
+
+            if viewModel.phase == .scanning {
+                homeButton
+            }
         }
         .statusBarHidden()
         .animation(.easeInOut(duration: AppDuration.transition), value: viewModel.phase)
         .onAppear { services.startCutscene(with: viewModel) }
     }
+    /// Only during `.scanning` — the child can skip the surface hunt straight back to
+    /// level select. Once the surface locks and the cheese/cat appear (`.introducing`
+    /// onward) the button goes away. Same size, tint and corner inset as
+    /// `SuccessActionsRow`'s home button (Figma 800:197) so it reads as the same control.
+    private var homeButton: some View {
+        VStack {
+            HStack {
+                LargeCTAButton(icon: .home, size: .celebration, tint: .mainBlue) {
+                    services.cancelCutscene()
+                    services.router.navigate(to: .levelSelect)
+                }
+                .padding(.leading, 86 * scale)
+                .padding(.top, 88 * scale)
+                Spacer()
+            }
+            Spacer()
+        }
+    }
+
     private var yellowGradientOverlay: some View {
         VStack {
             Spacer()

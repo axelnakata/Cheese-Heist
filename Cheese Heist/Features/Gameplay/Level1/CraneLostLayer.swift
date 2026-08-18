@@ -14,11 +14,12 @@ struct CraneLostLayer: View {
     @Environment(\.layoutScale) private var scale
 
     private enum Metric {
-        static let mouseHeight: CGFloat = 110
+        static let mouseHeight: CGFloat = 150
         static let topPadding: CGFloat = 36
         static let boxCornerRadius: CGFloat = 18
-        static let boxPaddingHorizontal: CGFloat = 24
-        static let boxPaddingVertical: CGFloat = 16
+        static let boxPaddingHorizontal: CGFloat = 28
+        static let boxPaddingVertical: CGFloat = 18
+        static let boxMaxWidth: CGFloat = 780
         static let strokeWidth: CGFloat = 2
     }
 
@@ -42,14 +43,16 @@ struct CraneLostLayer: View {
     private var topInstructionBanner: some View {
         ZStack(alignment: .bottomTrailing) {
             Text(Level1Script.craneLostSpeech)
-                .font(.system(size: 20 * scale, weight: .bold, design: .rounded))
+                .appText(AppFont.title)
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
+                .frame(maxWidth: Metric.boxMaxWidth * scale)
+                .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, Metric.boxPaddingHorizontal * scale)
                 .padding(.vertical, Metric.boxPaddingVertical * scale)
                 .background(
                     RoundedRectangle(cornerRadius: Metric.boxCornerRadius * scale, style: .continuous)
-                        .fill(AppGradient.navyChip)
+                        .fill(AppGradient.navyChip.opacity(0.85))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: Metric.boxCornerRadius * scale, style: .continuous)

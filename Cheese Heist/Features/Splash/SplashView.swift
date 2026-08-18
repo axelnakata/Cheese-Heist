@@ -17,10 +17,6 @@ struct SplashView: View {
     /// Set by `RootView` to `router.navigate(to: .cutscene)`.
     let onTapToPlay: () -> Void
 
-    /// Developer navigation shortcuts.
-    var onDevLevel1: (() -> Void)?
-    var onDevLevel2: (() -> Void)?
-
     @State private var viewModel = SplashViewModel()
     
     @State private var isComplete = false
@@ -39,14 +35,6 @@ struct SplashView: View {
                 Spacer()
                 
                 tapToPlayTypewriter
-            }
-
-            VStack {
-                HStack {
-                    Spacer()
-                    devShortcutsOverlay
-                }
-                Spacer()
             }
         }
         .contentShape(Rectangle())
@@ -78,29 +66,6 @@ struct SplashView: View {
         }
         .padding(.bottom, 125)
         .zIndex(1)
-    }
-
-    private var devShortcutsOverlay: some View {
-        HStack(spacing: AppSpacing.s) {
-            Button("Level 1") { onDevLevel1?() }
-                .appText(AppFont.subtitle)
-                .foregroundStyle(AppColor.textOnCamera)
-                .padding(.horizontal, AppSpacing.s)
-                .padding(.vertical, AppSpacing.xs)
-                .background(AppColor.surfaceInstruction)
-                .clipShape(Capsule())
-
-            Button("Level 2") { onDevLevel2?() }
-                .appText(AppFont.subtitle)
-                .foregroundStyle(AppColor.textOnCamera)
-                .padding(.horizontal, AppSpacing.s)
-                .padding(.vertical, AppSpacing.xs)
-                .background(AppColor.surfaceInstruction)
-                .clipShape(Capsule())
-        }
-        .padding(.top, AppSpacing.l)
-        .padding(.trailing, AppSpacing.l)
-        .zIndex(10)
     }
 
     private var logoGroup: some View {

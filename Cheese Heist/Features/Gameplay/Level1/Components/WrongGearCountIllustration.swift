@@ -12,67 +12,57 @@ struct WrongGearCountIllustration: View {
     @Environment(\.layoutScale) private var scale
 
     private enum Metric {
-        static let width: CGFloat = 886
-        static let height: CGFloat = 651
-        static let craneWidth: CGFloat = 720
-        static let badgeSize: CGFloat = 56
+        static let width: CGFloat = 600
+        static let height: CGFloat = 500
+        static let craneWidth: CGFloat = 600
+        static let smallCircleDiameter: CGFloat = 50
+        static let largeCircleDiameter: CGFloat = 120
+        static let strokeWidth: CGFloat = 4
     }
 
     var body: some View {
         ZStack {
-            craneBase
-
-            gearMarker(
-                number: "1",
-                ellipseName: "Ellipse 47",
-                offset: CGSize(width: -68 * scale, height: 18 * scale)
-            )
-
-            gearMarker(
-                number: "2",
-                ellipseName: "Ellipse 48",
-                offset: CGSize(width: 44 * scale, height: 42 * scale)
-            )
-        }
-        .frame(width: Metric.width * scale, height: Metric.height * scale)
-        .accessibilityLabel("Crane illustration with two numbered gear positions")
-    }
-
-    @ViewBuilder
-    private var craneBase: some View {
-        if UIImage(named: "crane") != nil {
             Image("crane")
                 .resizable()
                 .scaledToFit()
                 .frame(width: Metric.craneWidth * scale)
-        } else {
-            Image("crane_guidance")
-                .resizable()
-                .scaledToFit()
-                .frame(width: Metric.width * scale, height: Metric.height * scale)
+
+            gearHighlight(
+                number: "1",
+                diameter: Metric.smallCircleDiameter * scale,
+                circleOffset: CGSize(width: 93 * scale, height: -127 * scale ),
+                numberOffset: CGSize(width: 93 * scale, height: -80 * scale)
+            )
+
+            gearHighlight(
+                number: "2",
+                diameter: Metric.largeCircleDiameter * scale,
+                circleOffset: CGSize(width: 182 * scale, height: -125 * scale),
+                numberOffset: CGSize(width: 182 * scale, height: -40 * scale)
+            )
         }
+        .frame(width: Metric.width * scale, height: Metric.height * scale)
+        .accessibilityLabel("Crane illustration with two highlighted gear positions")
     }
 
-    @ViewBuilder
-    private func gearMarker(number: String, ellipseName: String, offset: CGSize) -> some View {
+    // MARK: - Ring Highlight & Number Text
+    private func gearHighlight(
+        number: String,
+        diameter: CGFloat,
+        circleOffset: CGSize,
+        numberOffset: CGSize
+    ) -> some View {
         ZStack {
-            if UIImage(named: ellipseName) != nil {
-                Image(ellipseName)
-                    .resizable()
-                    .scaledToFit()
-            }
-            if UIImage(named: number) != nil {
-                Image(number)
-                    .resizable()
-                    .scaledToFit()
-            } else {
-                Text(number)
-                    .appText(AppFont.title)
-                    .foregroundStyle(AppColor.textPrimary)
-            }
+            Circle()
+                .stroke(AppColor.accent, lineWidth: Metric.strokeWidth * scale)
+                .frame(width: diameter, height: diameter)
+                .offset(circleOffset)
+
+            Text(number)
+                .appText(AppFont.dialogue)
+                .foregroundColor(AppColor.accent)
+                .offset(numberOffset)
         }
-        .frame(width: Metric.badgeSize * scale, height: Metric.badgeSize * scale)
-        .offset(offset)
     }
 }
 

@@ -52,7 +52,7 @@ final class GearDetectionService {
     /// How long the wrong gear count must persist during setup before the fallback
     /// screen shows. Debounced for the same reason — one frame that miscounts (motion
     /// blur, a hand mid-build) must not fire the fallback on its own.
-    static let gearCountIssueDebounceAfter: TimeInterval = 4.0
+    static let gearCountIssueDebounceAfter: TimeInterval = 2.0
 
     // MARK: - Observable state (slow path, ~2 Hz)
 
@@ -172,6 +172,14 @@ final class GearDetectionService {
         wrongCountCandidate = nil
         firstWrongCountSeenAt = 0
         liveGearCountIssue = nil
+    }
+
+    /// Resets only the debounce candidate, not the shown `liveGearCountIssue`. Called on
+    /// every good frame so the debounce window is honest, without silently dismissing an
+    /// overlay the child hasn't confirmed via "I fixed it!" yet — see `recheckGearCountIssue`.
+    func clearWrongCountCandidate() {
+        wrongCountCandidate = nil
+        firstWrongCountSeenAt = 0
     }
 
     private func clearEstimates() {
