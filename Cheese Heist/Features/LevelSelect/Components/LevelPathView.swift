@@ -12,16 +12,32 @@ import SwiftUI
 struct LevelPathView: View {
 
     let stops: [LevelSelectStop]
+    let stopShadowOpacity: Double
+    let platformShadowOpacity: Double
+    var onSelectStop: ((LevelSelectStop) -> Void)?
+
+    init(
+        stops: [LevelSelectStop],
+        stopShadowOpacity: Double = 0.10,
+        platformShadowOpacity: Double = 0.10,
+        onSelectStop: ((LevelSelectStop) -> Void)? = nil
+    ) {
+        self.stops = stops
+        self.stopShadowOpacity = stopShadowOpacity
+        self.platformShadowOpacity = platformShadowOpacity
+        self.onSelectStop = onSelectStop
+    }
 
     @Environment(\.layoutScale) private var scale
 
     private enum Metric {
         static let startX: CGFloat = 155
         static let spacingX: CGFloat = 290
-        static let midY: CGFloat = 260
+        static let midY: CGFloat = 450
         static let amplitude: CGFloat = 105
-        static let canvasHeight: CGFloat = 520
+        static let canvasHeight: CGFloat = 900
         static let trailingInset: CGFloat = 200
+        static let tapRadius: CGFloat = 90
     }
 
     private var canvasWidth: CGFloat {
@@ -36,7 +52,11 @@ struct LevelPathView: View {
                     .opacity(0.85)
 
                 ForEach(stops) { stop in
-                    LevelPathStopView(kind: stop.kind)
+                    LevelPathStopView(kind: stop.kind, platformShadowOpacity: platformShadowOpacity)
+                        .contentShape(Circle())
+                        .onTapGesture {
+                            onSelectStop?(stop)
+                        }
                         .position(scaledPosition(for: stop))
                 }
             }
