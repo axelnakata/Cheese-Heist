@@ -61,16 +61,23 @@ enum SceneLayoutFromAssignment {
     /// Where the mouse stands: on the beam, tucked in close behind the driver gear
     /// rather than riding on top of it.
     ///
-    /// Both offsets are the driver's own tip radius — derived from the gear, because
-    /// the gear's size is the whole point of the lesson: an 8T is 10mm across and a
-    /// 40T is 42mm. One fixed clearance either leaves the mouse buried in the 40T's
-    /// teeth or standing a whole gear's width off the 8T, depending on which the child
-    /// picked, and the child picks a different one every run. UP puts its feet level
-    /// with the gear's rim, roughly where the beam actually is; BACK (−Z, away from the
-    /// camera — see `CraneFrame`) clears the disc's teeth without wandering off to the
-    /// side of the gear it is meant to be standing behind.
+    /// ═══ UP IS THE BEAM, NOT THE GEAR'S RIM. ═══
+    ///
+    /// This offset used to be the driver's own tip radius, on the reasoning that the
+    /// rim is "roughly where the beam actually is". It is not: the gear is mounted on
+    /// an axle THROUGH the beam, so its centre is the beam's centre and its rim is a
+    /// whole radius above it. On a 40T that put the mouse 21mm up in mid-air with the
+    /// beam nowhere near its feet — which is exactly what the child sees as a floating
+    /// mouse. The beam's own top surface is `beamHalfHeight` above the axle and that
+    /// is the whole of it, the same number for every gear.
+    ///
+    /// BACK is still the driver's tip radius, and that one does have to scale: an 8T
+    /// is 10mm across and a 40T is 42mm, so one fixed clearance either buries the
+    /// mouse in the 40T's teeth or stands it a whole gear's width off the 8T, and the
+    /// child picks a different one every run. −Z is away from the camera — see
+    /// `CraneFrame`.
     static func perch(on driver: GearPlacement) -> simd_float3 {
         let radius = GearGeometry.tipRadius(of: driver.type)
-        return driver.local + simd_float3(0, radius, -radius)
+        return driver.local + simd_float3(0, GearGeometry.beamHalfHeight, -radius)
     }
 }
