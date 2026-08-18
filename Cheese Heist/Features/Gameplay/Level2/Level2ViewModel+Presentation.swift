@@ -16,7 +16,7 @@ extension Level2ViewModel {
     var isResult: Bool { Level2PhasePresentation.isResult(phase) }
     var liftProgress: Double { runner?.progress ?? 0 }
     var crankHint: CrankHint {
-        .of(drive: crank.drive, isPressed: crank.isPressed, hasElevation: (runner?.state.height ?? 0) > 0)
+        .of(drive: crank.drive, isPressed: crank.isPressed, hasElevation: hasElevation)
     }
     var showsBars: Bool { Level2PhasePresentation.showsBars(phase) }
     var showsTimer: Bool { Level2PhasePresentation.showsTimer(phase) }

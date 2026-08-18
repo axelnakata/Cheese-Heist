@@ -11,6 +11,7 @@ enum LargeCTAButtonIcon: String, CaseIterable {
     case back
     case retry
     case info
+    case cutscene
 
     var systemName: String {
         switch self {
@@ -18,6 +19,7 @@ enum LargeCTAButtonIcon: String, CaseIterable {
         case .back: "arrow.left"
         case .retry: "arrow.counterclockwise"
         case .info: "info.circle"
+        case .cutscene: "movieclapper.fill"
         }
     }
 
@@ -28,6 +30,7 @@ enum LargeCTAButtonIcon: String, CaseIterable {
         case .back: "Back"
         case .retry: "Try again"
         case .info: "More information"
+        case .cutscene: "Watch cutscene again"
         }
     }
 }

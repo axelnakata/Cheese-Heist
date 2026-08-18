@@ -22,6 +22,7 @@ struct Level1View: View {
     let services: AppServices
 
     @State private var viewModel: Level1ViewModel
+    @State private var dismissedGearCountIssue = false
 
     init(services: AppServices) {
         self.services = services
@@ -48,8 +49,10 @@ struct Level1View: View {
         }
         .statusBarHidden()
         .animation(.easeInOut(duration: AppDuration.transition), value: viewModel.phase)
-        .onAppear { services.startLevel1(with: viewModel)
-            viewModel.playMainAudio()}
+        .onAppear {
+            services.startLevel1(with: viewModel)
+            viewModel.playMainAudio()
+        }
         .onChange(of: services.detection.trackingVersion) { _, _ in
             viewModel.observeDetection()
         }
@@ -63,12 +66,36 @@ struct Level1View: View {
         .onChange(of: services.detection.isViable) { _, _ in
             viewModel.observeDetection()
         }
+        .onChange(of: services.detection.liveGearCountIssue) { old, new in
+            if old == nil && new != nil {
+                dismissedGearCountIssue = false
+            }
+        }
+        .onChange(of: services.detection.hasLostGears) { _, _ in
+            viewModel.observeDetection()
+        }
     }
 
     @ViewBuilder
     private var overlays: some View {
         if Level1PhasePresentation.showsAlignmentIllustration(viewModel.phase) {
             CraneAlignmentLayer(title: Level1Script.alignment)
+        }
+
+        if viewModel.phase == .aligningCrane || viewModel.phase == .detectingGears,
+           let issue = services.detection.liveGearCountIssue,
+           !dismissedGearCountIssue {
+            WrongGearCountLayer(
+                issue: issue,
+                onFixed: {
+                    dismissedGearCountIssue = true
+                    services.detection.recheckGearCountIssue()
+                }
+            )
+        }
+
+        if services.detection.hasLostGears && !viewModel.showsResult {
+            CraneLostLayer()
         }
 
         GearSelectionTapLayer(
@@ -83,6 +110,7 @@ struct Level1View: View {
             gate: viewModel.inputGate,
             showsRoleLabels: viewModel.showsRoleLabels,
             hint: viewModel.crankHint,
+            hasElevation: viewModel.hasElevation,
             onDrag: { point, centre in viewModel.crank.drag(to: point, centre: centre) },
             onRelease: { viewModel.crank.release() }
         )

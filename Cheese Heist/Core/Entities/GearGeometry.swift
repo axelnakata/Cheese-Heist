@@ -16,6 +16,11 @@ enum GearGeometry {
     /// One module, in metres.
     static let module: Float = 0.001
 
+    /// Half a Technic beam's height, in metres. A beam is one stud (8mm) tall with its
+    /// holes on the centreline, so an axle mounted through it sits exactly this far
+    /// below the surface anything standing on the beam stands on.
+    static let beamHalfHeight: Float = 0.004
+
     /// Pitch radius — where two meshed gears touch.
     static func pitchRadius(teeth: Int) -> Float {
         Float(teeth) * module / 2

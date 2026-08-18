@@ -68,7 +68,6 @@ extension GameplaySceneCoordinator: CraneSceneProviding {
             simd_quatf(angle: Float(state.followerAngle(ratio: ratio)), axis: simd_float3(0, 0, 1))
 
         setPayloadHeight(Float(state.height))
-        mouseModel?.setAnimating(state.isCranking)
     }
 
     /// Moves the cheese up from its resting position and shortens the rope to match.

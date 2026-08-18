@@ -24,6 +24,7 @@ final class Level1ViewModel {
 
     private(set) var phase: Level1Phase = .aligningCrane
     private(set) var inputGate = Level1InputGate.of(.aligningCrane)
+    private(set) var hasElevation = false
 
     private let resultReveal = ResultRevealController()
     var showsResult: Bool { resultReveal.showsResult }
@@ -134,6 +135,7 @@ final class Level1ViewModel {
         director = nil
         runner = nil
         dialogue.reset()
+        hasElevation = false
         onTeardownRequested?()
     }
 
@@ -165,6 +167,11 @@ final class Level1ViewModel {
 
         runner?.drive = inputGate.joystickEnabled ? crank.drive : .holding
         runner?.advance(deltaTime: deltaTime)
+
+        let elevated = (runner?.state.height ?? 0) > 0.0001
+        if elevated != hasElevation {
+            hasElevation = elevated
+        }
     }
 
     // MARK: - Presentation
@@ -177,7 +184,7 @@ final class Level1ViewModel {
     var isSucceeded: Bool { phase == .succeeded }
     var liftProgress: Double { runner?.progress ?? 0 }
     var crankHint: CrankHint {
-        .of(drive: crank.drive, isPressed: crank.isPressed, hasElevation: (runner?.state.height ?? 0) > 0)
+        .of(drive: crank.drive, isPressed: crank.isPressed, hasElevation: hasElevation)
     }
 
     func playMainAudio() {

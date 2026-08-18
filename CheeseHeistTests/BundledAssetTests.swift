@@ -15,6 +15,7 @@
 import Foundation
 import RealityKit
 import Testing
+import simd
 import UIKit
 @testable import Cheese_Heist
 
@@ -161,15 +162,61 @@ struct BundledAssetTests {
         #expect(abs(bounds.min.y) < 0.001)
     }
 
-    /// The fixed export's rig carries real joint motion, not just the blend shapes the
-    /// first export was limited to — this is what makes `setAnimating` do anything.
-    @Test("the mouse model exposes a playable animation")
+    /// The export's rig carries real joint motion for both halves of the idle — the
+    /// breathe AND the blink, the latter on `Eyelid_L`/`Eyelid_R` joints rather than the
+    /// blend shapes RealityKit never imported. `playIdle` is the caller's job once
+    /// attached to a scene (see `MouseModelEntity`'s header); this flag being false
+    /// after calling it means `Mouse.usdz` exposed no playable take at all.
+    @Test("the mouse model's idle loop starts when played")
     func mouseModelAnimates() {
         guard let mouse = MouseModelEntity() else {
             Issue.record("Mouse.usdz did not build")
             return
         }
+        mouse.playIdle()
         #expect(mouse.canAnimate)
+    }
+
+    /// The mouse model faces front-right toward the gear and the viewer (+X, +Z).
+    @Test("the mouse model faces toward the gear and viewer")
+    func mouseFacesViewer() {
+        guard let mouse = MouseModelEntity(),
+              let nose = jointPosition(suffix: "Nose", in: mouse.entity),
+              let tail = jointPosition(suffix: "Tail4", in: mouse.entity) else {
+            Issue.record("Mouse.usdz did not yield a nose and a tail")
+            return
+        }
+
+        // Facing right toward the gear (+X) and forward toward the viewer (+Z).
+        #expect(nose.x > tail.x, "the mouse should face +X toward the gear")
+        #expect(nose.z > tail.z, "the mouse should face +Z toward the camera")
+    }
+
+    /// One named joint's rest-pose position in `root`'s own space — the same walk
+    /// `ModelBounds.measureSkeleton` does, stopping at a joint instead of a box.
+    private func jointPosition(suffix: String, in root: Entity) -> simd_float3? {
+        var queue = [(entity: root, parent: matrix_identity_float4x4)]
+        while let head = queue.first {
+            queue.removeFirst()
+            let world = head.parent * head.entity.transform.matrix
+
+            if let mesh = head.entity.components[ModelComponent.self]?.mesh,
+               let skeleton = mesh.contents.skeletons.first(where: { _ in true }) {
+                let joints = Array(skeleton.joints)
+                var poses = [simd_float4x4](repeating: matrix_identity_float4x4, count: joints.count)
+                for (index, joint) in joints.enumerated() {
+                    let local = joint.restPoseTransform.matrix
+                    poses[index] = joint.parentIndex.map { poses[$0] * local } ?? local
+                }
+                guard let index = joints.firstIndex(where: { $0.name.hasSuffix(suffix) }) else {
+                    return nil
+                }
+                let point = world * poses[index].columns.3
+                return simd_float3(point.x, point.y, point.z)
+            }
+            queue.append(contentsOf: head.entity.children.map { ($0, world) })
+        }
+        return nil
     }
 
     // MARK: - Cutscene assets
@@ -301,6 +348,15 @@ struct BundledAssetTests {
     func blueprintStepsUseDistinctGIFs() {
         let gifNames = BlueprintScript.steps.map(\.gifName)
         #expect(Set(gifNames).count == gifNames.count, "two blueprint steps share a GIF")
+    }
+
+    // MARK: - Detection fallback assets
+
+    @Test("detection fallback imagesets resolve in the asset catalogue", arguments: [
+        "crane", "1", "2", "Ellipse 47", "Ellipse 48", "mouse_panic1", "Mouse_searching"
+    ])
+    func detectionFallbackImagesResolve(_ name: String) {
+        #expect(UIImage(named: name) != nil, "\(name) is missing from Assets.xcassets")
     }
 }
 

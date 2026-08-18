@@ -40,21 +40,35 @@ struct SceneLayoutFromAssignmentTests {
 
     /// A fixed clearance buries the mouse in a 40T's teeth or floats it a centimetre
     /// over an 8T, and the child picks a different gear every run.
-    @Test("the mouse's perch is derived from the driver's own size")
-    func perchScalesWithTheDriver() {
+    @Test("the mouse's clearance behind the driver is derived from the driver's own size")
+    func clearanceScalesWithTheDriver() {
         let onSmall = layout(driver: small, follower: large)
         let onLarge = layout(driver: large, follower: small)
 
         let smallRadius = GearGeometry.tipRadius(of: .eightTooth)
         let largeRadius = GearGeometry.tipRadius(of: .fortyTooth)
 
-        #expect(onSmall?.mousePerch.y == small.local.y + smallRadius)
-        #expect(onLarge?.mousePerch.y == large.local.y + largeRadius)
-        #expect((onLarge?.mousePerch.y ?? 0) > (onSmall?.mousePerch.y ?? 0))
-
         // BEHIND the driver, not centred on it — away from the camera along local -Z.
         #expect(onSmall?.mousePerch.z == small.local.z - smallRadius)
         #expect(onLarge?.mousePerch.z == large.local.z - largeRadius)
+        #expect((onLarge?.mousePerch.z ?? 0) < (onSmall?.mousePerch.z ?? 0))
+    }
+
+    /// The regression this replaced: the perch's height used to be the driver's tip
+    /// radius, which is the RIM. The gear is mounted through the beam, so its rim is a
+    /// whole radius above the surface the mouse is supposed to be standing on — 21mm of
+    /// thin air on a 40T. Height is the beam, and the beam does not change size.
+    @Test("the mouse stands on the beam, at the same height whichever gear drives")
+    func perchStandsOnTheBeam() {
+        let onSmall = layout(driver: small, follower: large)
+        let onLarge = layout(driver: large, follower: small)
+
+        #expect(onSmall?.mousePerch.y == small.local.y + GearGeometry.beamHalfHeight)
+        #expect(onLarge?.mousePerch.y == large.local.y + GearGeometry.beamHalfHeight)
+        #expect(onLarge?.mousePerch.y == onSmall?.mousePerch.y)
+
+        // Well under the 40T's rim, which is where it used to float.
+        #expect((onLarge?.mousePerch.y ?? 0) < large.local.y + GearGeometry.tipRadius(of: .fortyTooth))
     }
 
     /// Swapping the assignment must move the mouse and the rope and nothing else.

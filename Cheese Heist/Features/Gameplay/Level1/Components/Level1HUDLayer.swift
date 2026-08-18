@@ -15,6 +15,7 @@ struct Level1HUDLayer: View {
     let gate: Level1InputGate
     let showsRoleLabels: Bool
     var hint: CrankHint = .idle
+    var hasElevation: Bool = false
     let onDrag: (CGPoint, CGPoint) -> Void
     let onRelease: () -> Void
 
@@ -51,7 +52,7 @@ struct Level1HUDLayer: View {
                 Spacer()
                 if gate.joystickEnabled {
                     CircularJoystickView(
-                        isEnabled: true, hint: hint,
+                        isEnabled: true, hint: hint, hasElevation: hasElevation,
                         onDrag: onDrag, onRelease: onRelease
                     )
                     .transition(.scale.combined(with: .opacity))

@@ -19,7 +19,12 @@ struct RootView: View {
             case .cutscene:
                 CutsceneView(services: services)
             case .blueprint:
-                BlueprintView(onFinished: { services.router.navigate(to: .level1) })
+                BlueprintView(onFinished: { services.router.navigate(to: .levelSelect) })
+            case .levelSelect:
+                LevelSelectView(
+                    onPlay: { services.router.navigate(to: .level1) },
+                    onWatchCutscene: { services.router.navigate(to: .cutscene) }
+                )
             case .level1:
                 Level1View(services: services)
             case .level2:

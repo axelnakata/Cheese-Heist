@@ -89,4 +89,32 @@ struct CrankInputViewModelTests {
         let crank = CrankInputViewModel()
         #expect(crank.drive == .falling)
     }
+
+    @Test("crank hint transitions from falling to idle when elevation hits bottom")
+    func hintTransitionsWhenElevationHitsBottom() {
+        let crank = CrankInputViewModel()
+        // Untouched while elevated -> falling hint (auto-unwinds)
+        let elevatedHint = CrankHint.of(
+            drive: crank.drive, isPressed: crank.isPressed, hasElevation: true
+        )
+        #expect(elevatedHint == .falling)
+
+        // Untouched at bottom -> idle hint (auto-unwind stopped)
+        let bottomHint = CrankHint.of(
+            drive: crank.drive, isPressed: crank.isPressed, hasElevation: false
+        )
+        #expect(bottomHint == .idle)
+
+        // Pressed & turning backwards mid-lift -> wrongWay (red alert)
+        let midLiftWrongWay = CrankHint.of(
+            drive: .falling, isPressed: true, hasElevation: true
+        )
+        #expect(midLiftWrongWay == .wrongWay)
+
+        // Pressed & turning backwards at the bottom -> idle (stays clockwise focused)
+        let bottomWrongWay = CrankHint.of(
+            drive: .falling, isPressed: true, hasElevation: false
+        )
+        #expect(bottomWrongWay == .idle)
+    }
 }

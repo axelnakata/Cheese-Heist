@@ -47,6 +47,9 @@ final class GearDetectionService {
     /// How long the gears can be out of frame before the HUD says so.
     static let trackingLostAfter: TimeInterval = 1.5
 
+    /// How long the wrong gear count must persist during setup before the fallback screen shows.
+    static let gearCountIssueDebounceAfter: TimeInterval = 1.0
+
     // MARK: - Observable state (slow path, ~2 Hz)
 
     internal(set) var phase: GearDetectionPhase = .idle
@@ -55,6 +58,7 @@ final class GearDetectionService {
     internal(set) var lockProgress: Double = 0
     internal(set) var isTracking = false
     internal(set) var hasLostGears = false
+    internal(set) var liveGearCountIssue: GearCountIssue?
 
     /// Bumped every time `craneFrame` and `gears` are republished. Views watch this
     /// rather than the frame itself, which is float noise and would fire constantly.
@@ -100,6 +104,8 @@ final class GearDetectionService {
     @ObservationIgnored var searchStartedAt: TimeInterval = 0
     @ObservationIgnored var lastTrackedAt: TimeInterval = 0
     @ObservationIgnored var lastSeenCount = 0
+    @ObservationIgnored var wrongCountCandidate: GearCountIssue?
+    @ObservationIgnored var firstWrongCountSeenAt: TimeInterval = 0
 
     @ObservationIgnored private var timer: Timer?
 
@@ -139,6 +145,7 @@ final class GearDetectionService {
         source = nil
         isTracking = false
         hasLostGears = false
+        clearWrongGearCount()
         if phase == .searching { phase = .idle }
     }
 
@@ -149,11 +156,23 @@ final class GearDetectionService {
         phase = .idle
     }
 
+    /// Clears the current mismatch issue and restarts the debounce window when the user taps "I fixed it!".
+    func recheckGearCountIssue() {
+        clearWrongGearCount()
+    }
+
+    func clearWrongGearCount() {
+        wrongCountCandidate = nil
+        firstWrongCountSeenAt = 0
+        liveGearCountIssue = nil
+    }
+
     private func clearEstimates() {
         vote.reset()
         viability.reset()
         estimator.reset()
         publisher.reset()
+        clearWrongGearCount()
         gears = []
         craneFrame = nil
         lockProgress = 0

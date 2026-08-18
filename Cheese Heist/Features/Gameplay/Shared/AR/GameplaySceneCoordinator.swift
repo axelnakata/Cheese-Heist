@@ -257,6 +257,7 @@ private extension GameplaySceneCoordinator {
 
         mouse = model
         mouseHolder = holder
+        model.playIdle()
     }
 
     /// The rope and the cheese share one holder, which sits at the follower's axle.
