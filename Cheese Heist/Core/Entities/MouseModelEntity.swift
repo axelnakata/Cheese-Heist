@@ -79,6 +79,11 @@ final class MouseModelEntity {
     /// The grounded, scaled, turned container: ours to position; never to reparent.
     let entity: Entity
 
+    /// Retained controller so RealityKit keeps the continuous skeletal animation running.
+    private var playback: AnimationPlaybackController?
+    private var idleTakeResource: AnimationResource?
+    private weak var animatedOwner: Entity?
+
     /// Whether the idle loop actually found something to play. Exposed for
     /// `BundledAssetTests` — a regression here reads on device as a mouse that stands
     /// perfectly still, neither breathing nor blinking, with nothing else visibly wrong.
@@ -114,15 +119,19 @@ final class MouseModelEntity {
         )
         entity = holder
 
-        startIdleLoop(in: model)
+        if let owner = Self.animationOwner(in: model),
+           let idle = Self.idleTake(from: owner) {
+            self.animatedOwner = owner
+            self.idleTakeResource = idle
+            playIdle()
+        }
     }
 
-    /// Starts the breathe-and-blink loop, once, for good. There is no stop: see the
-    /// header.
-    private func startIdleLoop(in model: Entity) {
-        guard let owner = Self.animationOwner(in: model),
-              let idle = Self.idleTake(from: owner) else { return }
-        owner.playAnimation(idle.repeat())
+    /// Starts or ensures the breathe-and-blink idle loop is running.
+    func playIdle() {
+        guard let animatedOwner, let idleTakeResource else { return }
+        if let playback, playback.isPlaying { return }
+        playback = animatedOwner.playAnimation(idleTakeResource.repeat())
         canAnimate = true
     }
 
