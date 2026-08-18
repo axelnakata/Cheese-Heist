@@ -46,8 +46,11 @@ extension GearDetectionService {
             guard !isTracking else { return noteTrackingGap() }
             vote.reset()
             lockProgress = 0
+            noteWrongGearCount(count: detections.count)
             return
         }
+
+        clearWrongGearCount()
 
         guard let captured = source?.captureData(from: frame) else { return }
         solve(detections: detections, captured: captured)
@@ -102,6 +105,7 @@ extension GearDetectionService {
         publish(solution, detections: detections, force: true)
         phase = .locked
         lockProgress = 1
+        clearWrongGearCount()
 
         // The timer stays alive and changes job. Everything after this is free
         // improvement, paid for by movement the child was going to do anyway.
@@ -128,11 +132,23 @@ extension GearDetectionService {
         trackingVersion += 1
     }
 
+    /// Records an off-count frame during setup. Debounced ~1s so a single stray frame
+    /// doesn't flip the fallback screen on.
+    func noteWrongGearCount(count: Int, now: TimeInterval = CACurrentMediaTime()) {
+        let issue: GearCountIssue = count < Self.requiredGearCount ? .tooFew : .tooMany(count)
+        if wrongCountCandidate != issue {
+            wrongCountCandidate = issue
+            firstWrongCountSeenAt = now
+        } else if now - firstWrongCountSeenAt >= Self.gearCountIssueDebounceAfter {
+            liveGearCountIssue = issue
+        }
+    }
+
     /// The gears were not usable this frame. Nothing moves; after a moment the HUD is
     /// told, so the child knows why the overlay has stopped keeping up.
-    private func noteTrackingGap() {
+    func noteTrackingGap(now: TimeInterval = CACurrentMediaTime()) {
         guard !hasLostGears,
-              CACurrentMediaTime() - lastTrackedAt > Self.trackingLostAfter else { return }
+              now - lastTrackedAt > Self.trackingLostAfter else { return }
         hasLostGears = true
     }
 
