@@ -6,6 +6,7 @@ enum AppRoute: Equatable, Sendable {
     case surfaceScan
     case cutscene
     case blueprint
+    case levelSelect
     case level1
     case level2
     case unsupportedDevice

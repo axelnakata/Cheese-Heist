@@ -27,6 +27,11 @@ enum Level1Script {
 
     static let alignment = "Put your crane on the center of the camera"
 
+    static let wrongGearCountTitle = "I need exactly 2 gears to build this crane! Let's fix that and try again."
+    static let wrongGearCountButton = "I fixed it!"
+
+    static let craneLostSpeech = "Where did your crane go? Put your crane back on the center of the camera!"
+
     static let successTitle = "CHEESE SECURED!"
     static let successSubtitle = "Great job!"
 }

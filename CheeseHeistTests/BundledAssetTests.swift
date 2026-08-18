@@ -347,5 +347,14 @@ struct BundledAssetTests {
         let gifNames = BlueprintScript.steps.map(\.gifName)
         #expect(Set(gifNames).count == gifNames.count, "two blueprint steps share a GIF")
     }
+
+    // MARK: - Detection fallback assets
+
+    @Test("detection fallback imagesets resolve in the asset catalogue", arguments: [
+        "crane", "1", "2", "Ellipse 47", "Ellipse 48", "mouse_panic1", "Mouse_searching"
+    ])
+    func detectionFallbackImagesResolve(_ name: String) {
+        #expect(UIImage(named: name) != nil, "\(name) is missing from Assets.xcassets")
+    }
 }
 
