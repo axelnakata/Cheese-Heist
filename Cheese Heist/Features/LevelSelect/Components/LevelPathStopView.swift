@@ -12,10 +12,12 @@ import SwiftUI
 
 struct LevelPathStopView: View {
 
+    static let defaultShadowOpacity: Double = 0.5
+
     let kind: LevelSelectStop.Kind
     let platformShadowOpacity: Double
 
-    init(kind: LevelSelectStop.Kind, platformShadowOpacity: Double = 0.10) {
+    init(kind: LevelSelectStop.Kind, platformShadowOpacity: Double = defaultShadowOpacity) {
         self.kind = kind
         self.platformShadowOpacity = platformShadowOpacity
     }
