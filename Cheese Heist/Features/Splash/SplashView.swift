@@ -122,8 +122,8 @@ struct SplashView: View {
             Image("splash_mouse")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 222)
-                .offset(x: 205, y: 257)
+                .frame(width: 245)
+                .offset(x: 170, y: 255)
         }
         .allowsHitTesting(false)
     }
