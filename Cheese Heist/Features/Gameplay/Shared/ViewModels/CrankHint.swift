@@ -23,6 +23,9 @@ enum CrankHint: Equatable, Sendable {
 
     static func of(drive: CrankDrive, isPressed: Bool, hasElevation: Bool) -> CrankHint {
         guard isPressed else { return hasElevation ? .falling : .idle }
-        return drive == .falling ? .wrongWay : .none
+        if drive == .falling {
+            return hasElevation ? .wrongWay : .idle
+        }
+        return .none
     }
 }

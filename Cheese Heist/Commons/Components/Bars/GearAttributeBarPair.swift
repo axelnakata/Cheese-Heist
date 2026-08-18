@@ -22,7 +22,10 @@ struct GearAttributeBarPair: View {
     @Environment(\.layoutScale) private var scale
 
     private enum Metric {
-        static let iconSize: CGFloat = 32
+        static let iconWidth: CGFloat = 32
+        static let iconHeight: CGFloat = 24
+        static let labelGap: CGFloat = 4
+        static let columnWidth: CGFloat = 48
         static let iconGap: CGFloat = 8
         static let rowGap: CGFloat = 8
     }
@@ -51,15 +54,20 @@ struct GearAttributeBarPair: View {
     }
 
     private func iconLabel(icon: String, text: String) -> some View {
-        VStack(spacing: 2 * scale) {
+        VStack(spacing: Metric.labelGap * scale) {
             Image(icon)
                 .resizable()
                 .scaledToFit()
-                .frame(width: Metric.iconSize * scale, height: Metric.iconSize * scale)
+                .frame(
+                    width: Metric.iconWidth * scale,
+                    height: Metric.iconHeight * scale,
+                    alignment: .bottom
+                )
             Text(text)
                 .appText(AppFont.caption)
                 .foregroundStyle(AppColor.textOnCamera)
         }
+        .frame(width: Metric.columnWidth * scale)
     }
 
     /// Strength bar colour: red at 1/3, green at 2+/3.

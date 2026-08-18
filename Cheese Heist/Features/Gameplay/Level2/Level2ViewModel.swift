@@ -24,6 +24,7 @@ final class Level2ViewModel {
 
     private(set) var phase: Level2Phase = .aligningCrane
     private(set) var inputGate = Level2InputGate.of(.aligningCrane)
+    private(set) var hasElevation = false
 
     private let resultReveal = ResultRevealController()
     var showsResult: Bool { resultReveal.showsResult }
@@ -169,6 +170,7 @@ final class Level2ViewModel {
         shakeStartTime = nil
         outcome = nil
         starCount = 3
+        hasElevation = false
     }
 
     /// Called every render frame during cranking AND the stall shake — a stalled pair
@@ -244,6 +246,11 @@ final class Level2ViewModel {
 
         runner?.drive = inputGate.joystickEnabled ? crank.drive : .holding
         runner?.advance(deltaTime: deltaTime)
+
+        let elevated = (runner?.state.height ?? 0) > 0.0001
+        if elevated != hasElevation {
+            hasElevation = elevated
+        }
 
         tickTimer(deltaTime: deltaTime)
         tickShake(deltaTime: deltaTime)

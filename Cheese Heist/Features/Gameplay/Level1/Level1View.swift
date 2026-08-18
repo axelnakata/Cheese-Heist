@@ -110,6 +110,7 @@ struct Level1View: View {
             gate: viewModel.inputGate,
             showsRoleLabels: viewModel.showsRoleLabels,
             hint: viewModel.crankHint,
+            hasElevation: viewModel.hasElevation,
             onDrag: { point, centre in viewModel.crank.drag(to: point, centre: centre) },
             onRelease: { viewModel.crank.release() }
         )

@@ -86,6 +86,7 @@ struct Level2View: View {
             showsJoystick: viewModel.showsJoystick,
             joystickEnabled: viewModel.inputGate.joystickEnabled,
             hint: viewModel.crankHint,
+            hasElevation: viewModel.hasElevation,
             onDrag: { point, centre in viewModel.crank.drag(to: point, centre: centre) },
             onRelease: { viewModel.crank.release() }
         )

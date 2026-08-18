@@ -45,11 +45,26 @@
 //  confirmed by dumping `entity.availableAnimations` on the simulator rather than
 //  trusting the raw USD.
 //
-//  It starts in `init` and is never stopped. It used to be gated on the joystick, which
-//  is backwards: a mouse that holds its breath the moment the child lets go of the
-//  crank reads as a broken model, not a resting one. Nothing outside this file has an
-//  opinion about it any more, so it keeps breathing through the lift, through the
-//  success overlay, and until the coordinator tears the scene down.
+//  It starts the moment `GameplaySceneCoordinator.buildMouse` parents this into `root`,
+//  and is never stopped. It used to be gated on the joystick, which is backwards: a
+//  mouse that holds its breath the moment the child lets go of the crank reads as a
+//  broken model, not a resting one. Nothing outside this file has an opinion about it
+//  any more, so it keeps breathing through the lift, through the success overlay, and
+//  until the coordinator tears the scene down.
+//
+//  ═══ NOT STARTED FROM `init`. ═══
+//
+//  `init` builds `entity` detached — no parent, no scene. `playAnimation` called there
+//  handed back a controller that reported `isPlaying == true` forever after but never
+//  actually advanced a single frame, because RealityKit only drives an
+//  `AnimationPlaybackController` once its entity is inside a live `Scene`. `buildMouse`
+//  used to call `playIdle()` a second time right after attaching to `root`, meant as
+//  the real start — but the guard below saw the first (inert) controller's `isPlaying`
+//  and skipped it, so the mouse loaded, measured, and grounded correctly and simply
+//  never moved. `CatOrbitDriver` has the working version of this same order:
+//  `root.addChild(stage.catHolder)` happens before `CatOrbitDriver.init` ever calls
+//  `playAnimation`. `playIdle()` is now the caller's job, after attachment — see
+//  `buildMouse`.
 //
 //  `idleTake` picks the clip out by being the only take with a finite, non-zero
 //  duration, which is also what filters out the importer's zero-length placeholders —
@@ -123,14 +138,13 @@ final class MouseModelEntity {
            let idle = Self.idleTake(from: owner) {
             self.animatedOwner = owner
             self.idleTakeResource = idle
-            playIdle()
         }
     }
 
-    /// Starts or ensures the breathe-and-blink idle loop is running.
+    /// Starts the breathe-and-blink idle loop. Call only after `entity` is attached
+    /// under a live scene — see the header.
     func playIdle() {
         guard let animatedOwner, let idleTakeResource else { return }
-        if let playback, playback.isPlaying { return }
         playback = animatedOwner.playAnimation(idleTakeResource.repeat())
         canAnimate = true
     }

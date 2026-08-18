@@ -164,14 +164,16 @@ struct BundledAssetTests {
 
     /// The export's rig carries real joint motion for both halves of the idle — the
     /// breathe AND the blink, the latter on `Eyelid_L`/`Eyelid_R` joints rather than the
-    /// blend shapes RealityKit never imported. `init` starts it and nothing stops it, so
-    /// this flag being false is a mouse that stands frozen for the whole level.
-    @Test("the mouse model starts its idle loop on build")
+    /// blend shapes RealityKit never imported. `playIdle` is the caller's job once
+    /// attached to a scene (see `MouseModelEntity`'s header); this flag being false
+    /// after calling it means `Mouse.usdz` exposed no playable take at all.
+    @Test("the mouse model's idle loop starts when played")
     func mouseModelAnimates() {
         guard let mouse = MouseModelEntity() else {
             Issue.record("Mouse.usdz did not build")
             return
         }
+        mouse.playIdle()
         #expect(mouse.canAnimate)
     }
 

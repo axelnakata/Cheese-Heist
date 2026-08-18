@@ -30,6 +30,10 @@ struct CircularJoystickView: View {
     /// now, if any.
     var hint: CrankHint = .idle
 
+    /// True while the cheese is elevated above the table. When false, the knob is locked
+    /// against counter-clockwise rotation and auto-unwinding is halted.
+    var hasElevation: Bool = false
+
     let onDrag: (CGPoint, CGPoint) -> Void
     let onRelease: () -> Void
 
@@ -154,6 +158,9 @@ struct CircularJoystickView: View {
         let delta = CrankRatchet.delta(from: lastTouchAngle, to: touch)
         guard abs(delta) > CrankRatchet.deadband else { return }
 
+        // When the cheese is at the bottom, lock counter-clockwise rotation: only clockwise turns are permitted.
+        if !hasElevation && delta < 0 { return }
+
         let clamped = min(max(delta, -Metric.maxStepRadians), Metric.maxStepRadians)
         knobAngle = Angle(radians: knobAngle.radians + clamped)
         snapToNotch()
@@ -165,10 +172,10 @@ struct CircularJoystickView: View {
     /// moment `hint` stops being `.falling`, whether that is because the cheese reached
     /// the table or because a finger landed on the ring again.
     private func autoUnwind() async {
-        guard hint == .falling else { return }
-        while !Task.isCancelled {
+        guard hint == .falling, hasElevation else { return }
+        while !Task.isCancelled && hasElevation {
             try? await Task.sleep(for: Metric.autoUnwindInterval)
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, hasElevation else { return }
             stepBack()
         }
     }
@@ -211,7 +218,7 @@ struct CircularJoystickView: View {
 
 #Preview("Falling") {
     CircularJoystickView(
-        isEnabled: true, hint: .falling, onDrag: { _, _ in }, onRelease: {}
+        isEnabled: true, hint: .falling, hasElevation: true, onDrag: { _, _ in }, onRelease: {}
     )
     .previewBackdrop(.cameraFeed)
 }
