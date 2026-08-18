@@ -1,11 +1,11 @@
 {
   "images" : [
     {
-      "filename" : "level_select_glow.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "level_select_glow.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

@@ -6,113 +6,6 @@
 //
 
 
-//import AVFoundation
-//
-//final class AudioManager: NSObject, AVAudioPlayerDelegate {
-//    static let shared = AudioManager()
-//    
-//    private var bgmPlayer: AVAudioPlayer?
-//    private var sfxPlayer: AVAudioPlayer?
-//    private var onAudioFinished: (() -> Void)?
-//    
-//    private(set) var currentBGMTrack: AudioTrack?
-//
-//    private override init() {
-//        super.init()
-//        setupAudioSession()
-//    }
-//    
-//    private func setupAudioSession() {
-//        do {
-//            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
-//            try AVAudioSession.sharedInstance().setActive(true)
-//        } catch {
-//            print("❌ Gagal set up AVAudioSession: \(error)")
-//        }
-//    }
-//
-//    // MARK: - Method BGM (Looping, mendukung .mp3 dan .wav)
-//    func playBGM(_ track: AudioTrack) {
-//        if currentBGMTrack == track && bgmPlayer?.isPlaying == true {
-//            return
-//        }
-//
-//        // Membaca fileName dan fileExtension otomatis dari enum AudioTrack
-//        guard let url = Bundle.main.url(forResource: track.fileName, withExtension: track.fileExtension) else {
-//            print("❌ File BGM tidak ditemukan di Bundle: '\(track.fileName).\(track.fileExtension)'")
-//            return
-//        }
-//
-//        do {
-//            bgmPlayer = try AVAudioPlayer(contentsOf: url)
-//            bgmPlayer?.numberOfLoops = -1 // Loop selamanya
-//            bgmPlayer?.volume = 1.0
-//            bgmPlayer?.prepareToPlay()
-//            
-//            if bgmPlayer?.play() == true {
-//                print("🔊 Memutar BGM: \(track.fileName).\(track.fileExtension)")
-//                currentBGMTrack = track
-//            }
-//        } catch {
-//            print("❌ Error AVAudioPlayer BGM: \(error.localizedDescription)")
-//        }
-//    }
-//
-//    func stopBGM() {
-//        bgmPlayer?.stop()
-//        currentBGMTrack = nil
-//    }
-//
-//    // MARK: - Method SFX (Sequential Playback, mendukung .mp3 dan .wav)
-//    func playSFXAndWait(track: AudioTrack) async {
-//        guard let url = Bundle.main.url(forResource: track.fileName, withExtension: track.fileExtension) else {
-//            print("❌ File SFX tidak ditemukan di Bundle: '\(track.fileName).\(track.fileExtension)'")
-//            return
-//        }
-//
-//        await withCheckedContinuation { continuation in
-//            do {
-//                sfxPlayer = try AVAudioPlayer(contentsOf: url)
-//                sfxPlayer?.delegate = self
-//              
-//                self.onAudioFinished = {
-//                    continuation.resume()
-//                }
-//                
-//                sfxPlayer?.prepareToPlay()
-//                sfxPlayer?.play()
-//                print("🔊 Memutar SFX: \(track.fileName).\(track.fileExtension)")
-//            } catch {
-//                print("❌ Gagal memutar SFX: \(error.localizedDescription)")
-//                continuation.resume()
-//            }
-//        }
-//    }
-//
-//    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-//        let callback = onAudioFinished
-//        onAudioFinished = nil
-//        callback?()
-//    }
-//    
-//    // MARK: - Method SFX Instant (Cocok untuk Tap / Button Click)
-//    func playSFX(_ track: AudioTrack) {
-//        guard let url = Bundle.main.url(forResource: track.fileName, withExtension: track.fileExtension) else {
-//            print("❌ File SFX tidak ditemukan: '\(track.fileName).\(track.fileExtension)'")
-//            return
-//        }
-//
-//        do {
-//            sfxPlayer = try AVAudioPlayer(contentsOf: url)
-//            sfxPlayer?.volume = 1.0
-//            sfxPlayer?.prepareToPlay()
-//            sfxPlayer?.play()
-//        } catch {
-//            print("❌ Gagal memutar SFX Tap: \(error.localizedDescription)")
-//        }
-//    }   
-//}
-
 import AVFoundation
 
 final class AudioManager: NSObject, AVAudioPlayerDelegate {
@@ -121,18 +14,26 @@ final class AudioManager: NSObject, AVAudioPlayerDelegate {
     private var bgmPlayer: AVAudioPlayer?
     private var sfxPlayer: AVAudioPlayer?
     private var activeSFXPlayers: [AVAudioPlayer] = []
+    private var loopingSFXPlayers: [AudioTrack: AVAudioPlayer] = [:]
+    
+    private var sfxPools: [AudioTrack: [AVAudioPlayer]] = [:]
+    private var sfxPoolIndexes: [AudioTrack: Int] = [:]
+    private let maxPoolSizePerTrack = 4
+    
     private var onAudioFinished: (() -> Void)?
     
     // Properti Pengaturan Volume (0.0 sampai 1.0)
-    var bgmVolume: Float = 0.35 { // Set default BGM lebih kecil agar SFX jelas
-        didSet {
-            bgmPlayer?.volume = bgmVolume
-        }
+    var bgmVolume: Float = 0.35 {
+        didSet { bgmPlayer?.volume = bgmVolume }
     }
     
     var sfxVolume: Float = 1.0 {
         didSet {
             sfxPlayer?.volume = sfxVolume
+            for player in loopingSFXPlayers.values { player.volume = sfxVolume }
+            for pool in sfxPools.values {
+                for player in pool { player.volume = sfxVolume }
+            }
         }
     }
     
@@ -141,6 +42,7 @@ final class AudioManager: NSObject, AVAudioPlayerDelegate {
     private override init() {
         super.init()
         setupAudioSession()
+        preloadJoystickSFX() // 🛠️ Preload otomatis saat AudioManager dibuat
     }
     
     private func setupAudioSession() {
@@ -151,57 +53,110 @@ final class AudioManager: NSObject, AVAudioPlayerDelegate {
             print("❌ Gagal set up AVAudioSession: \(error)")
         }
     }
+    
+    // 🛠️ Fungsi Preload khusus untuk SFX joystick
+    func preloadJoystickSFX() {
+        preloadSFX(.gear1)
+        preloadSFX(.gear2)
+    }
 
-    // MARK: - Method BGM (Dengan pengaturan volume BGM yang lebih lembut)
+    private func preloadSFX(_ track: AudioTrack) {
+        guard sfxPools[track] == nil else { return }
+        guard let url = Bundle.main.url(forResource: track.fileName, withExtension: track.fileExtension) else { return }
+        
+        var players: [AVAudioPlayer] = []
+        for _ in 0..<maxPoolSizePerTrack {
+            if let player = try? AVAudioPlayer(contentsOf: url) {
+                player.volume = sfxVolume
+                player.prepareToPlay()
+                players.append(player)
+            }
+        }
+        sfxPools[track] = players
+        sfxPoolIndexes[track] = 0
+    }
+
+    // MARK: - Method BGM
     func playBGM(_ track: AudioTrack) {
         if currentBGMTrack == track && bgmPlayer?.isPlaying == true { return }
 
-        guard let url = Bundle.main.url(forResource: track.fileName, withExtension: track.fileExtension) else {
-            print("❌ File BGM tidak ditemukan: '\(track.fileName).\(track.fileExtension)'")
-            return
-        }
+        guard let url = Bundle.main.url(forResource: track.fileName, withExtension: track.fileExtension) else { return }
 
         do {
             bgmPlayer = try AVAudioPlayer(contentsOf: url)
             bgmPlayer?.numberOfLoops = -1
-            bgmPlayer?.volume = bgmVolume // <--- Terapkan bgmVolume (0.35)
+            bgmPlayer?.volume = bgmVolume
             bgmPlayer?.prepareToPlay()
             bgmPlayer?.play()
             currentBGMTrack = track
         } catch {
-            print("❌ Error AVAudioPlayer BGM: \(error.localizedDescription)")
+            print("❌ Error BGM: \(error.localizedDescription)")
         }
     }
 
-    // MARK: - Method SFX Instant (Memutar SFX dengan volume kencang)
+    // MARK: - Method SFX Rapid/Fast Playback
     func playSFX(_ track: AudioTrack) {
-        guard let url = Bundle.main.url(forResource: track.fileName, withExtension: track.fileExtension) else {
-            print("❌ File SFX tidak ditemukan: '\(track.fileName).\(track.fileExtension)'")
-            return
+        if sfxPools[track] == nil {
+            preloadSFX(track)
         }
 
+        guard let pool = sfxPools[track], !pool.isEmpty else { return }
+        
+        let currentIndex = sfxPoolIndexes[track] ?? 0
+        let player = pool[currentIndex]
+        
+        player.currentTime = 0
+        player.volume = sfxVolume
+        player.play()
+        
+        sfxPoolIndexes[track] = (currentIndex + 1) % pool.count
+    }
+   
+    // MARK: - Method SFX Looping & Stopping
+    func playLoopingSFX(_ track: AudioTrack) {
+        if let existingPlayer = loopingSFXPlayers[track], existingPlayer.isPlaying { return }
+        guard let url = Bundle.main.url(forResource: track.fileName, withExtension: track.fileExtension) else { return }
+        
         do {
             let player = try AVAudioPlayer(contentsOf: url)
-            player.volume = sfxVolume // <--- Terapkan sfxVolume (1.0)
+            player.numberOfLoops = -1
+            player.volume = sfxVolume
             player.prepareToPlay()
             player.play()
-            
-            activeSFXPlayers.append(player)
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + player.duration + 0.1) { [weak self] in
-                self?.activeSFXPlayers.removeAll { $0 == player }
-            }
+            loopingSFXPlayers[track] = player
         } catch {
-            print("❌ Gagal memutar SFX: \(error.localizedDescription)")
+            print("❌ Gagal memutar Looping SFX: \(error.localizedDescription)")
+        }
+    }
+        
+    func stopSFX(_ track: AudioTrack) {
+        if let player = loopingSFXPlayers[track] {
+            player.stop()
+            loopingSFXPlayers.removeValue(forKey: track)
+        }
+        
+        if let pool = sfxPools[track] {
+            for player in pool where player.isPlaying {
+                player.stop()
+            }
+        }
+    }
+        
+    func stopAllSFX() {
+        activeSFXPlayers.forEach { $0.stop() }
+        activeSFXPlayers.removeAll()
+        
+        loopingSFXPlayers.values.forEach { $0.stop() }
+        loopingSFXPlayers.removeAll()
+        
+        for pool in sfxPools.values {
+            pool.forEach { $0.stop() }
         }
     }
 
-    // MARK: - Method SFX Sequential (Untuk Bintang / Success)
+    // MARK: - Method SFX Sequential
     func playSFXAndWait(track: AudioTrack) async {
-        guard let url = Bundle.main.url(forResource: track.fileName, withExtension: track.fileExtension) else {
-            print("❌ File SFX tidak ditemukan: '\(track.fileName).\(track.fileExtension)'")
-            return
-        }
+        guard let url = Bundle.main.url(forResource: track.fileName, withExtension: track.fileExtension) else { return }
 
         await withCheckedContinuation { continuation in
             do {
@@ -212,7 +167,6 @@ final class AudioManager: NSObject, AVAudioPlayerDelegate {
                 sfxPlayer?.prepareToPlay()
                 sfxPlayer?.play()
             } catch {
-                print("❌ Gagal memutar SFX: \(error.localizedDescription)")
                 continuation.resume()
             }
         }
@@ -224,15 +178,15 @@ final class AudioManager: NSObject, AVAudioPlayerDelegate {
         callback?()
     }
 
-    // MARK: - BGM fade
-    //
+    // MARK: - BGM Fade
+    
     // The BGM keeps playing through detection and role selection and only needs to get
-    // OUT OF THE WAY while the child is cranking and while the win/lose SFX plays — so
-    // this ramps the existing player's volume rather than stopping and restarting it,
-    // which is what makes the return smooth instead of a hard cut back in.
-
-    /// Ramps the BGM down to silent. The player keeps running at zero volume rather than
-    /// pausing, so `fadeInBGM` resumes in place instead of restarting the track.
+    //    // OUT OF THE WAY while the child is cranking and while the win/lose SFX plays — so
+    //    // this ramps the existing player's volume rather than stopping and restarting it,
+    //    // which is what makes the return smooth instead of a hard cut back in.
+    //
+    //    /// Ramps the BGM down to silent. The player keeps running at zero volume rather than
+    //    /// pausing, so `fadeInBGM` resumes in place instead of restarting the track.
     func fadeOutBGM(duration: TimeInterval = AppDuration.audioFade) {
         bgmPlayer?.setVolume(0, fadeDuration: duration)
     }

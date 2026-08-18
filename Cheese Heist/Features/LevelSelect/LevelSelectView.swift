@@ -3,19 +3,15 @@
 //  Cheese Heist
 //
 //  Figma "Little Einstein Board" 431:92 — the level-select frame, wired in
-//  `RootView` between `.blueprint` and `.level1`. `onPlay` and `onWatchCutscene` are
-//  handed in rather than owned here, same as `BlueprintView.onFinished` — this view
-//  describes the screen, `RootView` decides where its buttons lead. Which level
-//  "Play" starts, and a future "Select Level" entry from the result screen, are both
-//  routing decisions still to be made; this view only needs the current selection to
-//  exist, not to be reachable from anywhere else yet.
+//  `RootView` between `.blueprint` and `.level1`/`.level2`. Tapping an unlocked stop
+//  moves the mouse to that stop, and "Play" navigates to the selected level.
 //
 
 import SwiftUI
 
 struct LevelSelectView: View {
 
-    let onPlay: () -> Void
+    let onPlay: (AppRoute) -> Void
     let onWatchCutscene: () -> Void
 
     @State private var viewModel = LevelSelectViewModel()
@@ -26,16 +22,24 @@ struct LevelSelectView: View {
 
             VStack {
                 Spacer()
-                LevelPathView(stops: viewModel.stops)
+                LevelPathView(
+                    stops: viewModel.stops,
+                    onSelectStop: { stop in
+                        _ = viewModel.selectStop(stop)
+                    }
+                )
                 Spacer()
             }
 
-            LevelSelectActionBar(onPlay: onPlay, onWatchCutscene: onWatchCutscene)
+            LevelSelectActionBar(
+                onPlay: { onPlay(viewModel.selectedRoute) },
+                onWatchCutscene: onWatchCutscene
+            )
         }
         .statusBarHidden()
     }
 }
 
 #Preview {
-    LevelSelectView(onPlay: {}, onWatchCutscene: {})
+    LevelSelectView(onPlay: { _ in }, onWatchCutscene: {})
 }

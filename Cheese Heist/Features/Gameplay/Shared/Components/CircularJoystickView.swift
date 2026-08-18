@@ -23,9 +23,9 @@ import SwiftUI
 import UIKit
 
 struct CircularJoystickView: View {
-
+    
     let isEnabled: Bool
-
+    
     /// Which of the three teaching animations `CrankDirectionGuide` should show right
     /// now, if any.
     var hint: CrankHint = .idle
@@ -36,24 +36,28 @@ struct CircularJoystickView: View {
 
     let onDrag: (CGPoint, CGPoint) -> Void
     let onRelease: () -> Void
-
+    
     @Environment(\.layoutScale) private var scale
-
+    
     /// The knob's own continuous angle. Moved only by RELATIVE motion — see
     /// `follow(_:)` — never snapped to the finger's absolute position, so it is safe
     /// to round for display without ever having jumped anywhere first.
     @State private var knobAngle: Angle = .degrees(90)
-
+    
     /// What actually gets drawn — `knobAngle` rounded to the nearest notch. A real
     /// hand-crank ratchets over teeth, not a smooth sweep, and a knob that glides
     /// reads as a slider rather than a crank.
     @State private var notchAngle: Angle = .degrees(90)
-
+    
     /// The finger's angle on the PREVIOUS sample, so `follow(_:)` can measure how far
     /// it just turned rather than where it currently is. Nil between touches, which is
     /// what makes a fresh touch calibrate silently instead of teleporting the knob.
     @State private var lastTouchAngle: Angle?
-
+    
+    @State private var isDragging: Bool = false
+    
+    private let hapticGenerator = UIImpactFeedbackGenerator(style: .rigid)
+    
     private enum Metric {
         static let ring: CGFloat = 200
         static let knob: CGFloat = 62
@@ -68,7 +72,7 @@ struct CircularJoystickView: View {
         /// response time to see the knob travel and enough give to overshoot a hair,
         /// so each tooth reads as a mechanical click landing rather than a value
         /// snapping instantly to place.
-        static let notchSpring: Animation = .spring(response: 0.16, dampingFraction: 0.45)
+//        static let notchSpring: Animation = .spring(response: 0.16, dampingFraction: 0.45)
         /// Radians — the same unit `CrankRatchet.delta` returns. A hard ceiling on how
         /// far ONE touch sample may move the knob, however far the finger itself moved:
         /// about 60°, several times a realistic per-frame rotation and nowhere near a
@@ -79,18 +83,18 @@ struct CircularJoystickView: View {
         /// touching it.
         static let autoUnwindInterval: Duration = .milliseconds(150)
     }
-
+    
     var body: some View {
         let size = Metric.ring * scale
-
+        
         ZStack {
             ControlPlate(diameter: size)
-
+            
             CircularJoystickRingShape(lineWidth: AppStroke.control * scale)
                 .stroke(AppColor.textOnCamera, lineWidth: AppStroke.control * scale)
-
+            
             CrankDirectionGuide(diameter: size, hint: hint)
-
+            
             knob(size: size)
         }
         .frame(width: size, height: size)
@@ -98,9 +102,12 @@ struct CircularJoystickView: View {
         .gesture(drag(in: size))
         .opacity(isEnabled ? 1 : Metric.disabledOpacity)
         .allowsHitTesting(isEnabled)
+        .onAppear {
+            hapticGenerator.prepare()
+        }
         .task(id: hint) { await autoUnwind() }
     }
-
+    
     /// The pale disc that sits under the finger — drawn at the snapped notch, not the
     /// raw finger position, so it clicks from tooth to tooth instead of gliding.
     private func knob(size: CGFloat) -> some View {
@@ -109,13 +116,13 @@ struct CircularJoystickView: View {
             .shadow(color: AppColor.controlShadow, radius: AppSpacing.xs * scale)
             .frame(width: Metric.knob * scale, height: Metric.knob * scale)
             .offset(offset(for: notchAngle, radius: size / 2))
-            .animation(Metric.notchSpring, value: notchAngle)
+            .animation(isDragging ? nil : .spring(response: 0.15, dampingFraction: 0.65), value: notchAngle)
     }
-
+    
     private func offset(for angle: Angle, radius: CGFloat) -> CGSize {
         CGSize(width: cos(angle.radians) * radius, height: sin(angle.radians) * radius)
     }
-
+    
     /// ═══ THE KNOB NOW FOLLOWS BOTH WAYS — BUT NEVER TELEPORTS. ═══
     ///
     /// It used to only ever move clockwise, because a backward turn did nothing to the
@@ -129,6 +136,7 @@ struct CircularJoystickView: View {
     private func drag(in size: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
+                isDragging = true
                 let centre = CGPoint(x: size / 2, y: size / 2)
                 let touch = Angle(radians: atan2(
                     value.location.y - centre.y, value.location.x - centre.x
@@ -137,11 +145,14 @@ struct CircularJoystickView: View {
                 onDrag(value.location, centre)
             }
             .onEnded { _ in
+                isDragging = false
                 lastTouchAngle = nil
+                AudioManager.shared.stopSFX(.gear1)
+                AudioManager.shared.stopSFX(.gear2)
                 onRelease()
             }
     }
-
+    
     /// Moves the knob by however far the finger ITSELF rotated since the last sample —
     /// never to the finger's absolute position. Two things fall out of that for free:
     ///
@@ -151,11 +162,27 @@ struct CircularJoystickView: View {
     ///   finger actually turns from there.
     /// - A violent flick across the ring can only ever advance the knob by
     ///   `Metric.maxStepRadians` in one sample, however far the finger itself moved.
+//    private func follow(_ touch: Angle) {
+//        defer { lastTouchAngle = touch }
+//        guard let lastTouchAngle else { return }
+//        
+//        let delta = CrankRatchet.delta(from: lastTouchAngle, to: touch)
+//        guard abs(delta) > CrankRatchet.deadband else { return }
+//        
+//        let clamped = min(max(delta, -Metric.maxStepRadians), Metric.maxStepRadians)
+//        knobAngle = Angle(radians: knobAngle.radians + clamped)
+//        snapToNotch()
+//    }
+    
     private func follow(_ touch: Angle) {
-        defer { lastTouchAngle = touch }
-        guard let lastTouchAngle else { return }
-
-        let delta = CrankRatchet.delta(from: lastTouchAngle, to: touch)
+        guard let previousTouch = lastTouchAngle else {
+            lastTouchAngle = touch
+            return
+        }
+        
+        let delta = CrankRatchet.delta(from: previousTouch, to: touch)
+        lastTouchAngle = touch
+        
         guard abs(delta) > CrankRatchet.deadband else { return }
 
         // When the cheese is at the bottom, lock counter-clockwise rotation: only clockwise turns are permitted.
@@ -165,7 +192,7 @@ struct CircularJoystickView: View {
         knobAngle = Angle(radians: knobAngle.radians + clamped)
         snapToNotch()
     }
-
+    
     /// While nobody is touching the ring and the crane is unwinding — released mid-lift,
     /// or the wrong-way turn that started it has itself ended — the knob still has to
     /// spin backward to show the rope paying back out. `.task(id:)` cancels this the
@@ -179,12 +206,12 @@ struct CircularJoystickView: View {
             stepBack()
         }
     }
-
+    
     private func stepBack() {
         knobAngle = Angle(degrees: knobAngle.degrees - Metric.notchDegrees)
         snapToNotch()
     }
-
+    
     /// Rounds the continuous knob angle to the nearest ratchet tooth, in EITHER
     /// direction. The click the child feels is this discrete jump firing — not the
     /// drag, which is still perfectly smooth underneath.
@@ -192,8 +219,23 @@ struct CircularJoystickView: View {
         let step = Metric.notchDegrees
         let next = Angle(degrees: (knobAngle.degrees / step).rounded() * step)
         guard next != notchAngle else { return }
+        
+        var deltaDegrees = next.degrees - notchAngle.degrees
+        while deltaDegrees > 180 { deltaDegrees -= 360 }
+        while deltaDegrees < -180 { deltaDegrees += 360 }
+        
+        DispatchQueue.main.async {
+            if deltaDegrees > 0 {
+                AudioManager.shared.playSFX(.gear1)
+            } else {
+                AudioManager.shared.playSFX(.gear2)
+            }
+        }
+        
         notchAngle = next
-        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+        
+        hapticGenerator.impactOccurred()
+        hapticGenerator.prepare()
     }
 }
 
