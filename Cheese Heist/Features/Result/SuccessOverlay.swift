@@ -29,6 +29,7 @@ struct SuccessOverlay: View {
     let title: String
     let subtitle: String
     let onRetry: () -> Void
+    let onHome: () -> Void
     var onNext: (() -> Void)?
 
     /// How many cheese stars are "earned" (0–3). Defaults to 3 for L1 compatibility.
@@ -49,6 +50,7 @@ struct SuccessOverlay: View {
         subtitle: String,
         earnedStars: Int? = nil,
         onRetry: @escaping () -> Void,
+        onHome: @escaping () -> Void,
         onNext: (() -> Void)? = nil,
         starCount: Int = 3,
         timeRemaining: Int? = nil,
@@ -58,6 +60,7 @@ struct SuccessOverlay: View {
         self.title = title
         self.subtitle = subtitle
         self.onRetry = onRetry
+        self.onHome = onHome
         self.onNext = onNext
         self.starCount = earnedStars ?? starCount
         self.timeRemaining = timeRemaining
@@ -91,6 +94,7 @@ struct SuccessOverlay: View {
             celebration
             SuccessActionsRow(
                 onRetry: onRetry,
+                onHome: onHome,
                 onNext: onNext,
                 showNext: showNext
             )
@@ -166,6 +170,7 @@ struct SuccessOverlay: View {
         subtitle: "Great job!",
         earnedStars: 3,
         onRetry: {},
+        onHome: {},
         onNext: {}
     )
     .previewBackdrop(.cameraFeed)
@@ -176,9 +181,10 @@ struct SuccessOverlay: View {
         title: "CHEESE SECURED!",
         subtitle: "Great gear combination! Just the right mix!",
         onRetry: {},
-        onNext: {},
+        onHome: {},
         starCount: 2,
-        timeRemaining: 13
+        timeRemaining: 13,
+        showNext: false
     )
         .previewBackdrop(.cameraFeed)
 }
@@ -188,9 +194,10 @@ struct SuccessOverlay: View {
         title: "Phew, got it!",
         subtitle: "Your gears pulled through!",
         onRetry: {},
-        onNext: {},
+        onHome: {},
         starCount: 1,
-        timeRemaining: 2
+        timeRemaining: 2,
+        showNext: false
     )
         .previewBackdrop(.cameraFeed)
 }
@@ -200,6 +207,7 @@ struct SuccessOverlay: View {
         title: "Let's use a stronger gear!",
         subtitle: "Try switching which gear i should turn!",
         onRetry: {},
+        onHome: {},
         starCount: 0,
         mouseAssetName: MouseSprite.fail.assetName,
         showNext: false
@@ -212,6 +220,7 @@ struct SuccessOverlay: View {
         title: "So close! Let's be quicker!",
         subtitle: "Try switching which gear i should turn!",
         onRetry: {},
+        onHome: {},
         starCount: 0,
         mouseAssetName: MouseSprite.fail.assetName,
         showNext: false

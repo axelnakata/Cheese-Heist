@@ -2,7 +2,7 @@
 //  Level1View.swift
 //  Cheese Heist
 //
-//  The Level 1 screen: the live camera, four overlay layers over it, and the success
+//  The Level 1 screen: the live camera, the overlay layers over it, and the success
 //  overlay on top.
 //
 //  SUCCESS IS AN OVERLAY, NOT A ROUTE (parent PRD §10 lists it as a screen). Routing
@@ -42,6 +42,7 @@ struct Level1View: View {
                     subtitle: Level1Script.successSubtitle,
                     earnedStars: viewModel.earnedStars,
                     onRetry: { withAnimation { viewModel.handle(.tappedRetry) } },
+                    onHome: { services.router.navigate(to: .levelSelect) },
                     onNext: { services.router.navigate(to: .level2) }
                 )
                 .transition(.opacity)
@@ -76,15 +77,27 @@ struct Level1View: View {
         }
     }
 
+    /// Pre-lock only, and mutually exclusive with the alignment illustration — see
+    /// `showsAlignmentIllustration`'s doc comment.
+    private var showsWrongGearCount: Bool {
+        (viewModel.phase == .aligningCrane || viewModel.phase == .detectingGears)
+            && services.detection.liveGearCountIssue != nil
+            && !dismissedGearCountIssue
+    }
+
+    /// Nothing is interactive while the crane is lost mid-game — the joystick comes off
+    /// screen along with everything else, not just visually behind the scrim.
+    private var effectiveGate: Level1InputGate {
+        services.detection.hasLostGears ? .none : viewModel.inputGate
+    }
+
     @ViewBuilder
     private var overlays: some View {
-        if Level1PhasePresentation.showsAlignmentIllustration(viewModel.phase) {
+        if Level1PhasePresentation.showsAlignmentIllustration(viewModel.phase) && !showsWrongGearCount {
             CraneAlignmentLayer(title: Level1Script.alignment)
         }
 
-        if viewModel.phase == .aligningCrane || viewModel.phase == .detectingGears,
-           let issue = services.detection.liveGearCountIssue,
-           !dismissedGearCountIssue {
+        if showsWrongGearCount, let issue = services.detection.liveGearCountIssue {
             WrongGearCountLayer(
                 issue: issue,
                 onFixed: {
@@ -100,14 +113,14 @@ struct Level1View: View {
 
         GearSelectionTapLayer(
             targets: viewModel.screenTargets,
-            isEnabled: viewModel.inputGate.gearsTappable,
+            isEnabled: effectiveGate.gearsTappable,
             onTap: { viewModel.tapGear($0) }
         )
 
         Level1HUDLayer(
             chip: viewModel.chipText,
             targets: viewModel.screenTargets,
-            gate: viewModel.inputGate,
+            gate: effectiveGate,
             showsRoleLabels: viewModel.showsRoleLabels,
             hint: viewModel.crankHint,
             hasElevation: viewModel.hasElevation,
@@ -122,12 +135,5 @@ struct Level1View: View {
             mouseAnchor: viewModel.mouseAnchor,
             onRevealComplete: { viewModel.dialogue.markRevealComplete() }
         )
-
-        if viewModel.phase == .manualFallback, let failure = services.detection.phase.failure {
-            DetectionManualFallbackSheet(
-                failure: failure,
-                onRetry: { services.detection.start(source: services.arSessionManager) }
-            )
-        }
     }
 }

@@ -10,6 +10,7 @@ enum LargeCTAButtonIcon: String, CaseIterable {
     case next
     case back
     case retry
+    case home
     case info
     case cutscene
 
@@ -18,6 +19,7 @@ enum LargeCTAButtonIcon: String, CaseIterable {
         case .next: "arrow.right"
         case .back: "arrow.left"
         case .retry: "arrow.counterclockwise"
+        case .home: "house.fill"
         case .info: "info.circle"
         case .cutscene: "movieclapper.fill"
         }
@@ -29,6 +31,7 @@ enum LargeCTAButtonIcon: String, CaseIterable {
         case .next: "Next"
         case .back: "Back"
         case .retry: "Try again"
+        case .home: "Home"
         case .info: "More information"
         case .cutscene: "Watch cutscene again"
         }

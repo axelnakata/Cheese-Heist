@@ -43,7 +43,7 @@ struct Level2HUDLayer: View {
             if showsRestart {
                 VStack {
                     HStack {
-                        LargeCTAButton(icon: .retry, size: .standard, action: onRestart)
+                        LargeCTAButton(icon: .retry, size: .standard, tint: .secondaryYellow, action: onRestart)
                         Spacer()
                     }
                     Spacer()

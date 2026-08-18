@@ -26,14 +26,11 @@ enum Level1PhasePresentation {
         }
     }
 
-    /// Whether the alignment illustration and its scrim are on screen.
-    ///
-    /// Includes `manualFallback`: there is no manual picker, only "try looking again",
-    /// and that button restarts the detector without changing the phase — the
-    /// illustration has to already be behind the sheet so it is what's left once the
-    /// sheet dismisses.
+    /// Whether the alignment illustration and its scrim are on screen. `Level1View`
+    /// hides it in favour of `WrongGearCountLayer` while a live gear-count issue is up —
+    /// the two never show at once.
     static func showsAlignmentIllustration(_ phase: Level1Phase) -> Bool {
-        phase == .aligningCrane || phase == .detectingGears || phase == .manualFallback
+        phase == .aligningCrane || phase == .detectingGears
     }
 
     /// Driver/follower labels and the rope, shown once a driver has been picked and

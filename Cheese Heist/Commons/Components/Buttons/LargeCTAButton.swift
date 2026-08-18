@@ -12,6 +12,7 @@ struct LargeCTAButton: View {
 
     let icon: LargeCTAButtonIcon
     var size: LargeCTAButtonSize = .standard
+    var tint: LargeCTAButtonTint = .primary
     let action: () -> Void
 
     @Environment(\.layoutScale) private var scale
@@ -20,11 +21,15 @@ struct LargeCTAButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: icon.systemName)
-                .font(.system(size: size.symbolSize * scale, weight: .bold))
+                .font(.system(size: size.symbolSize(for: icon) * scale, weight: .bold))
                 .foregroundStyle(AppColor.textOnAccent)
                 .frame(width: size.width * scale, height: size.height * scale)
         }
-        .buttonStyle(AccentPillButtonStyle(cornerRadius: size.cornerRadius))
+        .buttonStyle(AccentPillButtonStyle(
+            cornerRadius: size.cornerRadius,
+            fillColor: tint.fillColor,
+            pressedFillColor: tint.pressedFillColor
+        ))
         .opacity(isEnabled ? 1 : 0.45)
         .accessibilityLabel(icon.accessibilityLabel)
     }

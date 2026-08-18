@@ -47,6 +47,19 @@ enum LargeCTAButtonSize {
         }
     }
 
+    /// Symbol size tailored per icon. The solid `house.fill` icon has a larger visual bounding
+    /// box than the stroke-based arrows, so it is drawn slightly smaller for balanced optics.
+    func symbolSize(for icon: LargeCTAButtonIcon) -> CGFloat {
+        switch (self, icon) {
+        case (.celebration, .home):
+            56
+        case (.standard, .home):
+            28
+        default:
+            symbolSize
+        }
+    }
+
     /// ═══ NOT `AppRadius.pill`. ═══
     ///
     /// That token is 63.57 — chosen to exceed half of the 78.14pt button height so the

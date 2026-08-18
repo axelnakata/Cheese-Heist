@@ -29,10 +29,12 @@ extension Level1ViewModel {
             guard let locked = lockedPair() else { return }
             handle(.detectionLocked(pair: locked.pair, assignment: locked.assignment))
 
-        case .timedOut, .unavailable:
-            handle(.detectionTimedOut)
-
-        case .idle, .searching:
+        // Detection never times out during Level 1 setup (`DetectionTimeoutPolicy
+        // .disabled`) — `.timedOut` cannot occur. `.unavailable` (the detector failed
+        // to load) is a build/device problem, not a flow this phase machine models;
+        // the alignment illustration is what's left on screen, same as `.idle`/
+        // `.searching`.
+        case .idle, .searching, .timedOut, .unavailable:
             break
         }
     }

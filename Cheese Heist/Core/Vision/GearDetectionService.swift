@@ -44,11 +44,15 @@ final class GearDetectionService {
     /// The app simulates exactly one driver/follower pair.
     static let requiredGearCount = 2
 
-    /// How long the gears can be out of frame before the HUD says so.
-    static let trackingLostAfter: TimeInterval = 1.5
+    /// How long the gears can be out of frame before the HUD says so. Debounced so a
+    /// single stray frame (a hand passing over the crane, a quick tilt) doesn't flip the
+    /// crane-lost fallback on.
+    static let trackingLostAfter: TimeInterval = 4.0
 
-    /// How long the wrong gear count must persist during setup before the fallback screen shows.
-    static let gearCountIssueDebounceAfter: TimeInterval = 1.0
+    /// How long the wrong gear count must persist during setup before the fallback
+    /// screen shows. Debounced for the same reason — one frame that miscounts (motion
+    /// blur, a hand mid-build) must not fire the fallback on its own.
+    static let gearCountIssueDebounceAfter: TimeInterval = 4.0
 
     // MARK: - Observable state (slow path, ~2 Hz)
 
@@ -94,7 +98,10 @@ final class GearDetectionService {
 
     @ObservationIgnored let estimator = CranePlaneEstimator()
     @ObservationIgnored let publisher = GearTrackingPublisher()
-    @ObservationIgnored let timeout = DetectionTimeoutPolicy.standard
+    /// Var, not let: Level 1 disables this (`.disabled`) since it has no manual-fallback
+    /// screen to hand off to and relies entirely on the live setup/crane-lost overlays.
+    /// Level 2 leaves it at `.standard` — see `AppServices.startLevel1`/`startLevel2`.
+    @ObservationIgnored var timeout = DetectionTimeoutPolicy.standard
     @ObservationIgnored var vote = GearPairVote()
     @ObservationIgnored var viability = DetectionViabilityGate()
 

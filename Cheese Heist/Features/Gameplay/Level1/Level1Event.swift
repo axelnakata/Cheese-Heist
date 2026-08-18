@@ -20,10 +20,6 @@ enum Level1Event: Equatable, Sendable {
     /// A pair was locked, with the roles the teaching run starts on.
     case detectionLocked(pair: GearPair, assignment: GearRoleAssignment)
 
-    /// Twelve seconds without a lock. There is no manual fallback — "Try looking
-    /// again" restarts the detector and waits for a real lock, same as the first try.
-    case detectionTimedOut
-
     /// The lift reached this phase's ceiling.
     case liftReachedCeiling
 
