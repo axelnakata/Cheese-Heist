@@ -9,33 +9,54 @@
 import SwiftUI
 
 struct WrongGearCountLayer: View {
-
+    
     let issue: GearCountIssue
     let onFixed: () -> Void
-
+    
     @Environment(\.layoutScale) private var scale
-
+    
     private enum Metric {
-        static let titleGap: CGFloat = 28
-        static let buttonGap: CGFloat = 36
-        static let sideMargin: CGFloat = 60
+        static let titleGap: CGFloat = 40
+        static let buttonGap: CGFloat = 40
+        static let sideMargin: CGFloat = 100
+        static let buttonPaddingHorizontal: CGFloat = 32
+        static let buttonPaddingVertical: CGFloat = 12
     }
-
+    
     var body: some View {
         ZStack {
             ScrimOverlay()
-
-            VStack(spacing: Metric.titleGap * scale) {
+            
+            VStack(spacing:1) {
+                Spacer(minLength: 50)
+                
                 Text(Level1Script.wrongGearCountTitle)
                     .appText(AppFont.largeTitle)
                     .foregroundStyle(AppColor.textOnCamera)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-
+                
                 WrongGearCountIllustration()
-
-                PrimaryButton(title: Level1Script.wrongGearCountButton, action: onFixed)
-                    .padding(.top, Metric.buttonGap * scale)
+                
+                // MARK: - Button "I fixed it!"
+                Button(action: onFixed) {
+                    Text("I fixed it!")
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, Metric.buttonPaddingHorizontal * scale)
+                        .padding(.vertical, Metric.buttonPaddingVertical * scale)
+                        .background(
+                            Capsule()
+                                .fill(AppColor.accent)
+                        )
+                        .overlay(
+                            Capsule()
+                                .stroke(Color.white, lineWidth: 2 * scale)
+                        )
+                        .shadow(color: .black.opacity(0.15), radius: 6 * scale, x: 0, y: 3 * scale)
+                }
+                
+                Spacer(minLength: 50)
             }
             .padding(.horizontal, Metric.sideMargin * scale)
         }
