@@ -12,18 +12,15 @@ import SwiftUI
 struct LevelPathView: View {
 
     let stops: [LevelSelectStop]
-    let stopShadowOpacity: Double
     let platformShadowOpacity: Double
     var onSelectStop: ((LevelSelectStop) -> Void)?
 
     init(
         stops: [LevelSelectStop],
-        stopShadowOpacity: Double = 0.10,
-        platformShadowOpacity: Double = 0.10,
+        platformShadowOpacity: Double = LevelPathStopView.defaultShadowOpacity,
         onSelectStop: ((LevelSelectStop) -> Void)? = nil
     ) {
         self.stops = stops
-        self.stopShadowOpacity = stopShadowOpacity
         self.platformShadowOpacity = platformShadowOpacity
         self.onSelectStop = onSelectStop
     }
@@ -31,7 +28,7 @@ struct LevelPathView: View {
     @Environment(\.layoutScale) private var scale
 
     private enum Metric {
-        static let startX: CGFloat = 155
+        static let startX: CGFloat = 200
         static let spacingX: CGFloat = 290
         static let midY: CGFloat = 450
         static let amplitude: CGFloat = 105

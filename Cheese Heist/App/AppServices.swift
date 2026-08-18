@@ -112,6 +112,9 @@ final class AppServices {
         detection.onTrackingUpdate = { [weak self] frame, gears in
             self?.trackingUpdate(frame: frame, gears: gears)
         }
+        // No manual-fallback screen to hand off to — the setup/crane-lost overlays are
+        // the whole of Level 1's feedback, so the search never gives up on its own.
+        detection.timeout = .disabled
         detection.start(source: arSessionManager)
         startLevel1Ticker()
     }
@@ -129,6 +132,8 @@ final class AppServices {
         detection.onTrackingUpdate = { [weak self] frame, gears in
             self?.trackingUpdateLevel2(frame: frame, gears: gears)
         }
+        // Restored explicitly in case the previous attempt was Level 1, which disables it.
+        detection.timeout = .standard
         detection.start(source: arSessionManager)
         startLevel2Ticker()
     }

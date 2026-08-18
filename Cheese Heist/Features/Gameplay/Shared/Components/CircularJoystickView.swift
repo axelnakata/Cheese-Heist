@@ -55,7 +55,10 @@ struct CircularJoystickView: View {
     @State private var lastTouchAngle: Angle?
     
     @State private var isDragging: Bool = false
-    
+
+    /// Last time a notch fired haptic + SFX feedback — see `Metric.feedbackCooldown`.
+    @State private var lastFeedbackAt: Date = .distantPast
+
     private let hapticGenerator = UIImpactFeedbackGenerator(style: .rigid)
     
     private enum Metric {
@@ -82,6 +85,13 @@ struct CircularJoystickView: View {
         /// How often the knob clicks back one notch while unwinding with nobody
         /// touching it.
         static let autoUnwindInterval: Duration = .milliseconds(150)
+        /// Floor between two notch feedback hits (haptic + SFX). `Gear1`/`Gear2`
+        /// run 480ms/183ms and the Taptic Engine can't keep up either — both are
+        /// far longer than the ~15-30ms between notches during a fast spin, so
+        /// without a floor a quick turn stacks overlapping audio and floods
+        /// haptic calls the engine just queues up and lags behind. The knob still
+        /// clicks through every notch at full speed; only the feedback is capped.
+        static let feedbackCooldown: TimeInterval = 0.09
     }
     
     var body: some View {
@@ -224,18 +234,15 @@ struct CircularJoystickView: View {
         while deltaDegrees > 180 { deltaDegrees -= 360 }
         while deltaDegrees < -180 { deltaDegrees += 360 }
         
-        DispatchQueue.main.async {
-            if deltaDegrees > 0 {
-                AudioManager.shared.playSFX(.gear1)
-            } else {
-                AudioManager.shared.playSFX(.gear2)
-            }
-        }
-        
         notchAngle = next
-        
-        hapticGenerator.impactOccurred()
-        hapticGenerator.prepare()
+
+        let now = Date()
+        if now.timeIntervalSince(lastFeedbackAt) >= Metric.feedbackCooldown {
+            lastFeedbackAt = now
+            AudioManager.shared.playSFX(deltaDegrees > 0 ? .gear1 : .gear2)
+            hapticGenerator.impactOccurred()
+            hapticGenerator.prepare()
+        }
     }
 }
 

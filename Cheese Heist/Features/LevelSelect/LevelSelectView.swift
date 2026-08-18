@@ -13,10 +13,12 @@ struct LevelSelectView: View {
 
     let onPlay: (AppRoute) -> Void
     let onWatchCutscene: () -> Void
+    var platformShadowOpacity: Double = LevelPathStopView.defaultShadowOpacity
 
     @State private var viewModel = LevelSelectViewModel()
 
     var body: some View {
+        
         ZStack {
             LevelSelectBackground()
 
@@ -24,6 +26,7 @@ struct LevelSelectView: View {
                 Spacer()
                 LevelPathView(
                     stops: viewModel.stops,
+                    platformShadowOpacity: platformShadowOpacity,
                     onSelectStop: { stop in
                         _ = viewModel.selectStop(stop)
                     }

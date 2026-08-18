@@ -13,6 +13,9 @@ import Testing
 @MainActor
 struct GearDetectionServiceTests {
 
+    static let debounce = GearDetectionService.gearCountIssueDebounceAfter
+    static let trackingLost = GearDetectionService.trackingLostAfter
+
     @Test("liveGearCountIssue enters .tooFew after debounce duration")
     func wrongGearCountDebouncesTooFew() {
         let service = GearDetectionService()
@@ -23,12 +26,12 @@ struct GearDetectionServiceTests {
         service.noteWrongGearCount(count: 1, now: 100.0)
         #expect(service.liveGearCountIssue == nil)
 
-        // Half a second later (t = 100.5) — still under 1.0s debounce
-        service.noteWrongGearCount(count: 1, now: 100.5)
+        // Still under the debounce window
+        service.noteWrongGearCount(count: 1, now: 100.0 + Self.debounce / 2)
         #expect(service.liveGearCountIssue == nil)
 
-        // Debounce expires at t = 101.0
-        service.noteWrongGearCount(count: 1, now: 101.0)
+        // Debounce expires
+        service.noteWrongGearCount(count: 1, now: 100.0 + Self.debounce)
         #expect(service.liveGearCountIssue == .tooFew)
     }
 
@@ -39,7 +42,7 @@ struct GearDetectionServiceTests {
         service.noteWrongGearCount(count: 3, now: 200.0)
         #expect(service.liveGearCountIssue == nil)
 
-        service.noteWrongGearCount(count: 3, now: 201.0)
+        service.noteWrongGearCount(count: 3, now: 200.0 + Self.debounce)
         #expect(service.liveGearCountIssue == .tooMany(3))
     }
 
@@ -48,7 +51,7 @@ struct GearDetectionServiceTests {
         let service = GearDetectionService()
 
         service.noteWrongGearCount(count: 1, now: 300.0)
-        service.noteWrongGearCount(count: 1, now: 301.1)
+        service.noteWrongGearCount(count: 1, now: 300.0 + Self.debounce + 0.1)
         #expect(service.liveGearCountIssue == .tooFew)
 
         service.clearWrongGearCount()
@@ -61,19 +64,20 @@ struct GearDetectionServiceTests {
         let service = GearDetectionService()
 
         service.noteWrongGearCount(count: 1, now: 400.0)
-        service.noteWrongGearCount(count: 1, now: 401.0)
+        service.noteWrongGearCount(count: 1, now: 400.0 + Self.debounce)
         #expect(service.liveGearCountIssue == .tooFew)
 
         // User taps "I fixed it!"
         service.recheckGearCountIssue()
         #expect(service.liveGearCountIssue == nil)
 
-        // New tick with 1 gear still wrong at t = 401.1 starts fresh debounce window
-        service.noteWrongGearCount(count: 1, now: 401.1)
+        // New tick with 1 gear still wrong starts a fresh debounce window
+        let rearmedAt = 400.0 + Self.debounce + 0.1
+        service.noteWrongGearCount(count: 1, now: rearmedAt)
         #expect(service.liveGearCountIssue == nil)
 
-        // Debounce expires at t = 402.1
-        service.noteWrongGearCount(count: 1, now: 402.1)
+        // Debounce expires
+        service.noteWrongGearCount(count: 1, now: rearmedAt + Self.debounce)
         #expect(service.liveGearCountIssue == .tooFew)
     }
 
@@ -84,12 +88,12 @@ struct GearDetectionServiceTests {
 
         #expect(!service.hasLostGears)
 
-        // 1.0s later — below 1.5s threshold
-        service.noteTrackingGap(now: 501.0)
+        // Under the threshold
+        service.noteTrackingGap(now: 500.0 + Self.trackingLost - 0.5)
         #expect(!service.hasLostGears)
 
-        // 1.6s later — exceeds 1.5s threshold
-        service.noteTrackingGap(now: 501.6)
+        // Exceeds the threshold
+        service.noteTrackingGap(now: 500.0 + Self.trackingLost + 0.1)
         #expect(service.hasLostGears)
     }
 
@@ -97,9 +101,9 @@ struct GearDetectionServiceTests {
     func stopAndResetClearStates() {
         let service = GearDetectionService()
         service.noteWrongGearCount(count: 1, now: 600.0)
-        service.noteWrongGearCount(count: 1, now: 601.0)
+        service.noteWrongGearCount(count: 1, now: 600.0 + Self.debounce)
         service.lastTrackedAt = 600.0
-        service.noteTrackingGap(now: 602.0)
+        service.noteTrackingGap(now: 600.0 + Self.trackingLost + 0.1)
 
         #expect(service.liveGearCountIssue == .tooFew)
         #expect(service.hasLostGears)

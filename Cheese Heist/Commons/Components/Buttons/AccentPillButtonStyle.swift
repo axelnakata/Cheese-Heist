@@ -14,6 +14,8 @@ struct AccentPillButtonStyle: ButtonStyle {
     /// standard button height; `LargeCTAButton` passes its own, because that token stops
     /// reading as a capsule once the button is larger than twice it.
     var cornerRadius: CGFloat = AppRadius.pill
+    var fillColor: Color = AppColor.accent
+    var pressedFillColor: Color = AppColor.accentPressed
 
     @Environment(\.layoutScale) private var scale
 
@@ -21,7 +23,7 @@ struct AccentPillButtonStyle: ButtonStyle {
         let shape = RoundedRectangle(cornerRadius: cornerRadius * scale, style: .continuous)
 
         return configuration.label
-            .background(configuration.isPressed ? AppColor.accentPressed : AppColor.accent, in: shape)
+            .background(configuration.isPressed ? pressedFillColor : fillColor, in: shape)
             .overlay(shape.strokeBorder(AppColor.accentStroke, lineWidth: AppStroke.button * scale))
             .contentShape(shape)
             .scaleEffect(configuration.isPressed ? 0.96 : 1)

@@ -18,7 +18,7 @@ struct Level1InputGate: Equatable, Sendable {
         // Nothing to touch: the illustration comes down when the DETECTOR is ready, not
         // when the child taps. Tapping past it would leave them detecting from a
         // viewpoint the model cannot work with.
-        case .aligningCrane, .detectingGears, .manualFallback:
+        case .aligningCrane, .detectingGears:
             return .none
 
         // Gears are pickable straight away — no PULL button. Tapping stays live in
