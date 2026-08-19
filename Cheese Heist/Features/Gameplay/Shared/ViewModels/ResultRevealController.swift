@@ -20,10 +20,13 @@ final class ResultRevealController {
 
     @ObservationIgnored private var task: Task<Void, Never>?
 
-    /// Plays `track`, then reveals the result overlay once it finishes.
-    func reveal(after track: AudioTrack) {
+    /// Plays `track`, then reveals the result overlay once it finishes. `overlapping`
+    /// starts alongside it rather than sequencing — the reveal timing is driven only by
+    /// `track` finishing, so a longer `overlapping` clip is free to keep playing past it.
+    func reveal(after track: AudioTrack, overlapping: AudioTrack? = nil) {
         task?.cancel()
         showsResult = false
+        if let overlapping { AudioManager.shared.playSFX(overlapping) }
         task = Task { [weak self] in
             await AudioManager.shared.playSFXAndWait(track: track)
             guard !Task.isCancelled else { return }
