@@ -15,7 +15,7 @@ struct LevelSelectActionBar: View {
     @Environment(\.layoutScale) private var scale
 
     private enum Metric {
-        static let sideInset: CGFloat = 68
+        static let sideInset: CGFloat = 100
         static let bottomInset: CGFloat = 76
         static let spacing: CGFloat = 16
     }
