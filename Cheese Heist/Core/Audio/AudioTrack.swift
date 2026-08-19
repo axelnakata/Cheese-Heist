@@ -17,6 +17,7 @@ enum AudioTrack: String, CaseIterable {
     
     case success = "Success"
     case fail = "Fail"
+    case failCat = "failCatTrim"
     
     case gear1 = "Gear1"
     case gear2 = "Gear2"

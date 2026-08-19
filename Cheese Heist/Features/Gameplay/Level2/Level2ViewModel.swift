@@ -74,7 +74,7 @@ final class Level2ViewModel {
 
         switch next {
         case .succeeded: resultReveal.reveal(after: .success)
-        case .failedWeak, .failedSlow: resultReveal.reveal(after: .fail)
+        case .failedWeak, .failedSlow: resultReveal.reveal(after: .fail, overlapping: .failCat)
         default: resultReveal.hide()
         }
     }

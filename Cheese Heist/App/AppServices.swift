@@ -72,6 +72,11 @@ final class AppServices {
     func startCutscene(with viewModel: CutsceneViewModel) {
         guard cutsceneCoordinator == nil else { return }
 
+        // A level attempt's gears/rope/cheese/mouse otherwise linger into the cutscene's
+        // AR view — `resetARGameplay` is the same teardown `startLevel1`/`startLevel2`
+        // run on entry; the cutscene needs it too since it shares the AR view.
+        resetARGameplay()
+
         let arView = arSessionManager.setupARView()
         arSessionManager.startSession()
         ticker.start(in: arView)
