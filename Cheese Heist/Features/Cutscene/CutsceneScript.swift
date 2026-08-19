@@ -47,7 +47,7 @@ enum CutsceneScript {
         // Beat 4 (cutscene 6): blueprint call to action, "this blueprint" bolded.
         CutsceneBeat(
             dialogue: DialogueBeat.bold(
-                "Click this blueprint to help me build one!",
+                "Open this blueprint to help me build one!",
                 "this blueprint"
             ),
             pose: .happy,
