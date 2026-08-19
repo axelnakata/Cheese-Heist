@@ -24,7 +24,8 @@ xcuserdata/
 Icon
 ._*
 
-# Documentation
+# Documentation & AI config
 Docs/
 @Docs/
-
+CLAUDE.md
+.claude/
